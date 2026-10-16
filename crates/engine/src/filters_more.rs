@@ -137,6 +137,7 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             angle: f(p, "angle", 0.0).clamp(-360.0, 360.0),
             center_x: f(p, "centerX", 0.5).clamp(0.0, 1.0),
             center_y: f(p, "centerY", 0.5).clamp(0.0, 1.0),
+            mirror: b(p, "mirror", false),
         },
         "filter.stylize.longShadow" => FilterParams::LongShadow {
             angle: f(p, "angle", 45.0).clamp(-360.0, 360.0),
@@ -256,6 +257,34 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             color: rgb(p, "color", [1.0, 1.0, 1.0]),
             seed: seed(p),
         },
+        "filter.distort.littlePlanet" => FilterParams::LittlePlanet { scale: f(p, "scale", 100.0).clamp(10.0, 500.0), rotation: f(p, "rotation", 0.0).clamp(-360.0, 360.0) },
+        "filter.distort.panoramaView" => FilterParams::PanoramaView {
+            pan: f(p, "pan", 0.0).clamp(-360.0, 360.0),
+            tilt: f(p, "tilt", 0.0).clamp(-90.0, 90.0),
+            fov: f(p, "fieldOfView", 90.0).clamp(10.0, 170.0),
+        },
+        "filter.distort.lensRefraction" => FilterParams::LensRefraction {
+            radius: f(p, "radius", 100.0).clamp(2.0, 20_000.0),
+            index: f(p, "refractiveIndex", 1.5).clamp(1.0, 2.5),
+            center_x: f(p, "centerX", 0.5).clamp(0.0, 1.0),
+            center_y: f(p, "centerY", 0.5).clamp(0.0, 1.0),
+        },
+        "filter.other.makeSeamless" => FilterParams::MakeSeamless { blend: f(p, "blend", 50.0).clamp(10.0, 100.0) },
+        "filter.pixelate.cubism" => FilterParams::Cubism { size: f(p, "tileSize", 12.0).clamp(2.0, 400.0), seed: seed(p) },
+        "filter.stylize.bumpMap" => FilterParams::BumpMap {
+            azimuth: f(p, "azimuth", 135.0).clamp(-180.0, 180.0),
+            elevation: f(p, "elevation", 45.0).clamp(1.0, 90.0),
+            depth: f(p, "depth", 10.0).clamp(0.0, 200.0),
+            ambient: f(p, "ambient", 20.0).clamp(0.0, 100.0),
+        },
+        "filter.stylize.normalMap" => FilterParams::NormalMap { strength: f(p, "strength", 4.0).clamp(0.01, 100.0), flip_y: b(p, "flipY", false) },
+        "filter.render.sparkle" => FilterParams::Sparkle {
+            threshold: f(p, "threshold", 80.0).clamp(0.0, 100.0),
+            length: f(p, "length", 30.0).clamp(1.0, 400.0),
+            spikes: f(p, "spikes", 4.0).round().clamp(2.0, 16.0) as u32,
+            angle: f(p, "angle", 0.0).clamp(-180.0, 180.0),
+            intensity: f(p, "intensity", 70.0).clamp(0.0, 100.0),
+        },
         _ => return crate::gallery_cmds::params_for(id, p),
     })
 }
@@ -292,6 +321,14 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.stylize.engrave" => &[("spacing", 2.0, 200.0), ("angle", -180.0, 180.0), ("contrast", 0.0, 100.0)],
         "filter.video.pixelDisplay" => &[("cellSize", 1.0, 50.0), ("strength", 0.0, 100.0), ("scanlines", 0.0, 100.0)],
         "filter.render.supernova" => &[("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0), ("radius", 2.0, 20_000.0), ("rays", 3.0, 200.0), ("randomness", 0.0, 100.0)],
+        "filter.distort.littlePlanet" => &[("scale", 10.0, 500.0), ("rotation", -360.0, 360.0)],
+        "filter.distort.panoramaView" => &[("pan", -360.0, 360.0), ("tilt", -90.0, 90.0), ("fieldOfView", 10.0, 170.0)],
+        "filter.distort.lensRefraction" => &[("radius", 2.0, 20_000.0), ("refractiveIndex", 1.0, 2.5), ("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0)],
+        "filter.other.makeSeamless" => &[("blend", 10.0, 100.0)],
+        "filter.pixelate.cubism" => &[("tileSize", 2.0, 400.0)],
+        "filter.stylize.bumpMap" => &[("azimuth", -180.0, 180.0), ("elevation", 1.0, 90.0), ("depth", 0.0, 200.0), ("ambient", 0.0, 100.0)],
+        "filter.stylize.normalMap" => &[("strength", 0.01, 100.0)],
+        "filter.render.sparkle" => &[("threshold", 0.0, 100.0), ("length", 1.0, 400.0), ("spikes", 2.0, 16.0), ("angle", -180.0, 180.0), ("intensity", 0.0, 100.0)],
         "filter.other.stretchLevels" | "filter.other.enhanceColors" => &[],
         "filter.other.invertBrightness" | "filter.other.invertLinear" | "filter.other.extractChannel" => &[],
         _ => return None,
@@ -310,6 +347,8 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.extractChannel" => &["invert"],
         "filter.other.gaussianDifference" => &["normalize", "invert"],
         "filter.stylize.longShadow" => &["fade"],
+        "filter.distort.kaleidoscope" => &["mirror"],
+        "filter.stylize.normalMap" => &["flipY"],
         "filter.render.spiral" => &["clockwise"],
         _ => &[],
     };
@@ -411,7 +450,7 @@ pub fn specs() -> Vec<CommandSpec> {
             r##"{"type":"perlin|simplex|cell|value"="perlin","size":1..10000=40,"detail":1..8=3,"seed":u32=0,"foreground":json,"background":json}"##
         ),
         cmd!("filter.render.checkerboard", "Checkerboard…", ["Filter", "Render"], r##"{"size":1..10000=32,"foreground":json,"background":json}"##),
-        cmd!("filter.render.grid", "Grid…", ["Filter", "Render"], r##"{"spacing":2..10000=32,"lineWidth":1..1000=1,"color":json}"##),
+        cmd!("filter.render.grid", "Grid…", ["Filter", "Render"], r##"{"spacing":2..10000=32,"lineWidth":1..1000=1,"color":color=#000000}"##),
         cmd!("filter.render.vignette", "Vignette…", ["Filter", "Render"], r##"{"amount":-100..100=-60,"size":0..100=40,"softness":0..100=60,"roundness":0..100=50}"##),
         cmd!("filter.other.stretchLevels", "Stretch Levels…", ["Filter", "Other"], r##"{"mode":"channels|together|brightness"="channels"}"##),
         cmd!("filter.other.enhanceColors", "Enhance Colors", ["Filter", "Other"], "{}"),
@@ -452,10 +491,23 @@ pub fn specs() -> Vec<CommandSpec> {
             "filter.render.supernova",
             "Supernova…",
             ["Filter", "Render"],
-            r##"{"centerX":0..1=0.5,"centerY":0..1=0.5,"radius":2..20000=60,"rays":3..200=40,"randomness":0..100=60,"color":json,"seed":u32=0}"##
+            r##"{"centerX":0..1=0.5,"centerY":0..1=0.5,"radius":2..20000=60,"rays":3..200=40,"randomness":0..100=60,"color":color=#ffffff,"seed":u32=0}"##
         ),
-        cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5}"##),
-        cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":json,"fade":bool=true}"##),
+        cmd!("filter.distort.littlePlanet", "Little Planet…", ["Filter", "Distort"], r##"{"scale":10..500=100,"rotation":-360..360=0}"##),
+        cmd!("filter.distort.panoramaView", "Panorama View…", ["Filter", "Distort"], r##"{"pan":-360..360=0,"tilt":-90..90=0,"fieldOfView":10..170=90}"##),
+        cmd!(
+            "filter.distort.lensRefraction",
+            "Lens Refraction…",
+            ["Filter", "Distort"],
+            r##"{"radius":2..20000=100,"refractiveIndex":1..2.5=1.5,"centerX":0..1=0.5,"centerY":0..1=0.5}"##
+        ),
+        cmd!("filter.other.makeSeamless", "Make Seamless…", ["Filter", "Other"], r##"{"blend":10..100=50}"##),
+        cmd!("filter.pixelate.cubism", "Cubism…", ["Filter", "Pixelate"], r##"{"tileSize":2..400=12,"seed":u32=0}"##),
+        cmd!("filter.stylize.bumpMap", "Bump Map…", ["Filter", "Stylize"], r##"{"azimuth":-180..180=135,"elevation":1..90=45,"depth":0..200=10,"ambient":0..100=20}"##),
+        cmd!("filter.stylize.normalMap", "Normal Map…", ["Filter", "Stylize"], r##"{"strength":0.01..100=4,"flipY":bool=false}"##),
+        cmd!("filter.render.sparkle", "Sparkle…", ["Filter", "Render"], r##"{"threshold":0..100=80,"length":1..400=30,"spikes":2..16=4,"angle":-180..180=0,"intensity":0..100=70}"##),
+        cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5,"mirror":bool=false}"##),
+        cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":color=#000000,"fade":bool=true}"##),
     ]
 }
 
@@ -465,7 +517,7 @@ mod tests {
 
     use crate::Session;
 
-    const IDS: [&str; 29] = [
+    const IDS: [&str; 37] = [
         "filter.other.invertBrightness",
         "filter.other.invertLinear",
         "filter.other.replaceColorRange",
@@ -495,6 +547,14 @@ mod tests {
         "filter.stylize.engrave",
         "filter.video.pixelDisplay",
         "filter.render.supernova",
+        "filter.distort.littlePlanet",
+        "filter.distort.panoramaView",
+        "filter.distort.lensRefraction",
+        "filter.other.makeSeamless",
+        "filter.pixelate.cubism",
+        "filter.stylize.bumpMap",
+        "filter.stylize.normalMap",
+        "filter.render.sparkle",
     ];
 
     fn session(depth: u64) -> Session {

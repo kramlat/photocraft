@@ -19,21 +19,20 @@
 
 ## Filters still to do
 
-72 GIMP operations had no PhotoCraft counterpart when this list was made. 45 are done or covered
+72 GIMP operations had no PhotoCraft counterpart when this list was made. 54 are done or covered
 (the table below, plus the existing features named under it), `rgb-clip` is not applicable (integer
-documents never leave 0–1; 32-bit documents clamp on display), and **26 are left**:
+documents never leave 0–1; 32-bit documents clamp on display), and **17 are left**:
 
 - **Blur and enhance (9):** variable-blur, mean-curvature-blur, snn-mean, wavelet-decompose,
   antialias, stress, fattal02, mantiuk06, reinhard05 (the last three are tone mappers).
-- **Distort and map (8):** apply-lens, panorama-projection, stereographic-projection, fractal-trace,
-  recursive-transform, bump-map, normal-map, tile-seamless.
-- **Artistic and light (3):** cubism, sparkle, gradient-flare.
+- **Distort and map (2):** fractal-trace, recursive-transform.
 - **Render (2):** diffraction-patterns, fractal-explorer.
 - **Misc (4):** distance-transform, value-propagate, waterpixels, slic.
 
 Found to be covered already by existing filters (so not new work): color-rotate (Hue/Saturation's
 colour ranges), edge-neon (Filter Gallery › Glowing Edges), cartoon (Poster Edges), photocopy
-(Photocopy), softglow and bloom (Diffuse Glow), invert-gamma (Invert).
+(Photocopy), softglow and bloom (Diffuse Glow), invert-gamma (Invert), gradient-flare (Lens
+Flare, Supernova and Sparkle).
 
 Operations GIMP has that PhotoCraft already covers under a Photoshop name (blurs, sharpens,
 Median, High Pass, Unsharp Mask, Lens Correction, Polar Coordinates, Spherize, Twirl/Pinch, Ripple,
@@ -43,10 +42,9 @@ listed.
 
 ## Suggested order
 
-1. **Cheap, self-contained maths first:** the remaining distorts (shift, curve-bend, tile-glass,
-   tile-paper, illusion, engrave, video-degradation), colour-rotate, edge-neon, the artistic filters.
-2. **Heavier:** tone mappers (fattal02, mantiuk06, reinhard05), variable/curvature blurs,
-   projections, the segmentation filters (slic, waterpixels).
+1. **Cheap first:** fractal-trace, recursive-transform, diffraction-patterns, fractal-explorer.
+2. **Heavier:** tone mappers (fattal02, mantiuk06, reinhard05), variable/curvature blurs, SNN mean,
+   wavelet decompose, the segmentation filters (slic, waterpixels), distance transform.
 
 ## Licence note
 

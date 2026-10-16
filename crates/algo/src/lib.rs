@@ -38,6 +38,8 @@ mod extrafx;
 pub use extrafx::NoiseKind;
 mod patternfx;
 pub use patternfx::WaveShape;
+mod projfx;
+mod relieffx;
 mod stylefx;
 mod tonefx;
 pub use tonefx::{DitherMethod, ScatterMode, StretchMode};
@@ -357,6 +359,9 @@ pub enum FilterParams {
         angle: f32,
         center_x: f32,
         center_y: f32,
+        /// Flip every other wedge (default: repeat the wedge).
+        #[serde(default)]
+        mirror: bool,
     },
     /// A hard shadow `length` px long toward `angle`° behind the opaque areas.
     LongShadow {
@@ -474,6 +479,53 @@ pub enum FilterParams {
         randomness: f32,
         color: [f32; 3],
         seed: u32,
+    },
+    /// A stereographic "little planet" of a panorama.
+    LittlePlanet {
+        scale: f32,
+        rotation: f32,
+    },
+    /// A rectilinear window onto a panorama.
+    PanoramaView {
+        pan: f32,
+        tilt: f32,
+        fov: f32,
+    },
+    /// A glass ball refracting what is behind it.
+    LensRefraction {
+        radius: f32,
+        index: f32,
+        center_x: f32,
+        center_y: f32,
+    },
+    /// Cross-fades the image with a half-shifted copy so it tiles.
+    MakeSeamless {
+        blend: f32,
+    },
+    /// Randomly turned flat squares.
+    Cubism {
+        size: f32,
+        seed: u32,
+    },
+    /// Relief lighting from the image's brightness.
+    BumpMap {
+        azimuth: f32,
+        elevation: f32,
+        depth: f32,
+        ambient: f32,
+    },
+    /// A tangent-space normal map from brightness.
+    NormalMap {
+        strength: f32,
+        flip_y: bool,
+    },
+    /// Spikes from bright points.
+    Sparkle {
+        threshold: f32,
+        length: f32,
+        spikes: u32,
+        angle: f32,
+        intensity: f32,
     },
     /// Angle −999…999 degrees.
     Twirl {
@@ -784,6 +836,10 @@ impl FilterParams {
             | FilterParams::Engrave { .. }
             | FilterParams::PixelDisplay { .. }
             | FilterParams::Supernova { .. } => Halo::Radius(0),
+            FilterParams::LittlePlanet { .. } | FilterParams::PanoramaView { .. } | FilterParams::LensRefraction { .. } | FilterParams::MakeSeamless { .. } => Halo::Bounds,
+            FilterParams::Cubism { size, .. } => Halo::Radius(projfx::cubism_halo(*size)),
+            FilterParams::BumpMap { .. } | FilterParams::NormalMap { .. } => Halo::Radius(1),
+            FilterParams::Sparkle { length, .. } => Halo::Radius(relieffx::sparkle_halo(*length)),
             FilterParams::ShiftRows { distance, .. } => Halo::Radius(warpfx::shift_halo(*distance)),
             FilterParams::Bend { .. } | FilterParams::Illusion { .. } => Halo::Bounds,
             FilterParams::GlassTiles { size, .. } => Halo::Radius(size.clamp(2.0, 2000.0).ceil() as i32 + 1),
@@ -900,6 +956,14 @@ impl FilterParams {
             FilterParams::Engrave { .. } => "Engrave",
             FilterParams::PixelDisplay { .. } => "Pixel Display",
             FilterParams::Supernova { .. } => "Supernova",
+            FilterParams::LittlePlanet { .. } => "Little Planet",
+            FilterParams::PanoramaView { .. } => "Panorama View",
+            FilterParams::LensRefraction { .. } => "Lens Refraction",
+            FilterParams::MakeSeamless { .. } => "Make Seamless",
+            FilterParams::Cubism { .. } => "Cubism",
+            FilterParams::BumpMap { .. } => "Bump Map",
+            FilterParams::NormalMap { .. } => "Normal Map",
+            FilterParams::Sparkle { .. } => "Sparkle",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -1035,9 +1099,21 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         }
         FilterParams::Checkerboard { size, foreground, background } => extrafx::checkerboard(src, out, ctx, *size, (*foreground, *background)),
         FilterParams::Grid { spacing, line_width, color } => extrafx::grid(src, out, ctx, *spacing, *line_width, *color),
-        FilterParams::Kaleidoscope { segments, angle, center_x, center_y } => extrafx::kaleidoscope(src, out, ctx, *segments, *angle, (*center_x, *center_y)),
+        FilterParams::Kaleidoscope { segments, angle, center_x, center_y, mirror } => {
+            extrafx::kaleidoscope(src, out, ctx, *segments, *angle, (*center_x, *center_y), *mirror)
+        }
         FilterParams::LongShadow { angle, length, color, fade } => extrafx::long_shadow(src, out, ctx, *angle, *length, *color, *fade),
         FilterParams::Vignette { amount, size, softness, roundness } => extrafx::vignette(src, out, ctx, *amount, *size, *softness, *roundness),
+        FilterParams::LittlePlanet { scale, rotation } => projfx::little_planet(src, out, ctx, *scale, *rotation),
+        FilterParams::PanoramaView { pan, tilt, fov } => projfx::panorama_view(src, out, ctx, *pan, *tilt, *fov),
+        FilterParams::LensRefraction { radius, index, center_x, center_y } => projfx::lens(src, out, ctx, *radius, *index, (*center_x, *center_y)),
+        FilterParams::MakeSeamless { blend } => projfx::make_seamless(src, out, ctx, *blend),
+        FilterParams::Cubism { size, seed } => projfx::cubism(src, out, ctx, *size, *seed),
+        FilterParams::BumpMap { azimuth, elevation, depth, ambient } => relieffx::bump_map(src, out, ctx, *azimuth, *elevation, *depth, *ambient),
+        FilterParams::NormalMap { strength, flip_y } => relieffx::normal_map(src, out, ctx, *strength, *flip_y),
+        FilterParams::Sparkle { threshold, length, spikes, angle, intensity } => {
+            relieffx::sparkle(src, out, ctx, *threshold, *length, *spikes, *angle, *intensity)
+        }
         FilterParams::ShiftRows { vertical, distance, seed } => warpfx::shift_rows(src, out, ctx, *vertical, *distance, *seed),
         FilterParams::Bend { amount, vertical_axis, curve } => warpfx::bend(src, out, ctx, *amount, *vertical_axis, *curve),
         FilterParams::GlassTiles { size, refraction } => warpfx::glass_tiles(src, out, ctx, *size, *refraction),

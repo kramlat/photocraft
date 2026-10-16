@@ -178,9 +178,10 @@ fn over(top: [f32; 4], under: [f32; 4]) -> [f32; 4] {
     [mix(top[0], under[0]), mix(top[1], under[1]), mix(top[2], under[2]), a]
 }
 
-/// Kaleidoscope: the part of the image within one of `segments` wedges (the first at `angle`
-/// degrees) mirrored around the centre.
-pub(crate) fn kaleidoscope(src: &Image, out: Rect, ctx: &Ctx, segments: u32, angle: f32, center: (f32, f32)) -> Vec<f32> {
+/// Kaleidoscope: the wedge of the picture starting at `angle` degrees (one of `segments`
+/// equal wedges) repeated all the way round the centre, so the circle holds `segments`
+/// copies of it. With `mirror` every other copy is flipped, which joins them seamlessly.
+pub(crate) fn kaleidoscope(src: &Image, out: Rect, ctx: &Ctx, segments: u32, angle: f32, center: (f32, f32), mirror: bool) -> Vec<f32> {
     let b = ctx.bounds;
     let (cx, cy) = (b.x0 as f32 + b.width() as f32 * center.0, b.y0 as f32 + b.height() as f32 * center.1);
     let wedge = std::f32::consts::TAU / segments.clamp(2, 64) as f32;
@@ -191,9 +192,13 @@ pub(crate) fn kaleidoscope(src: &Image, out: Rect, ctx: &Ctx, segments: u32, ang
         if r <= 0.0 {
             return (x, y);
         }
+        // The angle within its own wedge: the same positions in every wedge repeat the source.
         let mut t = (dy.atan2(dx) - a0).rem_euclid(wedge);
-        if t > wedge / 2.0 {
-            t = wedge - t;
+        if mirror {
+            let index = ((dy.atan2(dx) - a0).rem_euclid(std::f32::consts::TAU) / wedge).floor() as i32;
+            if index % 2 == 1 {
+                t = wedge - t;
+            }
         }
         let t = t + a0;
         (cx + r * t.cos(), cy + r * t.sin())
@@ -326,25 +331,39 @@ mod tests {
     }
 
     #[test]
-    fn kaleidoscope_repeats_a_wedge_symmetrically() {
-        // A horizontal ramp: with 4 wedges, mirrored positions about the vertical axis match.
-        let rect = Rect::new(0, 0, 33, 33);
+    fn kaleidoscope_repeats_the_wedge_in_every_segment() {
+        let rect = Rect::new(0, 0, 65, 65);
         let mut i = Image::new(rect, 4);
-        for y in 0..33 {
-            for x in 0..33 {
-                let k = (y * 33 + x) * 4;
-                i.data[k..k + 4].copy_from_slice(&[x as f32 / 32.0, y as f32 / 32.0, 0.0, 1.0]);
+        for y in 0..65 {
+            for x in 0..65 {
+                let k = (y * 65 + x) * 4;
+                i.data[k..k + 4].copy_from_slice(&[x as f32 / 64.0, y as f32 / 64.0, ((x * 7 + y * 13) % 17) as f32 / 17.0, 1.0]);
             }
         }
         let ctx = Ctx { bounds: rect, mode: ColorMode::Rgb, alpha: true };
-        let o = kaleidoscope(&i, rect, &ctx, 4, 0.0, (0.5, 0.5));
-        let at = |x: usize, y: usize| o[(y * 33 + x) * 4..(y * 33 + x) * 4 + 2].to_vec();
-        for (a, b) in [((8, 4), (8, 28)), ((4, 8), (28, 8))] {
-            let (p, q) = (at(a.0, a.1), at(b.0, b.1));
-            // Reflection across the wedge borders gives the same source distance from the centre.
-            let dist = |v: &[f32]| ((v[0] - 0.5).powi(2) + (v[1] - 0.5).powi(2)).sqrt();
-            assert!((dist(&p) - dist(&q)).abs() < 0.05, "{p:?} vs {q:?}");
+        for segments in [3u32, 4, 6] {
+            let o = kaleidoscope(&i, rect, &ctx, segments, 0.0, (0.5, 0.5), false);
+            let at = |x: f32, y: f32| {
+                let (xi, yi) = (x.round() as usize, y.round() as usize);
+                o[(yi * 65 + xi) * 4..(yi * 65 + xi) * 4 + 2].to_vec()
+            };
+            // The same point turned by one segment shows the same colour, n times round the circle.
+            let r = 20.0f32;
+            let first: Vec<(f32, f32)> = (0..segments).map(|k| {
+                let a = 0.3 + std::f32::consts::TAU * k as f32 / segments as f32;
+                (32.0 + r * a.cos(), 32.0 + r * a.sin())
+            }).collect();
+            for p in &first[1..] {
+                let (a, b) = (at(first[0].0, first[0].1), at(p.0, p.1));
+                let d: f32 = a.iter().zip(&b).map(|(x, y)| (x - y).abs()).sum();
+                assert!(d < 0.2, "{segments} segments: {a:?} vs {b:?}");
+            }
         }
+        // Mirrored copies flip every other wedge instead of repeating it.
+        let rep = kaleidoscope(&i, rect, &ctx, 4, 0.0, (0.5, 0.5), false);
+        let mir = kaleidoscope(&i, rect, &ctx, 4, 0.0, (0.5, 0.5), true);
+        assert_ne!(rep, mir);
+        assert_eq!(rep, kaleidoscope(&i, rect, &ctx, 4, 0.0, (0.5, 0.5), false));
     }
 
     #[test]

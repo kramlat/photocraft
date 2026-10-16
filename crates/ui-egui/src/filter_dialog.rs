@@ -244,6 +244,10 @@ const FULL_RESOLUTION_PREVIEW: &[&str] = &[
     "filter.stylize.engrave",
     "filter.video.pixelDisplay",
     "filter.render.supernova",
+    "filter.pixelate.cubism",
+    "filter.stylize.bumpMap",
+    "filter.stylize.normalMap",
+    "filter.render.sparkle",
 ];
 
 /// Whether `command` with `params` previews at full resolution: [`FULL_RESOLUTION_PREVIEW`], every
@@ -1693,6 +1697,18 @@ mod tests {
             }
         }
         assert!(failures.is_empty(), "{failures:#?}");
+    }
+
+    /// Supernova, Long Shadow and Grid take a picked colour (a swatch in the dialog), not
+    /// hidden JSON.
+    #[test]
+    fn effect_filters_offer_a_colour_swatch() {
+        for (id, key) in [("filter.render.supernova", "color"), ("filter.stylize.longShadow", "color"), ("filter.render.grid", "color")] {
+            let spec = photocraft_engine::commands::find(id).unwrap();
+            let p = parse_spec(spec.params);
+            let colour = p.iter().find(|p| p.key == key).unwrap_or_else(|| panic!("{id} has a {key}"));
+            assert!(matches!(colour.kind, Kind::Color(Some(_))), "{id}: {:?}", colour.kind);
+        }
     }
 
     #[test]
