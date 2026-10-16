@@ -4446,3 +4446,17 @@ shape	Appearance	Aspetto
 	Samples	Campioni
 	Repeats	Ripetizioni
 	Residual	Residuo
+	Mean Curvature Blur…	Sfocatura a curvatura media…
+	Reinhard Tone Map…	Mappatura tonale di Reinhard…
+	Fattal Tone Map…	Mappatura tonale di Fattal…
+	Contrast Domain Tone Map…	Mappatura tonale nel dominio del contrasto…
+	Chromatic Adaptation	Adattamento cromatico
+	Light Adaptation	Adattamento alla luce
+	Gradient Threshold	Soglia del gradiente
+	Attenuation	Attenuazione
+	Superpixels…	Superpixel…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Compattezza
+	Outline	Contorno
+	Outline Color	Colore del contorno

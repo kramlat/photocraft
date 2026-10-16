@@ -3933,3 +3933,17 @@ navigator	Zoom	Zvětšení
 	Samples	Vzorky
 	Repeats	Opakování
 	Residual	Zbytek
+	Mean Curvature Blur…	Rozostření střední křivostí…
+	Reinhard Tone Map…	Reinhardovo tónové mapování…
+	Fattal Tone Map…	Fattalovo tónové mapování…
+	Contrast Domain Tone Map…	Tónové mapování v oblasti kontrastu…
+	Chromatic Adaptation	Chromatická adaptace
+	Light Adaptation	Světelná adaptace
+	Gradient Threshold	Práh gradientu
+	Attenuation	Útlum
+	Superpixels…	Superpixely…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Kompaktnost
+	Outline	Obrys
+	Outline Color	Barva obrysu

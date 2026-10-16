@@ -4027,3 +4027,17 @@ curves	Smooth	Εξομάλυνση
 	Samples	Δείγματα
 	Repeats	Επαναλήψεις
 	Residual	Υπόλοιπο
+	Mean Curvature Blur…	Θάμπωμα μέσης καμπυλότητας…
+	Reinhard Tone Map…	Χαρτογράφηση τόνων Reinhard…
+	Fattal Tone Map…	Χαρτογράφηση τόνων Fattal…
+	Contrast Domain Tone Map…	Χαρτογράφηση τόνων στο πεδίο αντίθεσης…
+	Chromatic Adaptation	Χρωματική προσαρμογή
+	Light Adaptation	Προσαρμογή στο φως
+	Gradient Threshold	Κατώφλι κλίσης
+	Attenuation	Εξασθένηση
+	Superpixels…	Υπερεικονοστοιχεία…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Συμπάγεια
+	Outline	Περίγραμμα
+	Outline Color	Χρώμα περιγράμματος

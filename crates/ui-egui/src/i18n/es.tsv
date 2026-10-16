@@ -4287,3 +4287,17 @@ navigator	Zoom	Zoom
 	Samples	Muestras
 	Repeats	Repeticiones
 	Residual	Residuo
+	Mean Curvature Blur…	Desenfoque por curvatura media…
+	Reinhard Tone Map…	Mapeo tonal de Reinhard…
+	Fattal Tone Map…	Mapeo tonal de Fattal…
+	Contrast Domain Tone Map…	Mapeo tonal en dominio de contraste…
+	Chromatic Adaptation	Adaptación cromática
+	Light Adaptation	Adaptación a la luz
+	Gradient Threshold	Umbral de gradiente
+	Attenuation	Atenuación
+	Superpixels…	Superpíxeles…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Compacidad
+	Outline	Contorno
+	Outline Color	Color del contorno

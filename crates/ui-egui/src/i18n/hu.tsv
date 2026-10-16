@@ -4244,3 +4244,17 @@ cameraRaw	Yellow	Sárga
 	Samples	Minták
 	Repeats	Ismétlések
 	Residual	Maradék
+	Mean Curvature Blur…	Közepes görbületű elmosás…
+	Reinhard Tone Map…	Reinhard-tónusleképezés…
+	Fattal Tone Map…	Fattal-tónusleképezés…
+	Contrast Domain Tone Map…	Kontrasztterű tónusleképezés…
+	Chromatic Adaptation	Kromatikus adaptáció
+	Light Adaptation	Fényadaptáció
+	Gradient Threshold	Gradienshatár
+	Attenuation	Csillapítás
+	Superpixels…	Szuperpixelek…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Tömörség
+	Outline	Körvonal
+	Outline Color	Körvonal színe

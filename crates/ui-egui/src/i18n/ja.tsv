@@ -4003,3 +4003,17 @@ curves	Smooth	スムーズ
 	Samples	サンプル数
 	Repeats	繰り返し
 	Residual	残差
+	Mean Curvature Blur…	平均曲率ぼかし…
+	Reinhard Tone Map…	ラインハルト トーンマップ…
+	Fattal Tone Map…	ファッタル トーンマップ…
+	Contrast Domain Tone Map…	コントラスト領域トーンマップ…
+	Chromatic Adaptation	色順応
+	Light Adaptation	明順応
+	Gradient Threshold	勾配しきい値
+	Attenuation	減衰
+	Superpixels…	スーパーピクセル…
+	Slic	SLIC
+	Waterpixels	ウォーターピクセル
+	Compactness	コンパクトさ
+	Outline	輪郭線
+	Outline Color	輪郭線の色

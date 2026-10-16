@@ -3509,3 +3509,17 @@ curves	Smooth	매끄럽게
 	Samples	샘플 수
 	Repeats	반복
 	Residual	잔차
+	Mean Curvature Blur…	평균 곡률 흐림…
+	Reinhard Tone Map…	라인하르트 톤 매핑…
+	Fattal Tone Map…	파탈 톤 매핑…
+	Contrast Domain Tone Map…	대비 영역 톤 매핑…
+	Chromatic Adaptation	색 순응
+	Light Adaptation	명순응
+	Gradient Threshold	그래디언트 한계값
+	Attenuation	감쇠
+	Superpixels…	슈퍼픽셀…
+	Slic	SLIC
+	Waterpixels	워터픽셀
+	Compactness	밀집도
+	Outline	윤곽선
+	Outline Color	윤곽선 색상

@@ -3811,3 +3811,17 @@ curves	Smooth	Làm mượt
 	Samples	Số mẫu
 	Repeats	Số lần lặp lại
 	Residual	Phần dư
+	Mean Curvature Blur…	Làm mờ theo độ cong trung bình…
+	Reinhard Tone Map…	Ánh xạ tông Reinhard…
+	Fattal Tone Map…	Ánh xạ tông Fattal…
+	Contrast Domain Tone Map…	Ánh xạ tông miền tương phản…
+	Chromatic Adaptation	Thích nghi sắc độ
+	Light Adaptation	Thích nghi ánh sáng
+	Gradient Threshold	Ngưỡng độ dốc
+	Attenuation	Suy giảm
+	Superpixels…	Siêu điểm ảnh…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Độ nén
+	Outline	Đường viền
+	Outline Color	Màu đường viền

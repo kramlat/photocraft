@@ -257,6 +257,11 @@ const FULL_RESOLUTION_PREVIEW: &[&str] = &[
     "filter.other.propagateValues",
     "filter.other.localContrastStretch",
     "filter.other.waveletScale",
+    "filter.blur.meanCurvatureBlur",
+    "filter.other.reinhardToneMap",
+    "filter.other.fattalToneMap",
+    "filter.other.contrastDomainToneMap",
+    "filter.pixelate.superpixels",
 ];
 
 /// Whether `command` with `params` previews at full resolution: [`FULL_RESOLUTION_PREVIEW`], every

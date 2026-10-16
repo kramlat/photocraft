@@ -43,7 +43,10 @@ pub use detailfx::{Directions, PropagateMode, WaveletOutput};
 mod fractalfx;
 pub use fractalfx::{FractalKind, TraceInside};
 mod projfx;
+mod segmentfx;
+pub use segmentfx::SuperpixelMethod;
 mod smoothfx;
+mod tonemapfx;
 pub use smoothfx::DistanceSource;
 mod relieffx;
 mod stylefx;
@@ -612,6 +615,37 @@ pub enum FilterParams {
         scale: u32,
         output: WaveletOutput,
     },
+    /// Level-set curvature smoothing.
+    MeanCurvatureBlur {
+        iterations: u32,
+    },
+    /// Regions that follow edges, painted with their mean colour.
+    Superpixels {
+        method: SuperpixelMethod,
+        size: f32,
+        compactness: f32,
+        iterations: u32,
+        outline: bool,
+        outline_color: [f32; 3],
+    },
+    /// Reinhard–Devlin photoreceptor tone mapping.
+    ReinhardToneMap {
+        brightness: f32,
+        chromatic: f32,
+        light: f32,
+    },
+    /// Gradient-domain tone mapping.
+    FattalToneMap {
+        alpha: f32,
+        beta: f32,
+        saturation: f32,
+    },
+    /// Multi-scale contrast compression.
+    ContrastDomainToneMap {
+        contrast: f32,
+        detail: f32,
+        saturation: f32,
+    },
     /// Angle −999…999 degrees.
     Twirl {
         angle: f32,
@@ -932,6 +966,9 @@ impl FilterParams {
             FilterParams::PropagateValues { iterations, .. } => Halo::Radius(detailfx::propagate_halo(*iterations)),
             FilterParams::LocalContrast { radius, .. } => Halo::Radius(detailfx::stretch_halo(*radius)),
             FilterParams::WaveletScale { scale, .. } => Halo::Radius(detailfx::wavelet_halo(*scale)),
+            FilterParams::MeanCurvatureBlur { iterations } => Halo::Radius(tonemapfx::curvature_halo(*iterations)),
+            FilterParams::Superpixels { .. } => Halo::Bounds,
+            FilterParams::ReinhardToneMap { .. } | FilterParams::FattalToneMap { .. } | FilterParams::ContrastDomainToneMap { .. } => Halo::Bounds,
             FilterParams::ShiftRows { distance, .. } => Halo::Radius(warpfx::shift_halo(*distance)),
             FilterParams::Bend { .. } | FilterParams::Illusion { .. } => Halo::Bounds,
             FilterParams::GlassTiles { size, .. } => Halo::Radius(size.clamp(2.0, 2000.0).ceil() as i32 + 1),
@@ -1068,6 +1105,11 @@ impl FilterParams {
             FilterParams::PropagateValues { .. } => "Propagate Values",
             FilterParams::LocalContrast { .. } => "Local Contrast Stretch",
             FilterParams::WaveletScale { .. } => "Wavelet Scale",
+            FilterParams::MeanCurvatureBlur { .. } => "Mean Curvature Blur",
+            FilterParams::Superpixels { .. } => "Superpixels",
+            FilterParams::ReinhardToneMap { .. } => "Reinhard Tone Map",
+            FilterParams::FattalToneMap { .. } => "Fattal Tone Map",
+            FilterParams::ContrastDomainToneMap { .. } => "Contrast Domain Tone Map",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -1208,6 +1250,13 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         }
         FilterParams::LongShadow { angle, length, color, fade } => extrafx::long_shadow(src, out, ctx, *angle, *length, *color, *fade),
         FilterParams::Vignette { amount, size, softness, roundness } => extrafx::vignette(src, out, ctx, *amount, *size, *softness, *roundness),
+        FilterParams::Superpixels { method, size, compactness, iterations, outline, outline_color } => {
+            segmentfx::superpixels(src, out, ctx, *method, *size, *compactness, *iterations, *outline, *outline_color)
+        }
+        FilterParams::MeanCurvatureBlur { iterations } => tonemapfx::mean_curvature_blur(src, out, ctx, *iterations),
+        FilterParams::ReinhardToneMap { brightness, chromatic, light } => tonemapfx::reinhard(src, out, ctx, *brightness, *chromatic, *light),
+        FilterParams::FattalToneMap { alpha, beta, saturation } => tonemapfx::fattal(src, out, ctx, *alpha, *beta, *saturation),
+        FilterParams::ContrastDomainToneMap { contrast, detail, saturation } => tonemapfx::contrast_domain(src, out, ctx, *contrast, *detail, *saturation),
         FilterParams::PropagateValues { mode, lower, upper, rate, iterations, directions } => {
             detailfx::propagate(src, out, ctx, *mode, *lower, *upper, *rate, *iterations, *directions)
         }

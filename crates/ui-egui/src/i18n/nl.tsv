@@ -4087,3 +4087,17 @@ curves	Smooth	Vloeiend maken
 	Samples	Steekproeven
 	Repeats	Herhalingen
 	Residual	Residu
+	Mean Curvature Blur…	Gemiddelde-krommingsonscherpte…
+	Reinhard Tone Map…	Reinhard-tonemapping…
+	Fattal Tone Map…	Fattal-tonemapping…
+	Contrast Domain Tone Map…	Tonemapping in contrastdomein…
+	Chromatic Adaptation	Chromatische adaptatie
+	Light Adaptation	Lichtadaptatie
+	Gradient Threshold	Gradiëntdrempel
+	Attenuation	Demping
+	Superpixels…	Superpixels…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Compactheid
+	Outline	Omtrek
+	Outline Color	Kleur van omtrek

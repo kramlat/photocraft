@@ -4057,3 +4057,17 @@ cameraData	Lens	Lens
 	Samples	Örnekler
 	Repeats	Tekrarlar
 	Residual	Kalan
+	Mean Curvature Blur…	Ortalama Eğrilik Bulanıklığı…
+	Reinhard Tone Map…	Reinhard Ton Eşleme…
+	Fattal Tone Map…	Fattal Ton Eşleme…
+	Contrast Domain Tone Map…	Karşıtlık Alanı Ton Eşleme…
+	Chromatic Adaptation	Kromatik Uyum
+	Light Adaptation	Işık Uyumu
+	Gradient Threshold	Gradyan Eşiği
+	Attenuation	Zayıflatma
+	Superpixels…	Süper Pikseller…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Sıkılık
+	Outline	Anahat
+	Outline Color	Anahat Rengi

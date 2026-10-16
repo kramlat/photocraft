@@ -3925,3 +3925,17 @@ curves	Smooth	Wygładź
 	Samples	Próbki
 	Repeats	Powtórzenia
 	Residual	Reszta
+	Mean Curvature Blur…	Rozmycie średniej krzywizny…
+	Reinhard Tone Map…	Mapowanie tonów Reinharda…
+	Fattal Tone Map…	Mapowanie tonów Fattala…
+	Contrast Domain Tone Map…	Mapowanie tonów w dziedzinie kontrastu…
+	Chromatic Adaptation	Adaptacja chromatyczna
+	Light Adaptation	Adaptacja do światła
+	Gradient Threshold	Próg gradientu
+	Attenuation	Tłumienie
+	Superpixels…	Superpiksele…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Zwartość
+	Outline	Kontur
+	Outline Color	Kolor konturu

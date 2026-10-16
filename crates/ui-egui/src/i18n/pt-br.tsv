@@ -4117,3 +4117,17 @@ layerLabel	No Color	Sem cor
 	Samples	Amostras
 	Repeats	Repetições
 	Residual	Resíduo
+	Mean Curvature Blur…	Desfoque por curvatura média…
+	Reinhard Tone Map…	Mapeamento tonal de Reinhard…
+	Fattal Tone Map…	Mapeamento tonal de Fattal…
+	Contrast Domain Tone Map…	Mapeamento tonal no domínio do contraste…
+	Chromatic Adaptation	Adaptação cromática
+	Light Adaptation	Adaptação à luz
+	Gradient Threshold	Limite de gradiente
+	Attenuation	Atenuação
+	Superpixels…	Superpixels…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Compacidade
+	Outline	Contorno
+	Outline Color	Cor do contorno

@@ -50,6 +50,8 @@ a layer with transparency; undo and redo.
 | Enhance › Wavelet Decompose | Filter › Other › Wavelet Scale… (one scale at a time) |
 | Enhance › Antialias | Filter › Other › Smooth Edges… |
 | Blur › Selective Gaussian / SNN Mean | Filter › Blur › Surface Blur… / Edge-Preserving Mean… |
+| Blur › Mean Curvature Blur | Filter › Blur › Mean Curvature Blur… |
+| Tone Mapping › Reinhard / Fattal / Mantiuk | Filter › Other › Reinhard Tone Map… / Fattal Tone Map… / Contrast Domain Tone Map… |
 | Blur › Variable Blur | Filter › Blur › Lens Blur… with a depth map, or Field Blur |
 | Edge-Detect › Sobel / Laplace / Edge | Filter › Stylize › Edge Detection… |
 | Edge-Detect › Difference of Gaussians | Filter › Other › Gaussian Difference… |
@@ -77,9 +79,11 @@ a layer with transparency; undo and redo.
 | Render › Plasma / Sinus / Linear Sinusoid | Filter › Render › Plasma… / Sine Waves… |
 | Render › Diffraction Patterns / Fractal Explorer | Filter › Render › Diffraction Pattern… / Fractal Explorer… |
 | Colors › Distance Transform | Filter › Other › Distance Map… |
+| Generic › Waterpixels / SLIC | Filter › Pixelate › Superpixels… |
 
-Not done yet: the HDR tone mappers (Fattal, Mantiuk, Reinhard), Mean Curvature Blur, and the
-segmentation filters (Waterpixels, SLIC).
+The tone mappers (Reinhard, Fattal, and the Mantiuk-style Contrast Domain one) treat the picture as
+linear light; compare them on a 32-bit HDR image, not only on 8-bit photos. Contrast Domain is an
+approximation of Mantiuk 2006, so expect it to differ from GIMP's.
 
 ## Scripts
 

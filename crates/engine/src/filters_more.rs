@@ -3,7 +3,7 @@
 //! Difference. They run through [`crate::filters::run_filter`] like every other filter, so
 //! selections, smart filters, history and `filter.lastFilter` behave the same.
 
-use photocraft_algo::{BendCurve, ChannelSource, Directions, DistanceSource, DitherMethod, EdgeAlgorithm, FilterParams, FractalKind, NoiseKind, PropagateMode, ScatterMode, StretchMode, TileGaps, TraceInside, WaveShape, WaveletOutput};
+use photocraft_algo::{BendCurve, ChannelSource, Directions, DistanceSource, DitherMethod, EdgeAlgorithm, FilterParams, FractalKind, NoiseKind, PropagateMode, ScatterMode, StretchMode, SuperpixelMethod, TileGaps, TraceInside, WaveShape, WaveletOutput};
 use serde_json::Value;
 
 use crate::commands::CommandSpec;
@@ -359,6 +359,30 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             scale: f(p, "scale", 2.0).round().clamp(1.0, 8.0) as u32,
             output: if s(p, "output", "detail") == "residual" { WaveletOutput::Residual } else { WaveletOutput::Detail },
         },
+        "filter.blur.meanCurvatureBlur" => FilterParams::MeanCurvatureBlur { iterations: f(p, "iterations", 10.0).round().clamp(1.0, 200.0) as u32 },
+        "filter.other.reinhardToneMap" => FilterParams::ReinhardToneMap {
+            brightness: f(p, "brightness", 0.0).clamp(-8.0, 8.0),
+            chromatic: f(p, "chromaticAdaptation", 0.0).clamp(0.0, 100.0),
+            light: f(p, "lightAdaptation", 100.0).clamp(0.0, 100.0),
+        },
+        "filter.other.fattalToneMap" => FilterParams::FattalToneMap {
+            alpha: f(p, "gradientThreshold", 1.0).clamp(0.05, 4.0),
+            beta: f(p, "attenuation", 0.85).clamp(0.5, 1.0),
+            saturation: f(p, "saturation", 80.0).clamp(0.0, 200.0) / 100.0,
+        },
+        "filter.other.contrastDomainToneMap" => FilterParams::ContrastDomainToneMap {
+            contrast: f(p, "contrast", 40.0).clamp(5.0, 100.0),
+            detail: f(p, "detail", 100.0).clamp(0.0, 200.0),
+            saturation: f(p, "saturation", 80.0).clamp(0.0, 200.0) / 100.0,
+        },
+        "filter.pixelate.superpixels" => FilterParams::Superpixels {
+            method: if s(p, "method", "slic") == "waterpixels" { SuperpixelMethod::Waterpixels } else { SuperpixelMethod::Slic },
+            size: f(p, "size", 24.0).clamp(4.0, 1000.0),
+            compactness: f(p, "compactness", 10.0).clamp(1.0, 100.0),
+            iterations: f(p, "iterations", 8.0).round().clamp(1.0, 20.0) as u32,
+            outline: b(p, "outline", false),
+            outline_color: rgb(p, "outlineColor", [0.0, 0.0, 0.0]),
+        },
         _ => return crate::gallery_cmds::params_for(id, p),
     })
 }
@@ -421,6 +445,11 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.propagateValues" => &[("lowerLimit", 0.0, 100.0), ("upperLimit", 0.0, 100.0), ("rate", 0.0, 100.0), ("iterations", 1.0, 100.0)],
         "filter.other.localContrastStretch" => &[("radius", 1.0, 500.0), ("samples", 2.0, 200.0), ("repeats", 1.0, 8.0), ("strength", 0.0, 100.0)],
         "filter.other.waveletScale" => &[("scale", 1.0, 8.0)],
+        "filter.blur.meanCurvatureBlur" => &[("iterations", 1.0, 200.0)],
+        "filter.other.reinhardToneMap" => &[("brightness", -8.0, 8.0), ("chromaticAdaptation", 0.0, 100.0), ("lightAdaptation", 0.0, 100.0)],
+        "filter.other.fattalToneMap" => &[("gradientThreshold", 0.05, 4.0), ("attenuation", 0.5, 1.0), ("saturation", 0.0, 200.0)],
+        "filter.other.contrastDomainToneMap" => &[("contrast", 5.0, 100.0), ("detail", 0.0, 200.0), ("saturation", 0.0, 200.0)],
+        "filter.pixelate.superpixels" => &[("size", 4.0, 1000.0), ("compactness", 1.0, 100.0), ("iterations", 1.0, 20.0)],
         "filter.other.stretchLevels" | "filter.other.enhanceColors" => &[],
         "filter.other.invertBrightness" | "filter.other.invertLinear" | "filter.other.extractChannel" => &[],
         _ => return None,
@@ -443,6 +472,7 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.stylize.normalMap" => &["flipY"],
         "filter.other.distanceMap" => &["invert"],
         "filter.other.propagateValues" => &["left", "right", "up", "down"],
+        "filter.pixelate.superpixels" => &["outline"],
         "filter.render.spiral" => &["clockwise"],
         _ => &[],
     };
@@ -467,6 +497,7 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.distanceMap" => choice("source", "brightness|alpha"),
         "filter.other.propagateValues" => choice("mode", "lighter|darker|moreOpaque|moreTransparent"),
         "filter.other.waveletScale" => choice("output", "detail|residual"),
+        "filter.pixelate.superpixels" => choice("method", "slic|waterpixels"),
         _ => None,
     };
     if let Some(msg) = msg {
@@ -645,6 +676,31 @@ pub fn specs() -> Vec<CommandSpec> {
             r##"{"radius":1..500=50,"samples":2..200=20,"repeats":1..8=2,"strength":0..100=100,"seed":u32=0}"##
         ),
         cmd!("filter.other.waveletScale", "Wavelet Scale…", ["Filter", "Other"], r##"{"scale":1..8=2,"output":"detail|residual"="detail"}"##),
+        cmd!("filter.blur.meanCurvatureBlur", "Mean Curvature Blur…", ["Filter", "Blur"], r##"{"iterations":1..200=10}"##),
+        cmd!(
+            "filter.other.reinhardToneMap",
+            "Reinhard Tone Map…",
+            ["Filter", "Other"],
+            r##"{"brightness":-8..8=0,"chromaticAdaptation":0..100=0,"lightAdaptation":0..100=100}"##
+        ),
+        cmd!(
+            "filter.other.fattalToneMap",
+            "Fattal Tone Map…",
+            ["Filter", "Other"],
+            r##"{"gradientThreshold":0.05..4=1,"attenuation":0.5..1=0.85,"saturation":0..200=80}"##
+        ),
+        cmd!(
+            "filter.other.contrastDomainToneMap",
+            "Contrast Domain Tone Map…",
+            ["Filter", "Other"],
+            r##"{"contrast":5..100=40,"detail":0..200=100,"saturation":0..200=80}"##
+        ),
+        cmd!(
+            "filter.pixelate.superpixels",
+            "Superpixels…",
+            ["Filter", "Pixelate"],
+            r##"{"method":"slic|waterpixels"="slic","size":4..1000=24,"compactness":1..100=10,"iterations":1..20=8,"outline":bool=false,"outlineColor":color=#000000}"##
+        ),
         cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5,"mirror":bool=false}"##),
         cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":color=#000000,"fade":bool=true}"##),
     ]
@@ -656,7 +712,7 @@ mod tests {
 
     use crate::Session;
 
-    const IDS: [&str; 47] = [
+    const IDS: [&str; 52] = [
         "filter.other.invertBrightness",
         "filter.other.invertLinear",
         "filter.other.replaceColorRange",
@@ -704,6 +760,11 @@ mod tests {
         "filter.other.propagateValues",
         "filter.other.localContrastStretch",
         "filter.other.waveletScale",
+        "filter.blur.meanCurvatureBlur",
+        "filter.other.reinhardToneMap",
+        "filter.other.fattalToneMap",
+        "filter.other.contrastDomainToneMap",
+        "filter.pixelate.superpixels",
     ];
 
     fn session(depth: u64) -> Session {
@@ -752,7 +813,7 @@ mod tests {
                     s.execute("edit.fill", json!({"color": "#000000"})).unwrap();
                     s.execute("select.all", json!({})).unwrap();
                 }
-                if id == "filter.blur.edgePreservingMean" {
+                if matches!(id, "filter.blur.edgePreservingMean" | "filter.blur.meanCurvatureBlur") {
                     // Smoothing needs something to smooth: noise over the flat halves.
                     s.execute("filter.noise.addNoise", json!({"amount": 20, "seed": 3})).unwrap();
                 }

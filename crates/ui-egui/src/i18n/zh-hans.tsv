@@ -2960,3 +2960,17 @@ curves	Smooth	平滑
 	Samples	采样数
 	Repeats	重复次数
 	Residual	残差
+	Mean Curvature Blur…	平均曲率模糊…
+	Reinhard Tone Map…	Reinhard 色调映射…
+	Fattal Tone Map…	Fattal 色调映射…
+	Contrast Domain Tone Map…	对比度域色调映射…
+	Chromatic Adaptation	色适应
+	Light Adaptation	光适应
+	Gradient Threshold	梯度阈值
+	Attenuation	衰减
+	Superpixels…	超像素…
+	Slic	SLIC
+	Waterpixels	分水岭像素
+	Compactness	紧凑度
+	Outline	轮廓
+	Outline Color	轮廓颜色

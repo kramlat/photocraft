@@ -3330,3 +3330,17 @@ curves	Smooth	Glätten
 	Samples	Stichproben
 	Repeats	Wiederholungen
 	Residual	Rest
+	Mean Curvature Blur…	Mittlere-Krümmung-Weichzeichner…
+	Reinhard Tone Map…	Reinhard-Tonwertzuordnung…
+	Fattal Tone Map…	Fattal-Tonwertzuordnung…
+	Contrast Domain Tone Map…	Tonwertzuordnung im Kontrastbereich…
+	Chromatic Adaptation	Chromatische Adaptation
+	Light Adaptation	Helligkeitsadaptation
+	Gradient Threshold	Gradientenschwelle
+	Attenuation	Dämpfung
+	Superpixels…	Superpixel…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Kompaktheit
+	Outline	Umriss
+	Outline Color	Umrissfarbe

@@ -19,13 +19,11 @@
 
 ## Filters still to do
 
-72 GIMP operations had no PhotoCraft counterpart when this list was made. 66 are done or covered
-(the table below, plus the existing features named under it), `rgb-clip` is not applicable (integer
-documents never leave 0–1; 32-bit documents clamp on display), and **6 are left**:
-
-- **Tone mapping and blur (4):** fattal02, mantiuk06, reinhard05 (the three HDR tone mappers) and
-  mean-curvature-blur.
-- **Segmentation (2):** waterpixels, slic.
+72 GIMP operations had no PhotoCraft counterpart when this list was made. All are now done or
+covered (the table below, plus the existing features named under it), except `rgb-clip`, which is
+not applicable: integer documents never leave 0–1 and 32-bit documents clamp on display. **None are
+left.** What remains is testing against GIMP (see [parity-testing.md](parity-testing.md)) and fixing
+what that finds.
 
 Found to be covered already by existing filters (so not new work): color-rotate (Hue/Saturation's
 colour ranges), edge-neon (Filter Gallery › Glowing Edges), cartoon (Poster Edges), photocopy
@@ -39,11 +37,10 @@ Wave, Wind, Emboss, Find Edges, Add Noise, Custom, Color to Alpha, Channel Mixer
 Photo Filter, Invert, Posterize, Threshold, Shadows/Highlights, Lens Flare, Clouds, Fibers…) are not
 listed.
 
-## Suggested order
+## Next
 
-1. **Next:** mean-curvature-blur, then the tone mappers (fattal02, mantiuk06, reinhard05; the
-   HDR toning in `crates/algo/src/hdr.rs` is the starting point).
-2. **Last:** the segmentation filters (slic, waterpixels).
+The filter list is complete. Next: the testing in [parity-testing.md](parity-testing.md), then the
+remaining file formats.
 
 ## Licence note
 

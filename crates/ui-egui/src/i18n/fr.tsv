@@ -3342,3 +3342,17 @@ curves	Smooth	Lisser
 	Samples	Échantillons
 	Repeats	Répétitions
 	Residual	Résidu
+	Mean Curvature Blur…	Flou par courbure moyenne…
+	Reinhard Tone Map…	Mappage tonal de Reinhard…
+	Fattal Tone Map…	Mappage tonal de Fattal…
+	Contrast Domain Tone Map…	Mappage tonal dans le domaine du contraste…
+	Chromatic Adaptation	Adaptation chromatique
+	Light Adaptation	Adaptation à la lumière
+	Gradient Threshold	Seuil de gradient
+	Attenuation	Atténuation
+	Superpixels…	Superpixels…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Compacité
+	Outline	Contour
+	Outline Color	Couleur du contour

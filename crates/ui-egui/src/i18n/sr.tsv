@@ -4398,3 +4398,17 @@ shape	Appearance	Izgled
 	Samples	Uzorci
 	Repeats	Ponavljanja
 	Residual	Ostatak
+	Mean Curvature Blur…	Zamućenje po srednjoj krivini…
+	Reinhard Tone Map…	Reinhardovo tonsko mapiranje…
+	Fattal Tone Map…	Fatalovo tonsko mapiranje…
+	Contrast Domain Tone Map…	Tonsko mapiranje u domenu kontrasta…
+	Chromatic Adaptation	Hromatska adaptacija
+	Light Adaptation	Adaptacija na svetlo
+	Gradient Threshold	Prag gradijenta
+	Attenuation	Slabljenje
+	Superpixels…	Superpikseli…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Kompaktnost
+	Outline	Kontura
+	Outline Color	Boja konture

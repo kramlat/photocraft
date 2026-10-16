@@ -4026,3 +4026,17 @@ curves	Smooth	Згладити
 	Samples	Вибірки
 	Repeats	Повтори
 	Residual	Залишок
+	Mean Curvature Blur…	Розмиття за середньою кривиною…
+	Reinhard Tone Map…	Тональна компресія Рейнхарда…
+	Fattal Tone Map…	Тональна компресія Фаттала…
+	Contrast Domain Tone Map…	Тональна компресія в області контрасту…
+	Chromatic Adaptation	Хроматична адаптація
+	Light Adaptation	Світлова адаптація
+	Gradient Threshold	Поріг градієнта
+	Attenuation	Послаблення
+	Superpixels…	Суперпікселі…
+	Slic	SLIC
+	Waterpixels	Waterpixels
+	Compactness	Компактність
+	Outline	Контур
+	Outline Color	Колір контуру
