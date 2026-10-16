@@ -3,7 +3,7 @@
 //! Difference. They run through [`crate::filters::run_filter`] like every other filter, so
 //! selections, smart filters, history and `filter.lastFilter` behave the same.
 
-use photocraft_algo::{BendCurve, ChannelSource, DitherMethod, EdgeAlgorithm, FilterParams, NoiseKind, ScatterMode, StretchMode, TileGaps, WaveShape};
+use photocraft_algo::{BendCurve, ChannelSource, DistanceSource, DitherMethod, EdgeAlgorithm, FilterParams, FractalKind, NoiseKind, ScatterMode, StretchMode, TileGaps, TraceInside, WaveShape};
 use serde_json::Value;
 
 use crate::commands::CommandSpec;
@@ -285,8 +285,66 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             angle: f(p, "angle", 0.0).clamp(-180.0, 180.0),
             intensity: f(p, "intensity", 70.0).clamp(0.0, 100.0),
         },
+        "filter.render.fractalExplorer" => FilterParams::FractalExplorer {
+            kind: fractal_kind(p),
+            center_x: f(p, "centerX", -0.5).clamp(-4.0, 4.0),
+            center_y: f(p, "centerY", 0.0).clamp(-4.0, 4.0),
+            zoom: f(p, "zoom", 1.0).clamp(0.1, 1.0e6),
+            iterations: f(p, "iterations", 100.0).round().clamp(1.0, 2000.0) as u32,
+            julia_x: f(p, "juliaX", -0.8).clamp(-2.0, 2.0),
+            julia_y: f(p, "juliaY", 0.156).clamp(-2.0, 2.0),
+            colour_speed: f(p, "colorSpeed", 1.0).clamp(0.1, 20.0),
+        },
+        "filter.distort.fractalTrace" => FilterParams::FractalTrace {
+            kind: fractal_kind(p),
+            center_x: f(p, "centerX", -0.5).clamp(-4.0, 4.0),
+            center_y: f(p, "centerY", 0.0).clamp(-4.0, 4.0),
+            zoom: f(p, "zoom", 1.0).clamp(0.1, 1.0e6),
+            iterations: f(p, "iterations", 50.0).round().clamp(1.0, 1000.0) as u32,
+            julia_x: f(p, "juliaX", -0.8).clamp(-2.0, 2.0),
+            julia_y: f(p, "juliaY", 0.156).clamp(-2.0, 2.0),
+            inside: match s(p, "inside", "original") {
+                "transparent" => TraceInside::Transparent,
+                "black" => TraceInside::Black,
+                _ => TraceInside::Original,
+            },
+        },
+        "filter.distort.droste" => FilterParams::Droste {
+            scale: f(p, "scale", 50.0).clamp(10.0, 95.0),
+            angle: f(p, "angle", 0.0).clamp(-360.0, 360.0),
+            depth: f(p, "depth", 5.0).round().clamp(1.0, 16.0) as u32,
+            center_x: f(p, "centerX", 0.5).clamp(0.0, 1.0),
+            center_y: f(p, "centerY", 0.5).clamp(0.0, 1.0),
+        },
+        "filter.render.diffractionPattern" => FilterParams::DiffractionPattern {
+            center_x: f(p, "centerX", 0.5).clamp(0.0, 1.0),
+            center_y: f(p, "centerY", 0.5).clamp(0.0, 1.0),
+            size: f(p, "size", 60.0).clamp(1.0, 10_000.0),
+            spread: f(p, "spread", 50.0).clamp(0.0, 100.0),
+            lobes: f(p, "lobes", 0.0).round().clamp(0.0, 32.0) as u32,
+            brightness: f(p, "brightness", 50.0).clamp(0.0, 100.0),
+            contrast: f(p, "contrast", 50.0).clamp(0.0, 100.0),
+        },
+        "filter.blur.edgePreservingMean" => {
+            FilterParams::EdgePreservingMean { radius: f(p, "radius", 3.0).clamp(1.0, 50.0), iterations: f(p, "iterations", 2.0).round().clamp(1.0, 20.0) as u32 }
+        }
+        "filter.other.smoothEdges" => FilterParams::SmoothEdges { tolerance: f(p, "tolerance", 10.0).clamp(0.0, 100.0), strength: f(p, "strength", 100.0).clamp(0.0, 100.0) },
+        "filter.other.distanceMap" => FilterParams::DistanceMap {
+            source: if s(p, "source", "brightness") == "alpha" { DistanceSource::Alpha } else { DistanceSource::Brightness },
+            threshold: f(p, "threshold", 50.0).clamp(0.0, 100.0),
+            max_distance: f(p, "maxDistance", 32.0).clamp(1.0, 5000.0),
+            invert: b(p, "invert", false),
+        },
         _ => return crate::gallery_cmds::params_for(id, p),
     })
+}
+
+fn fractal_kind(p: &Value) -> FractalKind {
+    match s(p, "type", "mandelbrot") {
+        "julia" => FractalKind::Julia,
+        "burningShip" => FractalKind::BurningShip,
+        _ => FractalKind::Mandelbrot,
+    }
 }
 
 /// A `seed` param: any `u32`, else 0.
@@ -329,6 +387,13 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.stylize.bumpMap" => &[("azimuth", -180.0, 180.0), ("elevation", 1.0, 90.0), ("depth", 0.0, 200.0), ("ambient", 0.0, 100.0)],
         "filter.stylize.normalMap" => &[("strength", 0.01, 100.0)],
         "filter.render.sparkle" => &[("threshold", 0.0, 100.0), ("length", 1.0, 400.0), ("spikes", 2.0, 16.0), ("angle", -180.0, 180.0), ("intensity", 0.0, 100.0)],
+        "filter.render.fractalExplorer" => &[("centerX", -4.0, 4.0), ("centerY", -4.0, 4.0), ("zoom", 0.1, 1.0e6), ("iterations", 1.0, 2000.0), ("juliaX", -2.0, 2.0), ("juliaY", -2.0, 2.0), ("colorSpeed", 0.1, 20.0)],
+        "filter.distort.fractalTrace" => &[("centerX", -4.0, 4.0), ("centerY", -4.0, 4.0), ("zoom", 0.1, 1.0e6), ("iterations", 1.0, 1000.0), ("juliaX", -2.0, 2.0), ("juliaY", -2.0, 2.0)],
+        "filter.distort.droste" => &[("scale", 10.0, 95.0), ("angle", -360.0, 360.0), ("depth", 1.0, 16.0), ("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0)],
+        "filter.render.diffractionPattern" => &[("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0), ("size", 1.0, 10_000.0), ("spread", 0.0, 100.0), ("lobes", 0.0, 32.0), ("brightness", 0.0, 100.0), ("contrast", 0.0, 100.0)],
+        "filter.blur.edgePreservingMean" => &[("radius", 1.0, 50.0), ("iterations", 1.0, 20.0)],
+        "filter.other.smoothEdges" => &[("tolerance", 0.0, 100.0), ("strength", 0.0, 100.0)],
+        "filter.other.distanceMap" => &[("threshold", 0.0, 100.0), ("maxDistance", 1.0, 5000.0)],
         "filter.other.stretchLevels" | "filter.other.enhanceColors" => &[],
         "filter.other.invertBrightness" | "filter.other.invertLinear" | "filter.other.extractChannel" => &[],
         _ => return None,
@@ -349,6 +414,7 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.stylize.longShadow" => &["fade"],
         "filter.distort.kaleidoscope" => &["mirror"],
         "filter.stylize.normalMap" => &["flipY"],
+        "filter.other.distanceMap" => &["invert"],
         "filter.render.spiral" => &["clockwise"],
         _ => &[],
     };
@@ -368,6 +434,9 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.distort.shiftRows" => choice("direction", "horizontal|vertical"),
         "filter.distort.bend" => choice("direction", "horizontal|vertical").or_else(|| choice("curve", "arc|wave")),
         "filter.distort.paperTiles" => choice("gaps", "transparent|black|white"),
+        "filter.render.fractalExplorer" => choice("type", "mandelbrot|julia|burningShip"),
+        "filter.distort.fractalTrace" => choice("type", "mandelbrot|julia|burningShip").or_else(|| choice("inside", "original|transparent|black")),
+        "filter.other.distanceMap" => choice("source", "brightness|alpha"),
         _ => None,
     };
     if let Some(msg) = msg {
@@ -506,6 +575,33 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!("filter.stylize.bumpMap", "Bump Map…", ["Filter", "Stylize"], r##"{"azimuth":-180..180=135,"elevation":1..90=45,"depth":0..200=10,"ambient":0..100=20}"##),
         cmd!("filter.stylize.normalMap", "Normal Map…", ["Filter", "Stylize"], r##"{"strength":0.01..100=4,"flipY":bool=false}"##),
         cmd!("filter.render.sparkle", "Sparkle…", ["Filter", "Render"], r##"{"threshold":0..100=80,"length":1..400=30,"spikes":2..16=4,"angle":-180..180=0,"intensity":0..100=70}"##),
+        cmd!(
+            "filter.render.fractalExplorer",
+            "Fractal Explorer…",
+            ["Filter", "Render"],
+            r##"{"type":"mandelbrot|julia|burningShip"="mandelbrot","centerX":-4..4=-0.5,"centerY":-4..4=0,"zoom":0.1..1000000=1,"iterations":1..2000=100,"juliaX":-2..2=-0.8,"juliaY":-2..2=0.156,"colorSpeed":0.1..20=1}"##
+        ),
+        cmd!(
+            "filter.distort.fractalTrace",
+            "Fractal Trace…",
+            ["Filter", "Distort"],
+            r##"{"type":"mandelbrot|julia|burningShip"="mandelbrot","centerX":-4..4=-0.5,"centerY":-4..4=0,"zoom":0.1..1000000=1,"iterations":1..1000=50,"juliaX":-2..2=-0.8,"juliaY":-2..2=0.156,"inside":"original|transparent|black"="original"}"##
+        ),
+        cmd!("filter.distort.droste", "Droste…", ["Filter", "Distort"], r##"{"scale":10..95=50,"angle":-360..360=0,"depth":1..16=5,"centerX":0..1=0.5,"centerY":0..1=0.5}"##),
+        cmd!(
+            "filter.render.diffractionPattern",
+            "Diffraction Pattern…",
+            ["Filter", "Render"],
+            r##"{"centerX":0..1=0.5,"centerY":0..1=0.5,"size":1..10000=60,"spread":0..100=50,"lobes":0..32=0,"brightness":0..100=50,"contrast":0..100=50}"##
+        ),
+        cmd!("filter.blur.edgePreservingMean", "Edge-Preserving Mean…", ["Filter", "Blur"], r##"{"radius":1..50=3,"iterations":1..20=2}"##),
+        cmd!("filter.other.smoothEdges", "Smooth Edges…", ["Filter", "Other"], r##"{"tolerance":0..100=10,"strength":0..100=100}"##),
+        cmd!(
+            "filter.other.distanceMap",
+            "Distance Map…",
+            ["Filter", "Other"],
+            r##"{"source":"brightness|alpha"="brightness","threshold":0..100=50,"maxDistance":1..5000=32,"invert":bool=false}"##
+        ),
         cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5,"mirror":bool=false}"##),
         cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":color=#000000,"fade":bool=true}"##),
     ]
@@ -517,7 +613,7 @@ mod tests {
 
     use crate::Session;
 
-    const IDS: [&str; 37] = [
+    const IDS: [&str; 44] = [
         "filter.other.invertBrightness",
         "filter.other.invertLinear",
         "filter.other.replaceColorRange",
@@ -555,6 +651,13 @@ mod tests {
         "filter.stylize.bumpMap",
         "filter.stylize.normalMap",
         "filter.render.sparkle",
+        "filter.render.fractalExplorer",
+        "filter.distort.fractalTrace",
+        "filter.distort.droste",
+        "filter.render.diffractionPattern",
+        "filter.blur.edgePreservingMean",
+        "filter.other.smoothEdges",
+        "filter.other.distanceMap",
     ];
 
     fn session(depth: u64) -> Session {
@@ -585,10 +688,26 @@ mod tests {
                     s.execute("edit.fill", json!({"color": "#2060c0"})).unwrap();
                     s.execute("select.all", json!({})).unwrap();
                 }
+                if id == "filter.other.smoothEdges" {
+                    // A staircase needs steps: white rectangles stepping across a black ground.
+                    s = Session::new();
+                    s.execute("file.new", json!({"width": 24, "height": 24, "background": "black", "depth": depth})).unwrap();
+                    for k in 0..8 {
+                        s.execute("select.rect", json!({"x": 3 * k, "y": 3 * k, "width": 24 - 3 * k, "height": 3})).unwrap();
+                        s.execute("edit.fill", json!({"color": "#ffffff"})).unwrap();
+                    }
+                    s.execute("select.all", json!({})).unwrap();
+                }
+                if id == "filter.blur.edgePreservingMean" {
+                    // Smoothing needs something to smooth: noise over the flat halves.
+                    s.execute("filter.noise.addNoise", json!({"amount": 20, "seed": 3})).unwrap();
+                }
                 let before = pixels(&s);
                 let params = match id {
                     "filter.other.replaceColorRange" => json!({"from": "#2060c0", "to": "#ff8000", "fuzziness": 5}),
                     "filter.other.extractChannel" => json!({"channel": "blue"}),
+                    // Off-centre, so the nested copy of the split picture differs from the original.
+                    "filter.distort.droste" => json!({"centerX": 0.25}),
                     _ => json!({}),
                 };
                 s.execute(id, params).unwrap_or_else(|e| panic!("{id} @{depth}: {e}"));

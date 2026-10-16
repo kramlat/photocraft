@@ -248,6 +248,12 @@ const FULL_RESOLUTION_PREVIEW: &[&str] = &[
     "filter.stylize.bumpMap",
     "filter.stylize.normalMap",
     "filter.render.sparkle",
+    "filter.other.smoothEdges",
+    "filter.other.distanceMap",
+    "filter.blur.edgePreservingMean",
+    // Fine detail that a reduced proxy would alias away.
+    "filter.render.fractalExplorer",
+    "filter.distort.fractalTrace",
 ];
 
 /// Whether `command` with `params` previews at full resolution: [`FULL_RESOLUTION_PREVIEW`], every

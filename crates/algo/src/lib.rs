@@ -38,7 +38,11 @@ mod extrafx;
 pub use extrafx::NoiseKind;
 mod patternfx;
 pub use patternfx::WaveShape;
+mod fractalfx;
+pub use fractalfx::{FractalKind, TraceInside};
 mod projfx;
+mod smoothfx;
+pub use smoothfx::DistanceSource;
 mod relieffx;
 mod stylefx;
 mod tonefx;
@@ -527,6 +531,63 @@ pub enum FilterParams {
         angle: f32,
         intensity: f32,
     },
+    /// A fractal coloured by escape speed.
+    FractalExplorer {
+        kind: FractalKind,
+        center_x: f32,
+        center_y: f32,
+        zoom: f32,
+        iterations: u32,
+        julia_x: f32,
+        julia_y: f32,
+        colour_speed: f32,
+    },
+    /// The picture mapped through a fractal.
+    FractalTrace {
+        kind: FractalKind,
+        center_x: f32,
+        center_y: f32,
+        zoom: f32,
+        iterations: u32,
+        julia_x: f32,
+        julia_y: f32,
+        inside: TraceInside,
+    },
+    /// Nested shrunk copies of the picture.
+    Droste {
+        scale: f32,
+        angle: f32,
+        depth: u32,
+        center_x: f32,
+        center_y: f32,
+    },
+    /// Coloured interference rings.
+    DiffractionPattern {
+        center_x: f32,
+        center_y: f32,
+        size: f32,
+        spread: f32,
+        lobes: u32,
+        brightness: f32,
+        contrast: f32,
+    },
+    /// Edge-preserving smoothing by symmetric nearest neighbours.
+    EdgePreservingMean {
+        radius: f32,
+        iterations: u32,
+    },
+    /// Removes stair-steps from hard edges.
+    SmoothEdges {
+        tolerance: f32,
+        strength: f32,
+    },
+    /// Distance to the nearest edge of the shape.
+    DistanceMap {
+        source: DistanceSource,
+        threshold: f32,
+        max_distance: f32,
+        invert: bool,
+    },
     /// Angle −999…999 degrees.
     Twirl {
         angle: f32,
@@ -840,6 +901,10 @@ impl FilterParams {
             FilterParams::Cubism { size, .. } => Halo::Radius(projfx::cubism_halo(*size)),
             FilterParams::BumpMap { .. } | FilterParams::NormalMap { .. } => Halo::Radius(1),
             FilterParams::Sparkle { length, .. } => Halo::Radius(relieffx::sparkle_halo(*length)),
+            FilterParams::FractalExplorer { .. } | FilterParams::DiffractionPattern { .. } => Halo::Radius(0),
+            FilterParams::FractalTrace { .. } | FilterParams::Droste { .. } | FilterParams::DistanceMap { .. } => Halo::Bounds,
+            FilterParams::EdgePreservingMean { radius, iterations } => Halo::Radius(smoothfx::mean_halo(*radius, *iterations)),
+            FilterParams::SmoothEdges { .. } => Halo::Radius(2),
             FilterParams::ShiftRows { distance, .. } => Halo::Radius(warpfx::shift_halo(*distance)),
             FilterParams::Bend { .. } | FilterParams::Illusion { .. } => Halo::Bounds,
             FilterParams::GlassTiles { size, .. } => Halo::Radius(size.clamp(2.0, 2000.0).ceil() as i32 + 1),
@@ -901,6 +966,8 @@ impl FilterParams {
                 | FilterParams::Spiral { .. }
                 | FilterParams::Maze { .. }
                 | FilterParams::SineWaves { .. }
+                | FilterParams::FractalExplorer { .. }
+                | FilterParams::DiffractionPattern { .. }
         )
     }
 
@@ -964,6 +1031,13 @@ impl FilterParams {
             FilterParams::BumpMap { .. } => "Bump Map",
             FilterParams::NormalMap { .. } => "Normal Map",
             FilterParams::Sparkle { .. } => "Sparkle",
+            FilterParams::FractalExplorer { .. } => "Fractal Explorer",
+            FilterParams::FractalTrace { .. } => "Fractal Trace",
+            FilterParams::Droste { .. } => "Droste",
+            FilterParams::DiffractionPattern { .. } => "Diffraction Pattern",
+            FilterParams::EdgePreservingMean { .. } => "Edge-Preserving Mean",
+            FilterParams::SmoothEdges { .. } => "Smooth Edges",
+            FilterParams::DistanceMap { .. } => "Distance Map",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -1104,6 +1178,19 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         }
         FilterParams::LongShadow { angle, length, color, fade } => extrafx::long_shadow(src, out, ctx, *angle, *length, *color, *fade),
         FilterParams::Vignette { amount, size, softness, roundness } => extrafx::vignette(src, out, ctx, *amount, *size, *softness, *roundness),
+        FilterParams::FractalExplorer { kind, center_x, center_y, zoom, iterations, julia_x, julia_y, colour_speed } => {
+            fractalfx::explorer(src, out, ctx, *kind, (*center_x, *center_y), *zoom, *iterations, (*julia_x, *julia_y), *colour_speed)
+        }
+        FilterParams::FractalTrace { kind, center_x, center_y, zoom, iterations, julia_x, julia_y, inside } => {
+            fractalfx::trace(src, out, ctx, *kind, (*center_x, *center_y), *zoom, *iterations, (*julia_x, *julia_y), *inside)
+        }
+        FilterParams::Droste { scale, angle, depth, center_x, center_y } => fractalfx::droste(src, out, ctx, *scale, *angle, *depth, (*center_x, *center_y)),
+        FilterParams::DiffractionPattern { center_x, center_y, size, spread, lobes, brightness, contrast } => {
+            fractalfx::diffraction(src, out, ctx, (*center_x, *center_y), *size, *spread, *lobes, *brightness, *contrast)
+        }
+        FilterParams::EdgePreservingMean { radius, iterations } => smoothfx::symmetric_mean(src, out, ctx, *radius, *iterations),
+        FilterParams::SmoothEdges { tolerance, strength } => smoothfx::smooth_edges(src, out, ctx, *tolerance, *strength),
+        FilterParams::DistanceMap { source, threshold, max_distance, invert } => smoothfx::distance_map(src, out, ctx, *source, *threshold, *max_distance, *invert),
         FilterParams::LittlePlanet { scale, rotation } => projfx::little_planet(src, out, ctx, *scale, *rotation),
         FilterParams::PanoramaView { pan, tilt, fov } => projfx::panorama_view(src, out, ctx, *pan, *tilt, *fov),
         FilterParams::LensRefraction { radius, index, center_x, center_y } => projfx::lens(src, out, ctx, *radius, *index, (*center_x, *center_y)),

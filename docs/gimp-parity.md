@@ -19,15 +19,13 @@
 
 ## Filters still to do
 
-72 GIMP operations had no PhotoCraft counterpart when this list was made. 54 are done or covered
+72 GIMP operations had no PhotoCraft counterpart when this list was made. 61 are done or covered
 (the table below, plus the existing features named under it), `rgb-clip` is not applicable (integer
-documents never leave 0–1; 32-bit documents clamp on display), and **17 are left**:
+documents never leave 0–1; 32-bit documents clamp on display), and **10 are left**:
 
-- **Blur and enhance (9):** variable-blur, mean-curvature-blur, snn-mean, wavelet-decompose,
-  antialias, stress, fattal02, mantiuk06, reinhard05 (the last three are tone mappers).
-- **Distort and map (2):** fractal-trace, recursive-transform.
-- **Render (2):** diffraction-patterns, fractal-explorer.
-- **Misc (4):** distance-transform, value-propagate, waterpixels, slic.
+- **Blur and enhance (7):** variable-blur, mean-curvature-blur, wavelet-decompose, stress, fattal02,
+  mantiuk06, reinhard05 (the last three are tone mappers).
+- **Misc (3):** value-propagate, waterpixels, slic.
 
 Found to be covered already by existing filters (so not new work): color-rotate (Hue/Saturation's
 colour ranges), edge-neon (Filter Gallery › Glowing Edges), cartoon (Poster Edges), photocopy
@@ -42,9 +40,9 @@ listed.
 
 ## Suggested order
 
-1. **Cheap first:** fractal-trace, recursive-transform, diffraction-patterns, fractal-explorer.
-2. **Heavier:** tone mappers (fattal02, mantiuk06, reinhard05), variable/curvature blurs, SNN mean,
-   wavelet decompose, the segmentation filters (slic, waterpixels), distance transform.
+1. **Next:** value-propagate, stress, wavelet-decompose, variable-blur.
+2. **Heavier:** tone mappers (fattal02, mantiuk06, reinhard05), mean-curvature-blur, the
+   segmentation filters (slic, waterpixels).
 
 ## Licence note
 
