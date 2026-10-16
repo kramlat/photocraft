@@ -331,6 +331,14 @@ mod tests {
     }
 
     #[test]
+    fn kaleidoscope_reads_the_whole_picture_not_just_its_tile() {
+        // It samples far from the pixel it writes, so it must ask for the whole bounds: with a
+        // small halo every tile would see only itself and the rest would come out empty.
+        let p = crate::FilterParams::Kaleidoscope { segments: 6, angle: 0.0, center_x: 0.5, center_y: 0.5, mirror: false };
+        assert_eq!(p.halo(), crate::Halo::Bounds);
+    }
+
+    #[test]
     fn kaleidoscope_repeats_the_wedge_in_every_segment() {
         let rect = Rect::new(0, 0, 65, 65);
         let mut i = Image::new(rect, 4);

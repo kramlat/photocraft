@@ -946,7 +946,6 @@ impl FilterParams {
             | FilterParams::NoisePattern { .. }
             | FilterParams::Checkerboard { .. }
             | FilterParams::Grid { .. }
-            | FilterParams::Kaleidoscope { .. }
             | FilterParams::Vignette { .. }
             | FilterParams::Plasma { .. }
             | FilterParams::Spiral { .. }
@@ -955,7 +954,7 @@ impl FilterParams {
             | FilterParams::Engrave { .. }
             | FilterParams::PixelDisplay { .. }
             | FilterParams::Supernova { .. } => Halo::Radius(0),
-            FilterParams::LittlePlanet { .. } | FilterParams::PanoramaView { .. } | FilterParams::LensRefraction { .. } | FilterParams::MakeSeamless { .. } => Halo::Bounds,
+            FilterParams::Kaleidoscope { .. } | FilterParams::LittlePlanet { .. } | FilterParams::PanoramaView { .. } | FilterParams::LensRefraction { .. } | FilterParams::MakeSeamless { .. } => Halo::Bounds,
             FilterParams::Cubism { size, .. } => Halo::Radius(projfx::cubism_halo(*size)),
             FilterParams::BumpMap { .. } | FilterParams::NormalMap { .. } => Halo::Radius(1),
             FilterParams::Sparkle { length, .. } => Halo::Radius(relieffx::sparkle_halo(*length)),
