@@ -44,7 +44,7 @@ pub use crate::resolution::{exif_resolution, export_exif, export_xmp, photoshop_
 pub use crate::source_settings::{WebpEncoding, jpeg_quality, webp_encoding};
 pub use half::f16;
 
-use crate::codecs::{dds, dpx, exr, fits, heif, jpeg, pcx, png, pnm, tiff, via_image, webp, xpm};
+use crate::codecs::{aliaspix, dds, dpx, exr, farbfeld, fits, heif, jpeg, pcx, png, pnm, sgi, sunras, tiff, via_image, webp, xbm, xpm, xwd};
 
 /// Detect the format and decode with default [`Limits`].
 pub fn decode(bytes: &[u8]) -> Result<Image, CodecError> {
@@ -76,6 +76,13 @@ pub fn decode_as_with(format: Format, bytes: &[u8], opts: &DecodeOptions) -> Res
         Format::WebP => webp::decode(bytes, l),
         Format::Pnm => pnm::decode(bytes, l),
         Format::Pcx => pcx::decode(bytes, l),
+        Format::SunRaster => sunras::decode(bytes, l),
+        Format::Sgi => sgi::decode(bytes, l),
+        Format::Xbm => xbm::decode_xbm(bytes, l),
+        Format::Wbmp => xbm::decode_wbmp(bytes, l),
+        Format::Farbfeld => farbfeld::decode(bytes, l),
+        Format::Xwd => xwd::decode(bytes, l),
+        Format::AliasPix => aliaspix::decode(bytes, l),
         Format::Xpm => xpm::decode(bytes, l),
         Format::Dds => dds::decode(bytes, l),
         Format::Fits => fits::decode(bytes, l),
@@ -250,7 +257,14 @@ pub fn encode(image: &Image, format: Format, opts: &EncodeOptions) -> Result<Vec
         Format::Tiff => tiff::encode(image, plan, opts),
         Format::WebP => webp::encode(image, plan, opts),
         Format::Pnm => pnm::encode(image, plan, opts),
-        Format::Pcx => Err(CodecError::unsupported(format, "PCX is import-only; save as PNG instead")),
+        Format::Pcx => pcx::encode(image, plan, opts),
+        Format::SunRaster => sunras::encode(image, plan, opts),
+        Format::Sgi => sgi::encode(image, plan, opts),
+        Format::Xbm => xbm::encode_xbm(image, plan, opts),
+        Format::Wbmp => xbm::encode_wbmp(image, plan, opts),
+        Format::Farbfeld => farbfeld::encode(image, plan, opts),
+        Format::Xwd => xwd::encode(image, plan, opts),
+        Format::AliasPix => aliaspix::encode(image, plan, opts),
         Format::Xpm => Err(CodecError::unsupported(format, "XPM is import-only; save as PNG instead")),
         Format::Dds => Err(CodecError::unsupported(format, "DDS is import-only; save as PNG instead")),
         Format::Fits => fits::encode(image, plan, opts),

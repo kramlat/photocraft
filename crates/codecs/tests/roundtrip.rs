@@ -19,7 +19,8 @@ fn psnr_threshold(format: Format) -> f64 {
 
 fn check_roundtrip(format: Format, layout: ChannelLayout, sample: SampleType) {
     let c = caps(format);
-    if !c.write {
+    // XBM and WBMP are 1-bit: see `bitonal_formats_round_trip_black_and_white`.
+    if !c.write || matches!(format, Format::Xbm | Format::Wbmp) {
         return;
     }
     // GIF quantizes; keep its input smooth so the threshold is meaningful.
@@ -145,6 +146,24 @@ mod exr {
 }
 mod hdr {
     cases!(Format::Hdr);
+}
+mod sunras {
+    cases!(Format::SunRaster);
+}
+mod sgi {
+    cases!(Format::Sgi);
+}
+mod farbfeld {
+    cases!(Format::Farbfeld);
+}
+mod xwd {
+    cases!(Format::Xwd);
+}
+mod pcx {
+    cases!(Format::Pcx);
+}
+mod aliaspix {
+    cases!(Format::AliasPix);
 }
 
 // ---------------------------------------------------------------------------
@@ -283,4 +302,46 @@ fn larger_image_png_tiff_exact() {
         let back = decode(&encode(&img, f, &EncodeOptions::default()).unwrap()).unwrap();
         assert_eq!(back.data(), img.data(), "{f:?}");
     }
+}
+
+#[test]
+fn bitonal_formats_round_trip_black_and_white() {
+    // Odd widths exercise the padding bits; both formats read back black 0 / white 255.
+    let (w, h) = (21u32, 5u32);
+    let px: Vec<u8> = (0..w * h).map(|i| if (i * 7 + i / 3) % 5 < 2 { 0 } else { 255 }).collect();
+    let img = Image::from_u8(w, h, ChannelLayout::Gray, px.clone()).unwrap();
+    for f in [Format::Xbm, Format::Wbmp] {
+        let bytes = encode(&img, f, &EncodeOptions::default()).unwrap();
+        assert_eq!(detect(&bytes), Some(f), "{f:?}");
+        let back = decode(&bytes).unwrap();
+        assert_eq!((back.layout(), back.data()), (ChannelLayout::Gray, &px[..]), "{f:?}");
+    }
+    // Colour input is thresholded at one half.
+    let rgb = Image::from_u8(2, 1, ChannelLayout::Rgb, vec![200, 200, 200, 20, 20, 20]).unwrap();
+    for f in [Format::Xbm, Format::Wbmp] {
+        let back = decode(&encode(&rgb, f, &EncodeOptions::default()).unwrap()).unwrap();
+        assert_eq!(back.data(), [255, 0], "{f:?}");
+    }
+}
+
+#[test]
+fn legacy_formats_read_foreign_files() {
+    // X10 `short` XBM with a comment first and hot-spot defines.
+    let x10 = b"/* made elsewhere */\n#define t_width 9\n#define t_height 2\n#define t_x_hot 1\nstatic short t_bits[] = {\n 0x0101, 0x0000 };\n";
+    assert_eq!(detect(x10), Some(Format::Xbm));
+    let img = decode(x10).unwrap();
+    assert_eq!(img.data()[0], 0, "bit 0 of the first word is black");
+    assert_eq!(img.data()[8], 0);
+    assert_eq!(img.data()[1], 255);
+    // Sun Raster, byte-encoded: 2x1 24-bit BGR, the pixels written as RLE runs.
+    let mut sun = vec![0x59, 0xa6, 0x6a, 0x95];
+    for v in [2u32, 1, 24, 6, 2, 0, 0] {
+        sun.extend_from_slice(&v.to_be_bytes());
+    }
+    sun.extend_from_slice(&[0x80, 0x01, 0x10, 0x20, 0x30, 0x80, 0x00]);
+    assert!(decode(&sun).is_err(), "run overruns the 6-byte row");
+    let mut sun = sun[..32].to_vec();
+    sun.extend_from_slice(&[0x80, 0x05, 0x10]);
+    let img = decode(&sun).unwrap();
+    assert_eq!((img.layout(), img.data()), (ChannelLayout::Rgb, &[0x10u8; 6][..]));
 }

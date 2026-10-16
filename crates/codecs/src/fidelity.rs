@@ -36,6 +36,8 @@ pub enum FidelityWarning {
     },
     /// Colour data will be reduced to grayscale.
     ColorToGray,
+    /// The image will be thresholded to black and white (XBM, WBMP).
+    Bitonal,
     /// The image will be quantized to a 256-colour palette.
     PaletteQuantized,
     /// The format's encoder is lossy.
@@ -90,6 +92,7 @@ impl fmt::Display for FidelityWarning {
             }
             LabConverted { to } => write!(f, "Lab will be converted to {to:?} (sRGB)"),
             ColorToGray => write!(f, "colour will be converted to grayscale"),
+            Bitonal => write!(f, "the image will be reduced to black and white"),
             PaletteQuantized => write!(f, "colours will be quantized to a 256-colour palette"),
             LossyCompression => write!(f, "lossy compression"),
             IccDropped => write!(f, "ICC profile not supported; it will be dropped"),
@@ -227,6 +230,8 @@ pub fn fidelity_warnings_with(image: &Image, format: Format, opts: &EncodeOption
     // Compression
     if format == Format::Gif {
         w.push(W::PaletteQuantized);
+    } else if matches!(format, Format::Xbm | Format::Wbmp) {
+        w.push(W::Bitonal);
     } else if c.lossy || (format == Format::WebP && !opts.webp_lossless) {
         w.push(W::LossyCompression);
     }

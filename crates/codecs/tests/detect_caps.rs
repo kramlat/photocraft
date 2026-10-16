@@ -60,6 +60,14 @@ fn default_build_formats_all_symmetric() {
         Format::Hdr,
         Format::Fits,
         Format::Dpx,
+        Format::Pcx,
+        Format::SunRaster,
+        Format::Sgi,
+        Format::Xbm,
+        Format::Wbmp,
+        Format::Farbfeld,
+        Format::Xwd,
+        Format::AliasPix,
     ];
     for f in expected {
         assert!(caps(f).read && caps(f).write, "{f:?}");

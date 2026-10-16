@@ -5,7 +5,8 @@ use crate::SampleType;
 use crate::error::CodecError;
 use crate::format::Format;
 use crate::image::{ChannelLayout, Image};
-use crate::options::Limits;
+use crate::fidelity::Plan;
+use crate::options::{EncodeOptions, Limits};
 
 const HEADER: usize = 128;
 
@@ -109,10 +110,72 @@ pub(crate) fn decode(b: &[u8], limits: &Limits) -> Result<Image, CodecError> {
             pixels[(y * width + x) * 3..(y * width + x + 1) * 3].copy_from_slice(&rgb);
         }
     }
-    let mut image = Image::from_u8(w, h, ChannelLayout::Rgb, pixels)?;
+    // A colour-mapped file whose every pixel is gray opens as Grayscale (what the writer emits).
+    let gray = !(bits == 8 && planes == 3) && pixels.chunks_exact(3).all(|p| p[0] == p[1] && p[1] == p[2]);
+    let mut image = if gray {
+        Image::from_u8(w, h, ChannelLayout::Gray, pixels.chunks_exact(3).map(|p| p[0]).collect())?
+    } else {
+        Image::from_u8(w, h, ChannelLayout::Rgb, pixels)?
+    };
     let (xdpi, ydpi) = (le16(b, 12), le16(b, 14));
     if xdpi > 0 && ydpi > 0 {
         image.meta.dpi = Some((f32::from(xdpi), f32::from(ydpi)));
     }
     Ok(image)
+}
+
+/// RLE for one scanline plane: runs of up to 63, and any byte with its top two bits set is
+/// escaped even when alone.
+fn rle_plane(row: &[u8], out: &mut Vec<u8>) {
+    let mut i = 0;
+    while i < row.len() {
+        let mut run = 1;
+        while i + run < row.len() && row[i + run] == row[i] && run < 63 {
+            run += 1;
+        }
+        if run > 1 || row[i] >= 0xc0 {
+            out.push(0xc0 | run as u8);
+        }
+        out.push(row[i]);
+        i += run;
+    }
+}
+
+pub(crate) fn encode(src: &Image, plan: Plan, _opts: &EncodeOptions) -> Result<Vec<u8>, CodecError> {
+    let img = src.converted(plan.layout, plan.sample);
+    let (w, h) = (img.width() as usize, img.height() as usize);
+    if w > 65536 || h > 65536 {
+        return Err(CodecError::encode(Format::Pcx, "PCX is limited to 65536 pixels per side"));
+    }
+    let planes = img.layout().channels();
+    let stride = w.next_multiple_of(2);
+    let mut out = vec![0u8; HEADER];
+    out[0] = 0x0a;
+    out[1] = 5;
+    out[2] = 1;
+    out[3] = 8;
+    out[8..10].copy_from_slice(&((w - 1) as u16).to_le_bytes());
+    out[10..12].copy_from_slice(&((h - 1) as u16).to_le_bytes());
+    let (xd, yd) = img.meta.dpi.map_or((72, 72), |(x, y)| (x.round().clamp(1.0, 65535.0) as u16, y.round().clamp(1.0, 65535.0) as u16));
+    out[12..14].copy_from_slice(&xd.to_le_bytes());
+    out[14..16].copy_from_slice(&yd.to_le_bytes());
+    out[65] = planes as u8;
+    out[66..68].copy_from_slice(&(stride as u16).to_le_bytes());
+    out[68..70].copy_from_slice(&1u16.to_le_bytes());
+    let mut row = vec![0u8; stride];
+    for y in 0..h {
+        for p in 0..planes {
+            for x in 0..w {
+                row[x] = img.data()[(y * w + x) * planes + p];
+            }
+            rle_plane(&row, &mut out);
+        }
+    }
+    if planes == 1 {
+        out.push(0x0c);
+        for v in 0..=255u8 {
+            out.extend_from_slice(&[v; 3]);
+        }
+    }
+    Ok(out)
 }

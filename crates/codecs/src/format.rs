@@ -35,6 +35,20 @@ pub enum Format {
     Dpx,
     /// Kodak Cineon (`.cin`, the 10-bit film-scan format DPX grew from): read-only.
     Cineon,
+    /// Sun Raster (`.ras`): 1/8-bit (colour-mapped) and 24/32-bit.
+    SunRaster,
+    /// Silicon Graphics image (`.sgi`, `.rgb`, `.bw`): 8/16-bit, 1–4 channels, raw or RLE.
+    Sgi,
+    /// X BitMap: C-source 1-bit images.
+    Xbm,
+    /// Wireless Bitmap (type 0): 1-bit.
+    Wbmp,
+    /// Farbfeld: 16-bit RGBA.
+    Farbfeld,
+    /// X Window Dump (version 7).
+    Xwd,
+    /// Alias|Wavefront PIX: RLE, 24-bit or 8-bit.
+    AliasPix,
 }
 
 /// What a format can hold **and** what this crate reads/writes for it.
@@ -68,10 +82,6 @@ pub struct FormatCaps {
 pub const ASYMMETRIC_EXCEPTIONS: &[(Format, &str)] = &[
     (Format::Xpm, "XPM is a legacy Unix icon interchange format. Reading existing XPM icons is supported; writing modern image assets should use PNG instead."),
     (
-        Format::Pcx,
-        "PCX is supported for opening legacy paint and clipart assets. New files should use PNG; writing obsolete indexed and planar variants is intentionally not provided.",
-    ),
-    (
         Format::Dds,
         "DDS is supported for opening game and 3D textures. Writing one well means choosing a block compression and generating mip levels, which belongs in a texture export, not Save As.",
     ),
@@ -104,7 +114,7 @@ const TIFF_LAYOUTS: &[ChannelLayout] = &[L::Gray, L::GrayA, L::Rgb, L::Rgba, L::
 
 impl Format {
     /// Every format known to the crate (enabled or not).
-    pub const ALL: [Format; 20] = [
+    pub const ALL: [Format; 27] = [
         Format::Png,
         Format::Jpeg,
         Format::Tiff,
@@ -125,6 +135,13 @@ impl Format {
         Format::Fits,
         Format::Dpx,
         Format::Cineon,
+        Format::SunRaster,
+        Format::Sgi,
+        Format::Xbm,
+        Format::Wbmp,
+        Format::Farbfeld,
+        Format::Xwd,
+        Format::AliasPix,
     ];
 
     pub fn caps(self) -> FormatCaps {
@@ -159,6 +176,13 @@ impl Format {
             Format::Fits => "FITS",
             Format::Dpx => "DPX",
             Format::Cineon => "Cineon",
+            Format::SunRaster => "Sun Raster",
+            Format::Sgi => "SGI",
+            Format::Xbm => "XBM",
+            Format::Wbmp => "WBMP",
+            Format::Farbfeld => "Farbfeld",
+            Format::Xwd => "XWD",
+            Format::AliasPix => "Alias PIX",
         }
     }
 
@@ -186,6 +210,13 @@ impl Format {
             Format::Fits => &["fits", "fit", "fts"],
             Format::Dpx => &["dpx"],
             Format::Cineon => &["cin"],
+            Format::SunRaster => &["ras", "sun"],
+            Format::Sgi => &["sgi", "rgb", "rgba", "bw"],
+            Format::Xbm => &["xbm", "bitmap"],
+            Format::Wbmp => &["wbmp"],
+            Format::Farbfeld => &["ff"],
+            Format::Xwd => &["xwd"],
+            Format::AliasPix => &["pix"],
         }
     }
 
@@ -211,6 +242,13 @@ impl Format {
             Format::Fits => "image/fits",
             Format::Dpx => "image/x-dpx",
             Format::Cineon => "image/x-cin",
+            Format::SunRaster => "image/x-sun-raster",
+            Format::Sgi => "image/x-sgi",
+            Format::Xbm => "image/x-xbitmap",
+            Format::Wbmp => "image/vnd.wap.wbmp",
+            Format::Farbfeld => "image/x-farbfeld",
+            Format::Xwd => "image/x-xwindowdump",
+            Format::AliasPix => "image/x-alias-pix",
         }
     }
 
@@ -253,7 +291,7 @@ pub fn caps(format: Format) -> FormatCaps {
         Format::Tga => FormatCaps { layouts: RGB_GRAY, ..base },
         Format::Ico => FormatCaps { layouts: &[L::Rgba], ..base },
         Format::Pnm => FormatCaps { depths: &[S::U8, S::U16, S::F32], layouts: ALL_LAYOUTS, ..base },
-        Format::Pcx => FormatCaps { read: true, write: false, layouts: &[L::Rgb], alpha: false, ..base },
+        Format::Pcx => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, dpi: true, ..base },
         Format::Xpm => FormatCaps { read: true, write: false, layouts: &[L::Rgba], ..base },
         Format::Dds => FormatCaps { read: true, write: false, layouts: RGB_GRAY, ..base },
         Format::Qoi => base,
@@ -267,6 +305,12 @@ pub fn caps(format: Format) -> FormatCaps {
         // `text`: the DPX header fields only (see `fidelity_warnings_with`).
         Format::Dpx => FormatCaps { depths: &[S::U8, S::U16], layouts: &[L::Gray, L::Rgb, L::Rgba], text: true, ..base },
         Format::Cineon => FormatCaps { read: true, write: false, depths: &[S::U16], layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
+        Format::SunRaster => FormatCaps { layouts: &[L::Gray, L::Rgb, L::Rgba], ..base },
+        Format::Sgi => FormatCaps { depths: &[S::U8, S::U16], layouts: RGB_GRAY, ..base },
+        Format::Xbm | Format::Wbmp => FormatCaps { layouts: &[L::Gray], alpha: false, lossy: true, ..base },
+        Format::Farbfeld => FormatCaps { depths: &[S::U16], layouts: &[L::Rgba], ..base },
+        Format::Xwd => FormatCaps { layouts: &[L::Rgb], alpha: false, ..base },
+        Format::AliasPix => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
     }
 }
 
@@ -324,6 +368,21 @@ pub fn detect(bytes: &[u8]) -> Option<Format> {
     if crate::codecs::dpx::is_cineon(b) {
         return Some(Format::Cineon);
     }
+    if b.starts_with(&crate::codecs::sunras::MAGIC) {
+        return Some(Format::SunRaster);
+    }
+    if crate::codecs::sgi::looks_like_sgi(b) {
+        return Some(Format::Sgi);
+    }
+    if b.starts_with(b"farbfeld") {
+        return Some(Format::Farbfeld);
+    }
+    if crate::codecs::xwd::looks_like_xwd(b) {
+        return Some(Format::Xwd);
+    }
+    if crate::codecs::xbm::looks_like_xbm(b) {
+        return Some(Format::Xbm);
+    }
     if b.starts_with(b"SIMPLE  =") {
         return Some(Format::Fits);
     }
@@ -333,8 +392,14 @@ pub fn detect(bytes: &[u8]) -> Option<Format> {
     if crate::codecs::pcx::looks_like_pcx(b) {
         return Some(Format::Pcx);
     }
+    if crate::codecs::xbm::looks_like_wbmp(b) {
+        return Some(Format::Wbmp);
+    }
     if looks_like_tga(b) {
         return Some(Format::Tga);
+    }
+    if crate::codecs::aliaspix::looks_like_pix(b) {
+        return Some(Format::AliasPix);
     }
     None
 }

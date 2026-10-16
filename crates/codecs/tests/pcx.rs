@@ -27,11 +27,14 @@ fn rle_row(out: &mut Vec<u8>, row: &[u8]) {
 }
 
 #[test]
-fn pcx_is_readable_but_not_writable() {
+fn pcx_is_read_and_written_with_dpi() {
     assert_eq!(from_extension("archive.PCX"), Some(Format::Pcx));
-    assert!(caps(Format::Pcx).read && !caps(Format::Pcx).write);
-    let img = photocraft_codecs::Image::from_u8(1, 1, ChannelLayout::Rgb, vec![0, 0, 0]).unwrap();
-    assert!(matches!(encode(&img, Format::Pcx, &Default::default()), Err(CodecError::Unsupported { .. })));
+    assert!(caps(Format::Pcx).read && caps(Format::Pcx).write);
+    let mut img = photocraft_codecs::Image::from_u8(3, 1, ChannelLayout::Rgb, vec![0xff, 0xc1, 0, 0xc0, 0xc0, 0xc0, 1, 2, 3]).unwrap();
+    img.meta.dpi = Some((300.0, 150.0));
+    let b = encode(&img, Format::Pcx, &Default::default()).unwrap();
+    let back = decode(&b).unwrap();
+    assert_eq!((back.data(), back.meta.dpi), (img.data(), Some((300.0, 150.0))));
 }
 
 #[test]

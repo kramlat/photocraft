@@ -37,10 +37,30 @@ Wave, Wind, Emboss, Find Edges, Add Noise, Custom, Color to Alpha, Channel Mixer
 Photo Filter, Invert, Posterize, Threshold, Shadows/Highlights, Lens Flare, Clouds, Fibers…) are not
 listed.
 
+## File formats
+
+GIMP's `plug-ins/` file loaders and savers against PhotoCraft. ✅ = read and write done (or the
+direction GIMP offers), ⬜ = to do. Adobe column: whether Photoshop has it too (see
+[file-format-parity.md](file-format-parity.md)).
+
+| GIMP format | Status | Adobe |
+|---|---|---|
+| PNG, JPEG, TIFF, WebP, GIF, BMP, TGA, ICO, QOI, PNM, EXR, HDR, FITS, DDS (r), HEIF (r), XPM (r), PSD, SVG (r), OpenRaster, XCF, PCX | ✅ | most |
+| `.gbr`, `.gih`, `.pat` | ✅ (import) | `.pat` only |
+| Sun Raster, SGI, XBM, Farbfeld, XWD, Alias PIX | ✅ | no |
+| WBMP | ✅ | yes |
+| Cineon (r) | ✅ | yes |
+| PDF (load), PostScript/EPS | ⬜ | yes (PDF, EPS) |
+| JPEG XL, JPEG 2000 | ⬜ | JPEG 2000 yes, JXL yes |
+| DICOM, Amiga IFF | ⬜ | yes |
+| Photoshop Raw / raw data | ⬜ | yes |
+| ICNS, PSP, TIM, PVR, FLI/FLC, CEL, PIX (Dr. Halo), MacPaint, WMF, XMC, FAX G3, Seattle FilmWorks, MNG | ⬜ | no |
+| Export-only: C source, HTML table, ASCII art | ⬜ | no |
+
 ## Next
 
-The filter list is complete. Next: the testing in [parity-testing.md](parity-testing.md), then the
-remaining file formats.
+The filter list is complete. Next: the testing in [parity-testing.md](parity-testing.md), and the
+remaining file formats in the table above.
 
 ## Licence note
 

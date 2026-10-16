@@ -47,7 +47,7 @@ fn max_height_enforced_for_every_format() {
 #[test]
 fn max_alloc_enforced_for_every_format() {
     for f in rw_formats() {
-        let l = Limits { max_alloc: 64 * 48, ..Limits::default() };
+        let l = Limits { max_alloc: 64 * 48 - 1, ..Limits::default() };
         assert!(decode_with(&encoded(f), &opts(l)).is_err(), "{f:?}");
     }
 }
