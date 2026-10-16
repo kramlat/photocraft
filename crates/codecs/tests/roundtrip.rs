@@ -165,6 +165,12 @@ mod pcx {
 mod jxl {
     cases!(Format::Jxl);
 }
+mod iff {
+    cases!(Format::Iff);
+}
+mod dicom {
+    cases!(Format::Dicom);
+}
 mod jp2 {
     cases!(Format::Jp2);
 }

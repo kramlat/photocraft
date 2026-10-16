@@ -52,9 +52,10 @@ direction GIMP offers), ⬜ = to do. Adobe column: whether Photoshop has it too 
 | Cineon (r) | ✅ | yes |
 | PDF (load), PostScript/EPS | ⬜ | yes (PDF, EPS) |
 | JPEG XL (lossless write), JPEG 2000 (lossless write) | ✅ | yes, yes |
-| DICOM, Amiga IFF | ⬜ | yes |
+| DICOM, Amiga IFF | ✅ | yes |
 | Photoshop Raw / raw data | ⬜ | yes |
-| ICNS, PSP, TIM, PVR, FLI/FLC, CEL, PIX (Dr. Halo), MacPaint, WMF, XMC, FAX G3, Seattle FilmWorks, MNG | ⬜ | no |
+| ICNS (read) | ✅ | no |
+| PSP, TIM, PVR, FLI/FLC, CEL, PIX (Dr. Halo), MacPaint, WMF, XMC, FAX G3, Seattle FilmWorks, MNG | ⬜ | no |
 | Export-only: C source, HTML table, ASCII art | ⬜ | no |
 
 ## Next

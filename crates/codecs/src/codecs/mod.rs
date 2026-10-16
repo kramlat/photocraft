@@ -1,6 +1,7 @@
 pub(crate) mod aliaspix;
 pub(crate) mod dds;
 pub(crate) mod deep_exr;
+pub(crate) mod dicom;
 pub(crate) mod dpx;
 pub(crate) mod exr;
 pub(crate) mod exr_cryptomatte;
@@ -8,6 +9,8 @@ pub(crate) mod farbfeld;
 pub(crate) mod fits;
 pub(crate) mod gif_frames;
 pub(crate) mod heif;
+pub(crate) mod icns;
+pub(crate) mod iff;
 pub(crate) mod j2k;
 pub(crate) mod jp2;
 pub(crate) mod jpeg;

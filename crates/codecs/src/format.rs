@@ -53,6 +53,12 @@ pub enum Format {
     Jxl,
     /// JPEG 2000 (JP2 and bare codestreams).
     Jp2,
+    /// Apple icon: reads the largest picture; read-only.
+    Icns,
+    /// Amiga IFF ILBM/PBM: indexed, EHB, HAM and 24/32-bit; writes 24-bit and 8-bit gray.
+    Iff,
+    /// DICOM: first frame; uncompressed, RLE, JPEG baseline and JPEG 2000 read, uncompressed write.
+    Dicom,
 }
 
 /// What a format can hold **and** what this crate reads/writes for it.
@@ -86,6 +92,10 @@ pub struct FormatCaps {
 pub const ASYMMETRIC_EXCEPTIONS: &[(Format, &str)] = &[
     (Format::Xpm, "XPM is a legacy Unix icon interchange format. Reading existing XPM icons is supported; writing modern image assets should use PNG instead."),
     (
+        Format::Icns,
+        "ICNS is supported for opening Apple icons (the largest picture is read). An icon file holds a handful of fixed square sizes, so writing one is an icon-export job, not Save As; export a 512 or 1024 pixel PNG instead.",
+    ),
+    (
         Format::Dds,
         "DDS is supported for opening game and 3D textures. Writing one well means choosing a block compression and generating mip levels, which belongs in a texture export, not Save As.",
     ),
@@ -118,7 +128,7 @@ const TIFF_LAYOUTS: &[ChannelLayout] = &[L::Gray, L::GrayA, L::Rgb, L::Rgba, L::
 
 impl Format {
     /// Every format known to the crate (enabled or not).
-    pub const ALL: [Format; 29] = [
+    pub const ALL: [Format; 32] = [
         Format::Png,
         Format::Jpeg,
         Format::Tiff,
@@ -148,6 +158,9 @@ impl Format {
         Format::AliasPix,
         Format::Jxl,
         Format::Jp2,
+        Format::Dicom,
+        Format::Iff,
+        Format::Icns,
     ];
 
     pub fn caps(self) -> FormatCaps {
@@ -191,6 +204,9 @@ impl Format {
             Format::AliasPix => "Alias PIX",
             Format::Jxl => "JPEG XL",
             Format::Jp2 => "JPEG 2000",
+            Format::Dicom => "DICOM",
+            Format::Iff => "Amiga IFF",
+            Format::Icns => "ICNS",
         }
     }
 
@@ -227,6 +243,9 @@ impl Format {
             Format::AliasPix => &["pix"],
             Format::Jxl => &["jxl"],
             Format::Jp2 => &["jp2", "j2k", "j2c", "jpf", "jpx"],
+            Format::Dicom => &["dcm", "dicom", "dic"],
+            Format::Iff => &["iff", "ilbm", "lbm", "ham"],
+            Format::Icns => &["icns"],
         }
     }
 
@@ -261,6 +280,9 @@ impl Format {
             Format::AliasPix => "image/x-alias-pix",
             Format::Jxl => "image/jxl",
             Format::Jp2 => "image/jp2",
+            Format::Dicom => "image/x-dicom",
+            Format::Iff => "image/x-ilbm",
+            Format::Icns => "image/x-icns",
         }
     }
 
@@ -324,6 +346,9 @@ pub fn caps(format: Format) -> FormatCaps {
         Format::Xwd => FormatCaps { layouts: &[L::Rgb], alpha: false, ..base },
         Format::AliasPix => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
         Format::Jxl => FormatCaps { read: cfg!(not(target_arch = "wasm32")), depths: &[S::U8, S::U16], layouts: RGB_GRAY, icc: true, ..base },
+        Format::Icns => FormatCaps { write: false, layouts: RGB_GRAY, ..base },
+        Format::Iff => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
+        Format::Dicom => FormatCaps { depths: &[S::U8, S::U16], layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
         Format::Jp2 => FormatCaps { depths: &[S::U16], layouts: RGB_GRAY, icc: true, ..base },
     }
 }
@@ -396,6 +421,15 @@ pub fn detect(bytes: &[u8]) -> Option<Format> {
     }
     if crate::codecs::xbm::looks_like_xbm(b) {
         return Some(Format::Xbm);
+    }
+    if crate::codecs::icns::is_icns(b) {
+        return Some(Format::Icns);
+    }
+    if crate::codecs::iff::is_iff(b) {
+        return Some(Format::Iff);
+    }
+    if crate::codecs::dicom::is_dicom(b) {
+        return Some(Format::Dicom);
     }
     if crate::codecs::jxl::is_jxl(b) {
         return Some(Format::Jxl);

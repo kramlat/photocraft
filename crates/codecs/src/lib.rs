@@ -44,7 +44,7 @@ pub use crate::resolution::{exif_resolution, export_exif, export_xmp, photoshop_
 pub use crate::source_settings::{WebpEncoding, jpeg_quality, webp_encoding};
 pub use half::f16;
 
-use crate::codecs::{aliaspix, dds, dpx, exr, farbfeld, fits, heif, jp2, jpeg, jxl, pcx, png, pnm, sgi, sunras, tiff, via_image, webp, xbm, xpm, xwd};
+use crate::codecs::{aliaspix, dds, dicom, dpx, exr, farbfeld, fits, heif, icns, iff, jp2, jpeg, jxl, pcx, png, pnm, sgi, sunras, tiff, via_image, webp, xbm, xpm, xwd};
 
 /// Detect the format and decode with default [`Limits`].
 pub fn decode(bytes: &[u8]) -> Result<Image, CodecError> {
@@ -85,6 +85,9 @@ pub fn decode_as_with(format: Format, bytes: &[u8], opts: &DecodeOptions) -> Res
         Format::AliasPix => aliaspix::decode(bytes, l),
         Format::Jxl => jxl::decode(bytes, l),
         Format::Jp2 => jp2::decode(bytes, l),
+        Format::Dicom => dicom::decode(bytes, l),
+        Format::Iff => iff::decode(bytes, l),
+        Format::Icns => icns::decode(bytes, l),
         Format::Xpm => xpm::decode(bytes, l),
         Format::Dds => dds::decode(bytes, l),
         Format::Fits => fits::decode(bytes, l),
@@ -269,6 +272,9 @@ pub fn encode(image: &Image, format: Format, opts: &EncodeOptions) -> Result<Vec
         Format::AliasPix => aliaspix::encode(image, plan, opts),
         Format::Jxl => jxl::encode(image, plan, opts),
         Format::Jp2 => jp2::encode(image, plan, opts),
+        Format::Dicom => dicom::encode(image, plan, opts),
+        Format::Iff => iff::encode(image, plan, opts),
+        Format::Icns => Err(CodecError::unsupported(format, "ICNS is import-only; save as PNG instead")),
         Format::Xpm => Err(CodecError::unsupported(format, "XPM is import-only; save as PNG instead")),
         Format::Dds => Err(CodecError::unsupported(format, "DDS is import-only; save as PNG instead")),
         Format::Fits => fits::encode(image, plan, opts),

@@ -11,7 +11,7 @@ dispatch), `crates/psd`, `crates/raw`, `crates/heif`, `crates/affinity`. More de
 [raster formats](../book/src/formats/raster-formats.md), [PSD/PSB](../book/src/formats/psd-psb.md),
 [OpenRaster](ora.md), [Paint.NET](pdn.md).
 
-**Summary.** By count, 17 of Photoshop's 31 formats are fully supported in the directions Photoshop supports them, 4 partially (61%,
+**Summary.** By count, 19 of Photoshop's 31 formats are fully supported in the directions Photoshop supports them, 4 partially (68%,
 measured). Weighted by use (PSD/PSB 40%, JPEG 15%, PNG 15%, TIFF 10%, camera raw 8%, WebP/AVIF/
 HEIF/JXL 6%, PDF 3%, everything else 3%), presence is ~80% and ready-for-real-work ~60%: PSD
 is broad but not yet reliable against Photoshop (gap G1), and Photoshop PDF, AVIF read and JPEG
@@ -44,10 +44,10 @@ XL are missing (gap G10). Remaining: 300–500 h including PSD fidelity.
 | SVG | R (rasterize) | yes, as editable shape layers or a vector smart object | no | Better than Photoshop for editing; gradients approximated (FILE-215-9) |
 | JPEG 2000 | R/W | yes, JP2 and bare codestreams, 1–4 components, up to 16 bits, palettes resolved, ICC kept (hayro-jpeg2000) | yes, lossless JP2, 16-bit components, gray/RGB with alpha through a `cdef` box (a fork of pure_jpeg2k extended to several components) | Checked against OpenJPEG both ways; no lossy (9/7) or tiled write, one layer |
 | Cineon / DPX | R (DPX), R/W (CIN) | DPX: luma, RGB, RGBA at 8/10/12/16 bits, both byte orders (#1049); Cineon: 10-bit gray/RGB, read-only | DPX: 8/10/12/16 bits (`dpxBits`, `--dpx-bits`); Cineon no | Writes DPX, which Photoshop only reads; header fields (creator, project, copyright, transfer, frame rate, time code…) round-trip; Cineon read-only, no RLE |
-| DICOM | R/W | no | no | |
+| DICOM | R/W | yes: first frame; uncompressed (implicit and explicit little-endian), RLE, encapsulated JPEG baseline and JPEG 2000; MONOCHROME1/2, RGB, YBR_FULL, palette; rescale and window applied | yes, uncompressed Secondary Capture, gray or RGB, 8/16-bit | Written files read back identically in ImageMagick; no JPEG lossless, no big-endian, no multi-frame, no patient/study tags kept |
 | PCX | R/W | yes | yes | 8-bit gray (one plane, gray palette) and 24-bit RGB (three planes), RLE; reads 1/2/4/8-bit palettes too; DPI kept |
 | Pixar | R/W | no | no | |
-| Amiga IFF | R/W | no | no | |
+| Amiga IFF | R/W | yes: ILBM and PBM, 1–8 planes, EHB, HAM6/8, 24/32-bit, mask and transparent colour, ByteRun1 | yes, 24-bit and 8-bit gray, ByteRun1 | Read paths checked with hand-built files (no Amiga tool here) |
 | Wireless Bitmap | R/W | yes | yes | Type 0 (1-bit); thresholded at one half on save |
 | MPO / JPS (stereo) | R/W | no | no | |
 | PICT | R | no | no | Legacy |
@@ -91,6 +91,7 @@ D5100 colour profile. Counts and the G14 estimate are unchanged.
 | OpenRaster `.ora` | yes | yes | [ora.md](ora.md) |
 | GIMP `.xcf` | yes | yes | [xcf.md](xcf.md) |
 | ICO, QOI | yes | yes | |
+| Apple `.icns` | yes | no | The largest picture (PNG, JPEG 2000 or classic RLE with mask); an icon file holds fixed square sizes, so writing is an icon-export job, not Save As |
 | Sun Raster `.ras`, SGI `.sgi`/`.rgb`/`.bw`, Farbfeld `.ff`, X Window Dump `.xwd`, Alias PIX `.pix`, XBM `.xbm` | yes | yes | GIMP formats, written clean-room from the public specifications. Sun: 1/8/24/32-bit, raw and RLE (writes 8/24/32). SGI: raw and RLE, 8/16-bit, 1–4 channels (writes RLE). XWD: 1/8/16/24/32-bit (writes 32-bit TrueColor). XBM: X11 and X10, 1-bit |
 | DirectDraw Surface `.dds` | yes | no | Top mip level of a 2D texture: uncompressed RGB, RGBA or luminance, BC1–BC3 (DXT1/3/5), legacy or DX10 header. Cubemaps, arrays, volumes and BC4–BC7 are refused (#1327). Photoshop needs a plug-in |
 | Krita `.kra` (import only), Procreate | no | no | Not in Photoshop either |
@@ -144,6 +145,7 @@ remaining gaps in #1606 stay tracked with per-sample corpus ceilings.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-16 | minor | DICOM and Amiga IFF read and write, ICNS read |
 | 2026-10-16 | minor | JPEG XL and JPEG 2000 read and write (JXL and JP2 writes are lossless) |
 | 2026-10-16 | minor | Sun Raster, SGI, XBM, WBMP, Farbfeld, XWD and Alias PIX read and write; PCX now writes (Photoshop R/W); open-folder batch lists every readable codec extension |
 | 2026-10-14 | minor | PSD smart filter masks: Photoshop stores a smart object's filtered pixels without its filter mask and mixes the unfiltered ones (`FEid`) back in; import now mixes them and export writes them that way, so sf-filter-mask-hard, -gradient and sf-stack-blend-and-mask pass; Photoshop-oracle floor 185 → 188 of 258 |
