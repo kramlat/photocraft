@@ -703,3 +703,51 @@ fn an_actions_file_that_failed_to_load_is_not_overwritten() {
     assert_eq!(mem.files.lock().unwrap().get(ACTIONS_FILE), Some(&newer), "an actions file the store could not read was overwritten");
     assert!(!s.preset_store.as_mut().unwrap().take_warnings().is_empty());
 }
+
+/// A pattern that is not a built-in (a renamed copy of one keeps its pixels).
+fn user_pattern(name: &str) -> Pattern2 {
+    let b = crate::pattern_cmds::builtin().remove(1);
+    photocraft_doc::Pattern::new(name, b.surface, b.width, b.height)
+}
+type Pattern2 = photocraft_doc::Pattern;
+
+#[test]
+fn imported_patterns_and_their_groups_survive_a_restart() {
+    let dir = TempDir::new("patterns");
+    let (mut s, _) = session(&dir);
+    let p = user_pattern("Blue Weave");
+    let id = p.id.clone();
+    s.patterns.items.push(p);
+    s.presets.pattern_groups.push(crate::presets::Group::new("From GIMP", vec![id.clone()]));
+    s.sync_preset_store();
+    assert!(dir.files().contains(&PATTERNS_FILE.to_string()));
+    let saved_groups = s.presets.to_json(&s);
+
+    // A new run: the preferences load first, then the store attaches.
+    let mut t = Session::new();
+    t.load_presets_json(saved_groups);
+    let w = t.attach_preset_store(open_dir(&dir.0));
+    assert!(w.is_empty(), "{w:?}");
+    assert!(t.patterns.items.iter().any(|q| q.id == id && q.name == "Blue Weave"));
+    let g = t.presets.pattern_groups.iter().find(|g| g.name == "From GIMP").expect("group kept");
+    assert_eq!(g.items, [id.clone()]);
+
+    // Deleting it is saved too, and the built-ins are never written.
+    t.patterns.items.retain(|q| q.id != id);
+    t.sync_preset_store();
+    let (u, _) = session(&dir);
+    assert!(!u.patterns.items.iter().any(|q| q.id == id));
+    assert_eq!(u.patterns.items.len(), crate::pattern_cmds::builtin().len());
+}
+
+#[test]
+fn an_unreadable_pattern_file_is_left_alone() {
+    let dir = TempDir::new("badpat");
+    std::fs::create_dir_all(&dir.0).unwrap();
+    std::fs::write(dir.0.join(PATTERNS_FILE), b"garbage").unwrap();
+    let (mut s, w) = session(&dir);
+    assert!(w.iter().any(|m| m.contains("patterns")), "{w:?}");
+    s.patterns.items.push(user_pattern("New"));
+    s.sync_preset_store();
+    assert_eq!(std::fs::read(dir.0.join(PATTERNS_FILE)).unwrap(), b"garbage");
+}

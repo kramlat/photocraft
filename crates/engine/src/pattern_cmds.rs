@@ -94,6 +94,12 @@ pub fn builtin() -> Vec<Pattern> {
     ]
 }
 
+/// Ids of the built-in patterns (they are regenerated on start and never saved).
+pub(crate) fn builtin_ids() -> &'static std::collections::HashSet<String> {
+    static IDS: std::sync::OnceLock<std::collections::HashSet<String>> = std::sync::OnceLock::new();
+    IDS.get_or_init(|| builtin().into_iter().map(|p| p.id).collect())
+}
+
 fn bad(cmd: &str, msg: impl Into<String>) -> EngineError {
     EngineError::BadParams { cmd: cmd.into(), msg: msg.into() }
 }
