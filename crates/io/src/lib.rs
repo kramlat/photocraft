@@ -51,6 +51,8 @@ pub mod linked;
 mod multichannel_map;
 mod ora;
 pub use ora::losses as ora_losses;
+mod xcf;
+pub use xcf::losses as xcf_losses;
 pub mod pattern_map;
 pub mod pdf;
 mod pdn;
@@ -92,6 +94,9 @@ pub enum IoError {
     /// OpenRaster read failure.
     #[error("OpenRaster: {0}")]
     Ora(String),
+    /// GIMP XCF read or write failure.
+    #[error("XCF: {0}")]
+    Xcf(String),
     /// PSD parse/write failure.
     #[error("PSD: {0}")]
     Psd(#[from] PsdError),
@@ -297,6 +302,9 @@ fn import_stages(name: &str, bytes: &[u8], ctl: &photocraft_raster::Interrupt, m
     if ora::is_ora(bytes) || has_extension(name, "ora") {
         return ora::import(name, bytes, ctl);
     }
+    if xcf::is_xcf(bytes) || has_extension(name, "xcf") {
+        return xcf::import(name, bytes, ctl);
+    }
     // Krita files are ZIP containers. A recognized raster signature still wins over a
     // misleading .kra suffix (as with SVG imports).
     if kra::is_kra(bytes) || (kra::EXTENSIONS.iter().any(|e| has_extension(name, e)) && photocraft_codecs::detect(bytes).is_none()) {
@@ -396,6 +404,9 @@ fn export_stages(doc: &Document, name_or_ext: &str, opts: &ExportOptions, ctl: &
     }
     if ext == "ora" {
         return ora::export(doc);
+    }
+    if ext == "xcf" {
+        return xcf::export(doc);
     }
     if ext == "pdf" {
         return pdf::export(doc);

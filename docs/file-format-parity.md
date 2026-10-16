@@ -89,9 +89,10 @@ D5100 colour profile. Counts and the G14 estimate are unchanged.
 | Affinity `.af`, `.afphoto`, `.afdesign`, `.afpub` | yes | no | See below |
 | Paint.NET `.pdn` | yes | no | [pdn.md](pdn.md) |
 | OpenRaster `.ora` | yes | yes | [ora.md](ora.md) |
+| GIMP `.xcf` | yes | yes | [xcf.md](xcf.md) |
 | ICO, QOI | yes | yes | |
 | DirectDraw Surface `.dds` | yes | no | Top mip level of a 2D texture: uncompressed RGB, RGBA or luminance, BC1–BC3 (DXT1/3/5), legacy or DX10 header. Cubemaps, arrays, volumes and BC4–BC7 are refused (#1327). Photoshop needs a plug-in |
-| Krita `.kra`, GIMP `.xcf`, Procreate | no | no | Not in Photoshop either |
+| Krita `.kra` (import only), Procreate | no | no | Not in Photoshop either |
 
 ### Affinity import notes (moved from `roadmap.md`)
 

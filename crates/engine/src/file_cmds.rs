@@ -119,7 +119,7 @@ pub fn list_images(dir: &str) -> Result<Vec<String>> {
 /// Extensions the batch commands pick up from a folder.
 #[cfg(not(target_arch = "wasm32"))]
 const OPENABLE: &[&str] = &[
-    "pdn", "ora", "kra", "krz", "psd", "psb", "pcraft", "png", "jpg", "jpeg", "tif", "tiff", "webp", "gif", "bmp", "tga", "exr", "hdr", "qoi", "ico", "pnm",
+    "pdn", "ora", "xcf", "kra", "krz", "psd", "psb", "pcraft", "png", "jpg", "jpeg", "tif", "tiff", "webp", "gif", "bmp", "tga", "exr", "hdr", "qoi", "ico", "pnm",
     "ppm", "pgm", "fits", "fit", "fts", "dpx", "heic", "heif", "hif", "dng", "cr2", "nef", "nrw", "arw", "pef", "svg", "svgz", "af", "afdesign", "afphoto",
     "afpub",
 ];
@@ -161,10 +161,10 @@ pub fn saves_in_place(path: &str) -> bool {
 }
 
 /// Whether the lower-case extension `ext` names a layered document format (PSD, PSB, OpenRaster,
-/// .pcraft). A save to one becomes the document's file; any other format is a copy for automation
+/// GIMP XCF, .pcraft). A save to one becomes the document's file; any other format is a copy for automation
 /// saves, desktop and headless alike (#1547, #2579).
 pub fn layered_extension(ext: &str) -> bool {
-    matches!(ext, "psd" | "psb" | "pcraft" | "ora")
+    matches!(ext, "psd" | "psb" | "pcraft" | "ora" | "xcf")
 }
 
 /// Whether a file in format `ext` (lower-case) holds the whole of `doc`, so it can be the
@@ -176,6 +176,7 @@ pub fn holds(doc: &photocraft_doc::Document, ext: &str) -> bool {
     match ext {
         "psd" | "psb" | "pcraft" => true,
         "ora" => photocraft_io::ora_losses(doc).is_empty(),
+        "xcf" => photocraft_io::xcf_losses(doc).is_empty(),
         _ => false,
     }
 }
@@ -190,6 +191,7 @@ pub fn holds_at(doc: &photocraft_doc::Document, path: &str) -> bool {
 pub fn losses_at(doc: &photocraft_doc::Document, path: &str) -> Vec<String> {
     match extension(path).as_deref() {
         Some("ora") => photocraft_io::ora_losses(doc),
+        Some("xcf") => photocraft_io::xcf_losses(doc),
         _ => Vec::new(),
     }
 }
