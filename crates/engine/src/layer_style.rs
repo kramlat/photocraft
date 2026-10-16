@@ -64,9 +64,51 @@ fn gradient_stops(p: &Value, from: Color, to: Color) -> Vec<(f32, Color)> {
         None => stops,
     }
 }
+/// The `stops` param: `[[location 0..=1, "#rrggbb"], …]` (at least two, any order). `None` when
+/// absent or malformed, so the end colours (`from`/`to`) apply instead.
+fn stops_param(p: &Value) -> Option<Vec<(f32, Color)>> {
+    let a = p.get("stops")?.as_array()?;
+    let mut out: Vec<(f32, Color)> = a
+        .iter()
+        .filter_map(|s| {
+            let s = s.as_array()?;
+            let loc = s.first()?.as_f64().filter(|l| l.is_finite())? as f32;
+            let c = color_of(&json!({ "c": s.get(1)? }), "c")?;
+            Some((loc.clamp(0.0, 1.0), c))
+        })
+        .collect();
+    if out.len() < 2 || out.len() != a.len() || out.len() > 64 {
+        return None;
+    }
+    out.sort_by(|x, y| x.0.total_cmp(&y.0));
+    Some(out)
+}
+
+/// The `opacityStops` param: `[[location 0..=1, opacity 0..=100], …]`; empty = fully opaque.
+/// `None` when absent or malformed.
+fn opacity_stops_param(p: &Value) -> Option<Vec<(f32, f32)>> {
+    let a = p.get("opacityStops")?.as_array()?;
+    let mut out: Vec<(f32, f32)> = a
+        .iter()
+        .filter_map(|s| {
+            let s = s.as_array()?;
+            let loc = s.first()?.as_f64().filter(|l| l.is_finite())? as f32;
+            let o = s.get(1)?.as_f64().filter(|o| o.is_finite())? as f32;
+            Some((loc.clamp(0.0, 1.0), (o / 100.0).clamp(0.0, 1.0)))
+        })
+        .collect();
+    if out.len() != a.len() || out.len() > 64 || out.len() == 1 {
+        return None;
+    }
+    out.sort_by(|x, y| x.0.total_cmp(&y.0));
+    Some(out)
+}
+
 fn gradient(p: &Value) -> Gradient {
     Gradient {
-        stops: gradient_stops(p, color(p, "from", [0.0; 3]), color(p, "to", [1.0; 3])),
+        stops: stops_param(p).unwrap_or_else(|| gradient_stops(p, color(p, "from", [0.0; 3]), color(p, "to", [1.0; 3]))),
+        opacity_stops: opacity_stops_param(p).unwrap_or_default(),
+        align: b(p, "align", true),
         style: gradient_style(p.get("style").and_then(Value::as_str).unwrap_or("linear")),
         angle: f(p, "angle", 90.0),
         scale: f(p, "scale", 100.0) / 100.0,
@@ -94,7 +136,7 @@ pub fn effect_defaults(kind: &str) -> Value {
         "stroke" => json!({"size": 3, "position": "outside", "blend": "Normal", "opacity": 100, "color": "#000000"}),
         "colorOverlay" => json!({"blend": "Normal", "color": "#ff0000", "opacity": 100}),
         "gradientOverlay" => {
-            json!({"blend": "Normal", "opacity": 100, "from": "#000000", "to": "#ffffff", "reverse": false, "style": "linear", "angle": 90, "scale": 100})
+            json!({"blend": "Normal", "opacity": 100, "from": "#000000", "to": "#ffffff", "stops": [[0.0, "#000000"], [1.0, "#ffffff"]], "opacityStops": [], "reverse": false, "dither": false, "align": true, "style": "linear", "angle": 90, "scale": 100})
         }
         "patternOverlay" => json!({"blend": "Normal", "opacity": 100, "pattern": "", "angle": 0, "scale": 100, "link": true}),
         "bevelEmboss" => {
@@ -565,15 +607,26 @@ fn overlay_gradient(g: &mut Gradient, p: &Value) {
         let to = color_of(p, "to").or(ends.1).unwrap_or(Color::WHITE);
         g.stops = gradient_stops(p, from, to);
     }
-    if let Some(c) = color_of(p, "from")
-        && let Some(first) = g.stops.first_mut()
-    {
-        first.1 = c;
+    if let Some(stops) = stops_param(p) {
+        // Whole stop list from the dialog's gradient editor: the end colours are part of it.
+        g.stops = stops;
+    } else {
+        if let Some(c) = color_of(p, "from")
+            && let Some(first) = g.stops.first_mut()
+        {
+            first.1 = c;
+        }
+        if let Some(c) = color_of(p, "to")
+            && let Some(last) = g.stops.last_mut()
+        {
+            last.1 = c;
+        }
     }
-    if let Some(c) = color_of(p, "to")
-        && let Some(last) = g.stops.last_mut()
-    {
-        last.1 = c;
+    if let Some(o) = opacity_stops_param(p) {
+        g.opacity_stops = o;
+    }
+    if let Some(x) = b_of(p, "align") {
+        g.align = x;
     }
     if let Some(s) = p.get("style").and_then(Value::as_str) {
         g.style = gradient_style(s);
@@ -1011,7 +1064,7 @@ pub fn specs() -> Vec<CommandSpec> {
         style_cmd!(
             "gradientOverlay",
             "Gradient Overlay…",
-            r##"{"from":"#rrggbb","to":"#rrggbb","method":"classic|perceptual|linear|smooth"? (Photoshop's interpolation; omitted: straight stops),"smoothness":0..100=100,"style":"linear|radial|angle|reflected|diamond","angle":deg=90,"scale":10..150=100,"reverse":bool,"opacity":0..100,"blend":str,"add":bool}"##
+            r##"{"from":"#rrggbb","to":"#rrggbb","stops":[[location 0..1,"#rrggbb"],…]? (2..64 colour stops; replaces from/to),"opacityStops":[[location 0..1,opacity 0..100],…]? (transparency stops; [] = opaque),"align":bool=true,"method":"classic|perceptual|linear|smooth"? (Photoshop's interpolation; omitted: straight stops),"smoothness":0..100=100,"style":"linear|radial|angle|reflected|diamond","angle":deg=90,"scale":10..150=100,"reverse":bool,"opacity":0..100,"blend":str,"add":bool}"##
         ),
         style_cmd!(
             "patternOverlay",
@@ -1399,6 +1452,37 @@ mod tests {
         overlay_effect(&mut back, &json!({"contour": "Linear"}));
         let Effect::DropShadow(lin) = &back else { panic!() };
         assert_eq!(lin.contour, Contour::Linear);
+    }
+
+    #[test]
+    fn gradient_overlay_takes_a_full_stop_list_and_keeps_it_through_edits() {
+        let p = json!({
+            "stops": [[1.0, "#0000ff"], [0.0, "#ff0000"], [0.5, "#00ff00"]],
+            "opacityStops": [[0.0, 100], [1.0, 25]],
+            "align": false,
+            "style": "radial"
+        });
+        let mut s = Session::new();
+        s.execute("file.new", json!({"width": 8, "height": 8})).unwrap();
+        s.execute("layer.layerStyle.gradientOverlay", p).unwrap();
+        let st = s.active().unwrap();
+        let fx = st.doc.layer(st.active_layer.unwrap()).unwrap().effects.clone();
+        let Some(Effect::GradientOverlay { gradient: g, .. }) = fx.items.first() else { panic!("{:?}", fx.items) };
+        assert_eq!(g.stops.iter().map(|s| s.0).collect::<Vec<_>>(), [0.0, 0.5, 1.0], "sorted");
+        assert_eq!(g.opacity_stops, [(0.0, 1.0), (1.0, 0.25)]);
+        assert!(!g.align);
+        // An edit that names no stops keeps them (an imported multi-stop gradient survives).
+        let mut kept = Effect::GradientOverlay { common: FxCommon::new(BlendMode::Normal, 1.0), gradient: g.clone(), dither: false };
+        overlay_effect(&mut kept, &json!({"angle": 45, "from": "#ffffff"}));
+        let Effect::GradientOverlay { gradient: after, .. } = &kept else { panic!() };
+        assert_eq!((after.stops.len(), after.angle), (3, 45.0));
+        assert_eq!(after.stops[0].1, Color::WHITE, "from still sets the first colour when no stop list is given");
+        // Malformed lists are ignored, not half-applied.
+        for bad in [json!({"stops": [[0.0, "#ff0000"]]}), json!({"stops": "x"}), json!({"stops": [[0.0, "#ff0000"], ["a", "#000000"]]}), json!({"opacityStops": [[0.0, 100]]})] {
+            let mut e = kept.clone();
+            overlay_effect(&mut e, &bad);
+            assert_eq!(e, kept, "{bad}");
+        }
     }
 
     #[test]

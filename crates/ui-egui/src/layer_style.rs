@@ -23,6 +23,7 @@ use crate::{PhotocraftApp, widgets};
 
 pub(crate) mod color_picker;
 mod contour;
+mod gradient_row;
 
 #[derive(Clone, Copy)]
 enum P {
@@ -37,6 +38,8 @@ enum P {
     /// A contour (thumbnail, preset picker, Contour Editor), with the key of its Anti-aliased
     /// checkbox when the effect has one.
     Contour(Option<&'static str>),
+    /// The gradient editor row: `stops` and `opacityStops` together (key `stops`).
+    Gradient,
 }
 
 /// Effect kinds in Photoshop's list order: (command kind, label, params).
@@ -147,9 +150,13 @@ fn spec(kind: &str) -> &'static [(&'static str, &'static str, P)] {
         "gradientOverlay" => &[
             ("blend", "Blend Mode", P::Blend),
             ("opacity", "Opacity", P::Slider(0.0, 100.0, "%")),
+            ("stops", "Gradient", P::Gradient),
+            // End colours: scripted and picker-driven access; the gradient row edits them as stops.
             ("from", "From", P::Color),
             ("to", "To", P::Color),
             ("reverse", "Reverse", P::Check),
+            ("dither", "Dither", P::Check),
+            ("align", "Align with Layer", P::Check),
             ("style", "Style", P::Choice(GSTYLE)),
             ("angle", "Angle", P::Angle),
             ("scale", "Scale", P::Slider(10.0, 150.0, "%")),
@@ -279,31 +286,29 @@ fn values_of(e: &Effect, light: f32) -> Value {
             set(&mut v, "opacity", json!((common.opacity * 100.0).round()));
             set(&mut v, "color", json!(hex(color)));
         }
-        Effect::GradientOverlay { common, gradient: g, .. } => {
+        Effect::GradientOverlay { common, gradient: g, dither } => {
             set(&mut v, "blend", json!(common.blend.label()));
             set(&mut v, "opacity", json!((common.opacity * 100.0).round()));
-            // The From/To fields model a plain two-stop gradient; anything richer
-            // (more stops, transparency stops) is carried by the snapshot instead.
-            if g.stops.len() == 2 && g.opacity_stops.is_empty() {
-                set(&mut v, "from", json!(hex(&g.stops[0].1)));
-                set(&mut v, "to", json!(hex(&g.stops[1].1)));
-                set(&mut v, "reverse", json!(g.reverse));
-                set(
-                    &mut v,
-                    "style",
-                    json!(match g.style {
-                        photocraft_doc::effects::GradientStyle::Radial => "radial",
-                        photocraft_doc::effects::GradientStyle::Angle => "angle",
-                        photocraft_doc::effects::GradientStyle::Reflected => "reflected",
-                        photocraft_doc::effects::GradientStyle::Diamond => "diamond",
-                        photocraft_doc::effects::GradientStyle::Linear => "linear",
-                    }),
-                );
-                set(&mut v, "angle", json!(g.angle));
-                set(&mut v, "scale", json!((g.scale * 100.0).round()));
-            } else {
-                drop_keys(&mut v, &["from", "to", "reverse", "style", "angle", "scale"]);
-            }
+            // The whole stop list travels as params; the gradient editor row edits it.
+            set(&mut v, "stops", json!(g.stops.iter().map(|(l, c)| json!([l, hex(c)])).collect::<Vec<_>>()));
+            set(&mut v, "opacityStops", json!(g.opacity_stops.iter().map(|(l, o)| json!([l, (o * 100.0).round()])).collect::<Vec<_>>()));
+            drop_keys(&mut v, &["from", "to"]);
+            set(&mut v, "reverse", json!(g.reverse));
+            set(
+                &mut v,
+                "style",
+                json!(match g.style {
+                    photocraft_doc::effects::GradientStyle::Radial => "radial",
+                    photocraft_doc::effects::GradientStyle::Angle => "angle",
+                    photocraft_doc::effects::GradientStyle::Reflected => "reflected",
+                    photocraft_doc::effects::GradientStyle::Diamond => "diamond",
+                    photocraft_doc::effects::GradientStyle::Linear => "linear",
+                }),
+            );
+            set(&mut v, "angle", json!(g.angle));
+            set(&mut v, "scale", json!((g.scale * 100.0).round()));
+            set(&mut v, "dither", json!(dither));
+            set(&mut v, "align", json!(g.align));
         }
         Effect::PatternOverlay { common, name, id, scale, angle, link, phase } => {
             set(&mut v, "blend", json!(common.blend.label()));
@@ -397,6 +402,15 @@ fn set_param(f: &mut Map<String, Value>, id: &str, key: &str, value: Value) {
     if let Some(e) = entry_mut(f, id)
         && let Some(o) = e.get_mut("params").and_then(Value::as_object_mut)
     {
+        // The end colours are the first and last stop of a gradient overlay's stop list.
+        if matches!(key, "from" | "to")
+            && let Some(stops) = o.get_mut("stops").and_then(Value::as_array_mut)
+            && let Some(end) = if key == "from" { stops.first_mut() } else { stops.last_mut() }
+            && let Some(pair) = end.as_array_mut()
+            && pair.len() == 2
+        {
+            pair[1] = value.clone();
+        }
         o.insert(key.into(), value);
     }
     if let Some(angle) = shared_angle {
@@ -967,6 +981,9 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
                 }
             }
             for &(key, label, kind_p) in spec(&sel_kind) {
+                if sel_kind == "gradientOverlay" && matches!(key, "from" | "to") {
+                    continue;
+                }
                 match kind_p {
                     P::Angle => {
                         let mut v = disp.get(key).and_then(Value::as_f64).unwrap_or(0.0) as f32;
@@ -1045,6 +1062,34 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
                         });
                     }
                     P::Contour(aa) => contour::row(ui, f, &selected, key, label, aa, &mut disp),
+                    P::Gradient => {
+                        let hexc = |v: &Value| v.as_str().and_then(crate::color_picker_ui::parse_hex);
+                        let mut colors: Vec<(f32, [f32; 3])> = disp
+                            .get(key)
+                            .and_then(Value::as_array)
+                            .map(|a| a.iter().filter_map(|s| Some((s.get(0)?.as_f64()? as f32, hexc(s.get(1)?)?))).collect())
+                            .unwrap_or_default();
+                        if colors.len() < 2 {
+                            // A new instance: the defaults' end colours.
+                            let end = |k: &str, d: [f32; 3]| disp.get(k).and_then(hexc).unwrap_or(d);
+                            colors = vec![(0.0, end("from", [0.0; 3])), (1.0, end("to", [1.0; 3]))];
+                        }
+                        let mut opacity: Vec<(f32, f32)> = disp
+                            .get("opacityStops")
+                            .and_then(Value::as_array)
+                            .map(|a| a.iter().filter_map(|s| Some((s.get(0)?.as_f64()? as f32, s.get(1)?.as_f64()? as f32 / 100.0))).collect())
+                            .unwrap_or_default();
+                        let salt = egui::Id::new(("layer-style-gradient", f.get("layer").and_then(Value::as_u64), &selected));
+                        ui.label(RichText::new(tl!(&label)).color(t.text_dim));
+                        if gradient_row::show(ui, salt, &mut colors, &mut opacity) {
+                            let stops = json!(colors.iter().map(|(l, c)| json!([l, crate::color_picker_ui::hex(*c)])).collect::<Vec<_>>());
+                            let ops = json!(opacity.iter().map(|(l, o)| json!([l, (o * 100.0).round()])).collect::<Vec<_>>());
+                            disp[key] = stops.clone();
+                            disp["opacityStops"] = ops.clone();
+                            set_param(f, &selected, key, stops);
+                            set_param(f, &selected, "opacityStops", ops);
+                        }
+                    }
                     P::Check => {
                         let mut b = disp.get(key).and_then(Value::as_bool).unwrap_or(false);
                         if widgets::checkbox(ui, &mut b, label).changed() {
