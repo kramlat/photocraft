@@ -180,11 +180,11 @@ fn is_pixel_param(key: &str) -> bool {
 
 /// [`is_pixel_param`] for `key` of `command`. Some commands use those names for relative values:
 /// Tree's and Picture Frame's `size` (a fraction of the canvas, an ornament scale) and Lens
-/// Correction's perspective `horizontal` / `vertical` (-100..100). Scaled by the proxy factor,
+/// Correction's perspective `horizontal` / `vertical` (-100..100), and Vignette's `size` (a percentage). Scaled by the proxy factor,
 /// their preview drew a quarter-size tree and a quarter of the perspective (#2063).
 fn is_pixel_param_of(command: &str, key: &str) -> bool {
     is_pixel_param(key)
-        && !matches!((command, key), ("filter.render.tree" | "filter.render.pictureFrame", "size") | ("filter.lensCorrection", "horizontal" | "vertical"))
+        && !matches!((command, key), ("filter.render.tree" | "filter.render.pictureFrame" | "filter.render.vignette", "size") | ("filter.lensCorrection", "horizontal" | "vertical"))
 }
 
 /// Filters whose features have a fixed size in document pixels that no dialog parameter scales:
@@ -225,6 +225,11 @@ const FULL_RESOLUTION_PREVIEW: &[&str] = &[
     // Fixed one-pixel kernels, and a result normalized over the whole image.
     "filter.stylize.edgeDetection",
     "filter.other.gaussianDifference",
+    // Generators and lengths in document pixels that a reduced proxy would resample.
+    "filter.render.noisePattern",
+    "filter.render.checkerboard",
+    "filter.render.grid",
+    "filter.stylize.longShadow",
 ];
 
 /// Whether `command` with `params` previews at full resolution: [`FULL_RESOLUTION_PREVIEW`], every

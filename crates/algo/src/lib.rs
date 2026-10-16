@@ -34,6 +34,8 @@ mod distort;
 mod distort2;
 mod edgeops;
 pub use edgeops::EdgeAlgorithm;
+mod extrafx;
+pub use extrafx::NoiseKind;
 pub mod erase;
 pub mod exif;
 pub mod features;
@@ -320,6 +322,48 @@ pub enum FilterParams {
         radius2: f32,
         normalize: bool,
         invert: bool,
+    },
+    /// Fractal noise: features about `size` px wide, `detail` octaves; background (0) to foreground (1).
+    NoisePattern {
+        kind: NoiseKind,
+        size: f32,
+        detail: u32,
+        seed: u32,
+        foreground: [f32; 4],
+        background: [f32; 4],
+    },
+    /// Squares of `size` px in the foreground and background colours.
+    Checkerboard {
+        size: f32,
+        foreground: [f32; 4],
+        background: [f32; 4],
+    },
+    /// Grid lines every `spacing` px, `line_width` px thick.
+    Grid {
+        spacing: f32,
+        line_width: f32,
+        color: [f32; 4],
+    },
+    /// `segments` mirrored wedges around a centre (fractions of the bounds), the first at `angle`°.
+    Kaleidoscope {
+        segments: u32,
+        angle: f32,
+        center_x: f32,
+        center_y: f32,
+    },
+    /// A hard shadow `length` px long toward `angle`° behind the opaque areas.
+    LongShadow {
+        angle: f32,
+        length: f32,
+        color: [f32; 4],
+        fade: bool,
+    },
+    /// Edge darkening (negative `amount`) or lightening (positive), all 0–100 except `amount`.
+    Vignette {
+        amount: f32,
+        size: f32,
+        softness: f32,
+        roundness: f32,
     },
     /// Angle −999…999 degrees.
     Twirl {
@@ -617,7 +661,13 @@ impl FilterParams {
             | FilterParams::InvertLinear
             | FilterParams::ReplaceColorRange { .. }
             | FilterParams::ChannelWaves { .. }
-            | FilterParams::ExtractChannel { .. } => Halo::Radius(0),
+            | FilterParams::ExtractChannel { .. }
+            | FilterParams::NoisePattern { .. }
+            | FilterParams::Checkerboard { .. }
+            | FilterParams::Grid { .. }
+            | FilterParams::Kaleidoscope { .. }
+            | FilterParams::Vignette { .. } => Halo::Radius(0),
+            FilterParams::LongShadow { length, .. } => Halo::Radius(extrafx::long_shadow_halo(*length)),
             FilterParams::RadialBlur { .. }
             | FilterParams::Offset { .. }
             | FilterParams::Twirl { .. }
@@ -656,7 +706,7 @@ impl FilterParams {
     /// the reference bounds even where the layer is transparent, as Photoshop's does on an
     /// empty layer, while still reading no neighbourhood.
     pub fn renders_from_nothing(&self) -> bool {
-        matches!(self, FilterParams::Fibers { .. })
+        matches!(self, FilterParams::Fibers { .. } | FilterParams::NoisePattern { .. } | FilterParams::Checkerboard { .. })
     }
 
     /// Human-readable name.
@@ -689,6 +739,12 @@ impl FilterParams {
             FilterParams::ExtractChannel { .. } => "Extract Channel",
             FilterParams::EdgeDetection { .. } => "Edge Detection",
             FilterParams::GaussianDifference { .. } => "Gaussian Difference",
+            FilterParams::NoisePattern { .. } => "Noise Pattern",
+            FilterParams::Checkerboard { .. } => "Checkerboard",
+            FilterParams::Grid { .. } => "Grid",
+            FilterParams::Kaleidoscope { .. } => "Kaleidoscope",
+            FilterParams::LongShadow { .. } => "Long Shadow",
+            FilterParams::Vignette { .. } => "Vignette",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -819,6 +875,14 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         FilterParams::ChannelWaves { frequency, phase, modify } => colorops::alien_map(src, out, ctx, *frequency, *phase, *modify),
         FilterParams::ExtractChannel { source, invert } => colorops::component_extract(src, out, ctx, *source, *invert),
         FilterParams::EdgeDetection { algorithm, amount } => edgeops::edge_detect(src, out, ctx, *algorithm, *amount),
+        FilterParams::NoisePattern { kind, size, detail, seed, foreground, background } => {
+            extrafx::noise_pattern(src, out, ctx, *kind, *size, *detail, *seed, (*foreground, *background))
+        }
+        FilterParams::Checkerboard { size, foreground, background } => extrafx::checkerboard(src, out, ctx, *size, (*foreground, *background)),
+        FilterParams::Grid { spacing, line_width, color } => extrafx::grid(src, out, ctx, *spacing, *line_width, *color),
+        FilterParams::Kaleidoscope { segments, angle, center_x, center_y } => extrafx::kaleidoscope(src, out, ctx, *segments, *angle, (*center_x, *center_y)),
+        FilterParams::LongShadow { angle, length, color, fade } => extrafx::long_shadow(src, out, ctx, *angle, *length, *color, *fade),
+        FilterParams::Vignette { amount, size, softness, roundness } => extrafx::vignette(src, out, ctx, *amount, *size, *softness, *roundness),
         FilterParams::GaussianDifference { radius1, radius2, normalize, invert } => {
             edgeops::difference_of_gaussians(src, out, ctx, *radius1, *radius2, *normalize, *invert)
         }

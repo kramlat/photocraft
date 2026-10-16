@@ -3,7 +3,7 @@
 //! Difference. They run through [`crate::filters::run_filter`] like every other filter, so
 //! selections, smart filters, history and `filter.lastFilter` behave the same.
 
-use photocraft_algo::{ChannelSource, EdgeAlgorithm, FilterParams};
+use photocraft_algo::{ChannelSource, EdgeAlgorithm, FilterParams, NoiseKind};
 use serde_json::Value;
 
 use crate::commands::CommandSpec;
@@ -29,6 +29,21 @@ fn rgb(p: &Value, k: &str, d: [f32; 3]) -> [f32; 3] {
         Some(Value::String(h)) if h.len() == 7 && h.starts_with('#') => {
             let ch = |i: usize| h.get(i..i + 2).and_then(|x| u8::from_str_radix(x, 16).ok()).map_or(0.0, |v| f32::from(v) / 255.0);
             [ch(1), ch(3), ch(5)]
+        }
+        _ => d,
+    }
+}
+
+/// Straight RGBA from `#rrggbb`, `[r, g, b(, a)]` (0..=1) or the default.
+fn rgba(p: &Value, k: &str, d: [f32; 4]) -> [f32; 4] {
+    match p.get(k) {
+        Some(Value::Array(a)) if a.len() >= 3 => {
+            let c = |i: usize, dv: f32| a.get(i).and_then(Value::as_f64).map_or(dv, |v| (v as f32).clamp(0.0, 1.0));
+            [c(0, 0.0), c(1, 0.0), c(2, 0.0), c(3, 1.0)]
+        }
+        Some(Value::String(_)) => {
+            let c = rgb(p, k, [d[0], d[1], d[2]]);
+            [c[0], c[1], c[2], d[3]]
         }
         _ => d,
     }
@@ -94,6 +109,47 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             normalize: b(p, "normalize", true),
             invert: b(p, "invert", false),
         },
+        "filter.render.noisePattern" => FilterParams::NoisePattern {
+            kind: match s(p, "type", "perlin") {
+                "simplex" => NoiseKind::Simplex,
+                "cell" => NoiseKind::Cell,
+                "value" => NoiseKind::Value,
+                _ => NoiseKind::Perlin,
+            },
+            size: f(p, "size", 40.0).clamp(1.0, 10_000.0),
+            detail: f(p, "detail", 3.0).round().clamp(1.0, 8.0) as u32,
+            seed: p.get("seed").and_then(Value::as_u64).and_then(|n| u32::try_from(n).ok()).unwrap_or(0),
+            foreground: rgba(p, "foreground", [0.0, 0.0, 0.0, 1.0]),
+            background: rgba(p, "background", [1.0, 1.0, 1.0, 1.0]),
+        },
+        "filter.render.checkerboard" => FilterParams::Checkerboard {
+            size: f(p, "size", 32.0).clamp(1.0, 10_000.0),
+            foreground: rgba(p, "foreground", [0.0, 0.0, 0.0, 1.0]),
+            background: rgba(p, "background", [1.0, 1.0, 1.0, 1.0]),
+        },
+        "filter.render.grid" => FilterParams::Grid {
+            spacing: f(p, "spacing", 32.0).clamp(2.0, 10_000.0),
+            line_width: f(p, "lineWidth", 1.0).clamp(1.0, 1000.0),
+            color: rgba(p, "color", [0.0, 0.0, 0.0, 1.0]),
+        },
+        "filter.distort.kaleidoscope" => FilterParams::Kaleidoscope {
+            segments: f(p, "segments", 6.0).round().clamp(2.0, 64.0) as u32,
+            angle: f(p, "angle", 0.0).clamp(-360.0, 360.0),
+            center_x: f(p, "centerX", 0.5).clamp(0.0, 1.0),
+            center_y: f(p, "centerY", 0.5).clamp(0.0, 1.0),
+        },
+        "filter.stylize.longShadow" => FilterParams::LongShadow {
+            angle: f(p, "angle", 45.0).clamp(-360.0, 360.0),
+            length: f(p, "length", 50.0).clamp(1.0, 2000.0),
+            color: rgba(p, "color", [0.0, 0.0, 0.0, 0.6]),
+            fade: b(p, "fade", true),
+        },
+        "filter.render.vignette" => FilterParams::Vignette {
+            amount: f(p, "amount", -60.0).clamp(-100.0, 100.0),
+            size: f(p, "size", 40.0).clamp(0.0, 100.0),
+            softness: f(p, "softness", 60.0).clamp(0.0, 100.0),
+            roundness: f(p, "roundness", 50.0).clamp(0.0, 100.0),
+        },
         _ => return crate::gallery_cmds::params_for(id, p),
     })
 }
@@ -105,6 +161,12 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.channelWaves" => &[("frequency", 0.0, 20.0), ("phase", 0.0, 360.0)],
         "filter.stylize.edgeDetection" => &[("amount", 0.1, 10.0)],
         "filter.other.gaussianDifference" => &[("radius", 0.1, 100.0), ("outerRadius", 0.1, 100.0)],
+        "filter.render.noisePattern" => &[("size", 1.0, 10_000.0), ("detail", 1.0, 8.0)],
+        "filter.render.checkerboard" => &[("size", 1.0, 10_000.0)],
+        "filter.render.grid" => &[("spacing", 2.0, 10_000.0), ("lineWidth", 1.0, 1000.0)],
+        "filter.distort.kaleidoscope" => &[("segments", 2.0, 64.0), ("angle", -360.0, 360.0), ("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0)],
+        "filter.stylize.longShadow" => &[("angle", -360.0, 360.0), ("length", 1.0, 2000.0)],
+        "filter.render.vignette" => &[("amount", -100.0, 100.0), ("size", 0.0, 100.0), ("softness", 0.0, 100.0), ("roundness", 0.0, 100.0)],
         "filter.other.invertBrightness" | "filter.other.invertLinear" | "filter.other.extractChannel" => &[],
         _ => return None,
     };
@@ -121,6 +183,7 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.channelWaves" => &["red", "green", "blue"],
         "filter.other.extractChannel" => &["invert"],
         "filter.other.gaussianDifference" => &["normalize", "invert"],
+        "filter.stylize.longShadow" => &["fade"],
         _ => &[],
     };
     for key in flags {
@@ -131,10 +194,18 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
     let msg = match id {
         "filter.other.extractChannel" => choice("channel", CHANNELS),
         "filter.stylize.edgeDetection" => choice("algorithm", EDGE_ALGORITHMS),
+        "filter.render.noisePattern" => choice("type", "perlin|simplex|cell|value"),
         _ => None,
     };
     if let Some(msg) = msg {
         return bad(msg);
+    }
+    for key in ["foreground", "background", "color"] {
+        if matches!(id, "filter.render.noisePattern" | "filter.render.checkerboard" | "filter.render.grid" | "filter.stylize.longShadow")
+            && p.get(key).is_some_and(|v| !v.is_array() && v.as_str().is_none_or(|h| h.len() != 7 || !h.starts_with('#')))
+        {
+            return bad(format!("`{key}` must be #rrggbb or [r, g, b]"));
+        }
     }
     for key in ["from", "to"] {
         if id == "filter.other.replaceColorRange"
@@ -196,6 +267,17 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Filter", "Other"],
             r##"{"radius":0.1..100=1,"outerRadius":0.1..100=3,"normalize":bool=true,"invert":bool=false}"##
         ),
+        cmd!(
+            "filter.render.noisePattern",
+            "Noise Pattern…",
+            ["Filter", "Render"],
+            r##"{"type":"perlin|simplex|cell|value"="perlin","size":1..10000=40,"detail":1..8=3,"seed":u32=0,"foreground":json,"background":json}"##
+        ),
+        cmd!("filter.render.checkerboard", "Checkerboard…", ["Filter", "Render"], r##"{"size":1..10000=32,"foreground":json,"background":json}"##),
+        cmd!("filter.render.grid", "Grid…", ["Filter", "Render"], r##"{"spacing":2..10000=32,"lineWidth":1..1000=1,"color":json}"##),
+        cmd!("filter.render.vignette", "Vignette…", ["Filter", "Render"], r##"{"amount":-100..100=-60,"size":0..100=40,"softness":0..100=60,"roundness":0..100=50}"##),
+        cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5}"##),
+        cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":json,"fade":bool=true}"##),
     ]
 }
 
@@ -203,10 +285,9 @@ pub fn specs() -> Vec<CommandSpec> {
 mod tests {
     use serde_json::json;
 
-    use super::*;
     use crate::Session;
 
-    const IDS: [&str; 7] = [
+    const IDS: [&str; 13] = [
         "filter.other.invertBrightness",
         "filter.other.invertLinear",
         "filter.other.replaceColorRange",
@@ -214,6 +295,12 @@ mod tests {
         "filter.other.extractChannel",
         "filter.stylize.edgeDetection",
         "filter.other.gaussianDifference",
+        "filter.render.noisePattern",
+        "filter.render.checkerboard",
+        "filter.render.grid",
+        "filter.render.vignette",
+        "filter.distort.kaleidoscope",
+        "filter.stylize.longShadow",
     ];
 
     fn session(depth: u64) -> Session {
@@ -236,6 +323,14 @@ mod tests {
         for depth in [8, 16, 32] {
             for id in IDS {
                 let mut s = session(depth);
+                if id == "filter.stylize.longShadow" {
+                    // A shadow needs somewhere to fall: blue on the left half of a transparent layer.
+                    s = Session::new();
+                    s.execute("file.new", json!({"width": 24, "height": 24, "background": "transparent", "depth": depth})).unwrap();
+                    s.execute("select.rect", json!({"x": 0, "y": 0, "width": 12, "height": 24})).unwrap();
+                    s.execute("edit.fill", json!({"color": "#2060c0"})).unwrap();
+                    s.execute("select.all", json!({})).unwrap();
+                }
                 let before = pixels(&s);
                 let params = match id {
                     "filter.other.replaceColorRange" => json!({"from": "#2060c0", "to": "#ff8000", "fuzziness": 5}),

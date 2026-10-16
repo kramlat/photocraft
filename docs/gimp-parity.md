@@ -69,6 +69,11 @@ PhotoCraft command.
 | Extract Channel… | Filter › Other | component-extract |
 | Gaussian Difference… | Filter › Other | difference-of-gaussians |
 | Edge Detection… (Sobel, Prewitt, Roberts, Gradient, Differential, Laplace) | Filter › Stylize | edge-sobel, edge-laplace, edge |
+| Noise Pattern… (Perlin, Simplex, Cell, Value) | Filter › Render | perlin-noise, simplex-noise, cell-noise |
+| Checkerboard…, Grid… | Filter › Render | checkerboard, grid |
+| Vignette… | Filter › Render | vignette |
+| Kaleidoscope… | Filter › Distort | mirrors |
+| Long Shadow… | Filter › Stylize | long-shadow |
 
 ## Suggested order
 

@@ -1,0 +1,54 @@
+# Maintainer: PhotoCraft contributors
+# Builds the current git head. pkgver() comes from the nearest `v*` tag, so every new commit is a
+# new, higher version for pacman: v0.90.1 + 3 commits -> 0.90.1.r3.g1a2b3c4 (vercmp sorts it above
+# 0.90.1.r2.* and below 0.90.2). Cut a release by tagging (scripts/git-version.sh --write bumps
+# Cargo.toml to match).
+pkgname=photocraft-git
+pkgver=0.90.1.r0.g0000000
+pkgrel=1
+pkgdesc='Open-source, native image editor with layers, masks, PSD/PSB and XCF support (git)'
+arch=('x86_64' 'aarch64')
+url='https://github.com/kramlat/photocraft'
+license=('MIT' 'Apache-2.0')
+# Windowing (X11/Wayland) and the GPU (Vulkan/EGL) are loaded with dlopen at run time.
+depends=('gcc-libs' 'glibc' 'libx11' 'libxcb' 'libxcursor' 'libxi' 'libxkbcommon' 'libxkbcommon-x11' 'wayland')
+optdepends=('vulkan-icd-loader: GPU compositing (or mesa for EGL)'
+            'xdg-desktop-portal: native file dialogs')
+makedepends=('git' 'cargo')
+provides=('photocraft')
+conflicts=('photocraft')
+options=('!lto')
+source=("$pkgname::git+$url.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  # v0.90.1-3-g1a2b3c4 -> 0.90.1.r3.g1a2b3c4 (no hyphens allowed in pkgver)
+  git describe --long --tags --abbrev=7 --match='v*' HEAD | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "$pkgname"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "$pkgname"
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release -p photocraft -p photocraft-cli
+}
+
+package() {
+  cd "$pkgname"
+  local id=ai.storyteller.photocraft
+  install -Dm755 target/release/photocraft "$pkgdir/usr/bin/photocraft"
+  install -Dm755 target/release/photocraft-cli "$pkgdir/usr/bin/photocraft-cli"
+  install -Dm644 "packaging/linux/$id.desktop" "$pkgdir/usr/share/applications/$id.desktop"
+  install -Dm644 "packaging/linux/$id.mime.xml" "$pkgdir/usr/share/mime/packages/$id.xml"
+  install -dm755 "$pkgdir/usr/share/icons"
+  cp -R assets/app-icon/hicolor "$pkgdir/usr/share/icons/"
+  install -Dm644 LICENSE-MIT "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+  install -Dm644 LICENSE-APACHE "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+}
