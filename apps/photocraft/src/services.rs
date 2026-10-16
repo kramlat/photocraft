@@ -491,7 +491,15 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
             photocraft_automation::workspace::authorize_desktop_engine_command(id, params).map_err(|error| error.to_string())
         }) as photocraft_ui_egui::AutomationCommandFn
     });
+    let mut script_fu = photocraft_script::ScriptFu::new();
+    let mut python_fu = photocraft_pyfu::PythonFu::new();
     Services {
+        python_run: Some(Box::new(move |session, source| {
+            crate::crash_guard::guard("Python-Fu", || python_fu.run(session, source).map(|o| (o.output, o.value)))
+        })),
+        script_run: Some(Box::new(move |session, source| {
+            crate::crash_guard::guard("Script-Fu", || script_fu.run(session, source).map(|o| (o.output, o.value)))
+        })),
         import: Some(Box::new(|name: &str, bytes: &[u8], max_svg_group_depth: usize| {
             crate::crash_guard::guard("Open", || {
                 photocraft_io::import_with_svg_group_depth(name, bytes, max_svg_group_depth).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string())

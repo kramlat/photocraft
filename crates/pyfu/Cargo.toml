@@ -1,0 +1,17 @@
+[package]
+name = "photocraft-pyfu"
+description = "Python-Fu: runs Python scripts (RustPython, sandboxed) against the PhotoCraft engine through the same procedure names as Script-Fu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+photocraft-engine = { workspace = true }
+photocraft-scheme = { workspace = true }
+photocraft-script = { workspace = true }
+rustpython-vm = { version = "0.4", default-features = false, features = ["compiler"] }
+serde_json = { workspace = true }

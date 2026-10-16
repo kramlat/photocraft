@@ -4329,3 +4329,33 @@ shape	Appearance	Aspetto
 	This document's layers: {needed} of {budget} for layers	Livelli di questo documento: {needed} su {budget} per i livelli
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	I livelli di questo documento richiedono {needed} ma possono occupare {budget}: i ridisegni dell'intero documento usano la CPU
 	GPU Memory (MB, 0 = Automatic)	Memoria GPU (MB, 0 = Automatico)
+	Channel Waves…	Onde canale…
+	Edge Detection…	Rilevamento bordi…
+	Extract Channel…	Estrai canale…
+	Gaussian Difference…	Differenza gaussiana…
+	Invert (Linear Light)	Inverti (luce lineare)
+	Invert Brightness	Inverti luminosità
+	Replace Color Range…	Sostituisci intervallo colori…
+	Choose a pattern file (.pat).	Scegli un file di motivi (.pat).
+	Import presets from a file…	Importa predefiniti da file…
+	Console…	Console…
+	Plugins	Plugin
+	Run Script…	Esegui script…
+	Script-Fu	Script-Fu
+	Scheme expression	Espressione Scheme
+	Script-Fu Console	Console Script-Fu
+	Script-Fu is not available in this build.	Script-Fu non è disponibile in questa versione.
+	{name} is not a text file.	{name} non è un file di testo.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Console Python-Fu
+	Python statement	Istruzione Python
+	Python-Fu is not available in this build.	Python-Fu non è disponibile in questa versione.
+	Algorithm	Algoritmo
+	Differential	Differenziale
+	Laplace	Laplace
+	Normalize	Normalizza
+	Outer Radius	Raggio esterno
+	Phase	Fase
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel

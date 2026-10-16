@@ -3213,3 +3213,34 @@ curves	Smooth	Lisser
 	This document's layers: {needed} of {budget} for layers	Calques de ce document : {needed} sur {budget} pour les calques
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Les calques de ce document ont besoin de {needed} mais peuvent occuper {budget} : le document entier se redessine sur le CPU
 	GPU Memory (MB, 0 = Automatic)	Mémoire GPU (Mo, 0 = Automatique)
+	Channel Waves…	Ondes de canal…
+	Edge Detection…	Détection des contours…
+	Extract Channel…	Extraire le canal…
+	Gaussian Difference…	Différence de gaussiennes…
+	Invert (Linear Light)	Inverser (lumière linéaire)
+	Invert Brightness	Inverser la luminosité
+	Replace Color Range…	Remplacer la plage de couleurs…
+	Choose a pattern file (.pat).	Choisissez un fichier de motifs (.pat).
+	Import presets from a file…	Importer des paramètres prédéfinis depuis un fichier…
+	Console…	Console…
+	Plugins	Modules externes
+	Run Script…	Exécuter un script…
+	Script-Fu	Script-Fu
+	Scheme expression	Expression Scheme
+	Script-Fu Console	Console Script-Fu
+	Script-Fu is not available in this build.	Script-Fu n’est pas disponible dans cette version.
+	{name} is not a text file.	{name} n’est pas un fichier texte.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Console Python-Fu
+	Python statement	Instruction Python
+	Python-Fu is not available in this build.	Python-Fu n’est pas disponible dans cette version.
+	Algorithm	Algorithme
+	Differential	Différentiel
+	Laplace	Laplace
+	Normalize	Normaliser
+	Outer Radius	Rayon extérieur
+	Phase	Phase
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	Vers

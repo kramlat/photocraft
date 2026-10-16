@@ -3938,3 +3938,34 @@ cameraData	Lens	Lens
 	This document's layers: {needed} of {budget} for layers	Bu belgenin katmanları: katmanlar için {budget} içinden {needed}
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Bu belgenin katmanlarının {needed} belleğe ihtiyacı var ama en fazla {budget} kullanabilirler: tüm belgenin yeniden çizimi CPU'yu kullanır
 	GPU Memory (MB, 0 = Automatic)	GPU Belleği (MB, 0 = Otomatik)
+	Channel Waves…	Kanal Dalgaları…
+	Edge Detection…	Kenar Algılama…
+	Extract Channel…	Kanalı Ayıkla…
+	Gaussian Difference…	Gauss Farkı…
+	Invert (Linear Light)	Ters Çevir (Doğrusal Işık)
+	Invert Brightness	Parlaklığı Ters Çevir
+	Replace Color Range…	Renk Aralığını Değiştir…
+	Choose a pattern file (.pat).	Bir desen dosyası (.pat) seçin.
+	Import presets from a file…	Dosyadan ön ayarları içe aktar…
+	Console…	Konsol…
+	Plugins	Eklentiler
+	Run Script…	Betik Çalıştır…
+	Script-Fu	Script-Fu
+	Scheme expression	Scheme ifadesi
+	Script-Fu Console	Script-Fu Konsolu
+	Script-Fu is not available in this build.	Script-Fu bu sürümde kullanılamıyor.
+	{name} is not a text file.	{name} bir metin dosyası değil.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Python-Fu Konsolu
+	Python statement	Python deyimi
+	Python-Fu is not available in this build.	Python-Fu bu sürümde kullanılamıyor.
+	Algorithm	Algoritma
+	Differential	Diferansiyel
+	Laplace	Laplace
+	Normalize	Normalleştir
+	Outer Radius	Dış Yarıçap
+	Phase	Faz
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	Hedef

@@ -1,0 +1,13 @@
+[package]
+name = "photocraft-scheme"
+description = "A small Scheme interpreter (R5RS core plus the TinyScheme-style extensions Script-Fu scripts use), in safe Rust"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror = { workspace = true }

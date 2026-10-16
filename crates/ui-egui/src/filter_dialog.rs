@@ -222,6 +222,9 @@ const FULL_RESOLUTION_PREVIEW: &[&str] = &[
     "filter.stylize.findEdges",
     "filter.stylize.emboss",
     "filter.noise.despeckle",
+    // Fixed one-pixel kernels, and a result normalized over the whole image.
+    "filter.stylize.edgeDetection",
+    "filter.other.gaussianDifference",
 ];
 
 /// Whether `command` with `params` previews at full resolution: [`FULL_RESOLUTION_PREVIEW`], every

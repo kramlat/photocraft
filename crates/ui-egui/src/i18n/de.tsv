@@ -3210,3 +3210,33 @@ curves	Smooth	Glätten
 	This document's layers: {needed} of {budget} for layers	Ebenen dieses Dokuments: {needed} von {budget} für Ebenen
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Die Ebenen dieses Dokuments brauchen {needed}, dürfen aber {budget} belegen: Das ganze Dokument wird auf der CPU neu gezeichnet
 	GPU Memory (MB, 0 = Automatic)	GPU-Speicher (MB, 0 = Automatisch)
+	Channel Waves…	Kanalwellen…
+	Edge Detection…	Kantenerkennung…
+	Extract Channel…	Kanal extrahieren…
+	Gaussian Difference…	Gauß-Differenz…
+	Invert (Linear Light)	Umkehren (Lineares Licht)
+	Invert Brightness	Helligkeit umkehren
+	Replace Color Range…	Farbbereich ersetzen…
+	Choose a pattern file (.pat).	Wählen Sie eine Musterdatei (.pat).
+	Import presets from a file…	Vorgaben aus Datei importieren…
+	Console…	Konsole…
+	Plugins	Plug-ins
+	Run Script…	Skript ausführen…
+	Script-Fu	Script-Fu
+	Scheme expression	Scheme-Ausdruck
+	Script-Fu Console	Script-Fu-Konsole
+	Script-Fu is not available in this build.	Script-Fu ist in dieser Version nicht verfügbar.
+	{name} is not a text file.	{name} ist keine Textdatei.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Python-Fu-Konsole
+	Python statement	Python-Anweisung
+	Python-Fu is not available in this build.	Python-Fu ist in dieser Version nicht verfügbar.
+	Algorithm	Algorithmus
+	Differential	Differenzial
+	Laplace	Laplace
+	Normalize	Normalisieren
+	Outer Radius	Äußerer Radius
+	Phase	Phase
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel

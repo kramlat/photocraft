@@ -3968,3 +3968,34 @@ curves	Smooth	Vloeiend maken
 	This document's layers: {needed} of {budget} for layers	Lagen van dit document: {needed} van {budget} voor lagen
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	De lagen van dit document hebben {needed} nodig maar mogen {budget} gebruiken: het hele document wordt op de CPU opnieuw getekend
 	GPU Memory (MB, 0 = Automatic)	GPU-geheugen (MB, 0 = Automatisch)
+	Channel Waves…	Kanaalgolven…
+	Edge Detection…	Randdetectie…
+	Extract Channel…	Kanaal extraheren…
+	Gaussian Difference…	Gauss-verschil…
+	Invert (Linear Light)	Omkeren (lineair licht)
+	Invert Brightness	Helderheid omkeren
+	Replace Color Range…	Kleurbereik vervangen…
+	Choose a pattern file (.pat).	Kies een patroonbestand (.pat).
+	Import presets from a file…	Voorinstellingen importeren uit bestand…
+	Console…	Console…
+	Plugins	Plug-ins
+	Run Script…	Script uitvoeren…
+	Script-Fu	Script-Fu
+	Scheme expression	Scheme-expressie
+	Script-Fu Console	Script-Fu-console
+	Script-Fu is not available in this build.	Script-Fu is niet beschikbaar in deze versie.
+	{name} is not a text file.	{name} is geen tekstbestand.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Python-Fu-console
+	Python statement	Python-instructie
+	Python-Fu is not available in this build.	Python-Fu is niet beschikbaar in deze versie.
+	Algorithm	Algoritme
+	Differential	Differentieel
+	Laplace	Laplace
+	Normalize	Normaliseren
+	Outer Radius	Buitenradius
+	Phase	Fase
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	Naar

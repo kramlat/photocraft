@@ -2824,3 +2824,35 @@ curves	Smooth	平滑
 	This document's layers: {needed} of {budget} for layers	此文档的图层：图层可用 {budget} 中的 {needed}
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	此文档的图层需要 {needed}，但只能占用 {budget}：整个文档的重绘使用 CPU
 	GPU Memory (MB, 0 = Automatic)	GPU 内存（MB，0 = 自动）
+	Channel Waves…	通道波形…
+	Edge Detection…	边缘检测…
+	Extract Channel…	提取通道…
+	Gaussian Difference…	高斯差分…
+	Invert (Linear Light)	反相（线性光）
+	Invert Brightness	反相亮度
+	Replace Color Range…	替换颜色范围…
+	Choose a pattern file (.pat).	请选择图案文件（.pat）。
+	Import presets from a file…	从文件导入预设…
+	Console…	控制台…
+	Plugins	增效工具
+	Run Script…	运行脚本…
+	Script-Fu	Script-Fu
+	Scheme expression	Scheme 表达式
+	Script-Fu Console	Script-Fu 控制台
+	Script-Fu is not available in this build.	此版本不支持 Script-Fu。
+	{name} is not a text file.	{name} 不是文本文件。
+	Python-Fu	Python-Fu
+	Python-Fu Console	Python-Fu 控制台
+	Python statement	Python 语句
+	Python-Fu is not available in this build.	此版本不支持 Python-Fu。
+	Algorithm	算法
+	Channel	通道
+	Differential	微分
+	Laplace	拉普拉斯
+	Normalize	规范化
+	Outer Radius	外半径
+	Phase	相位
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	到

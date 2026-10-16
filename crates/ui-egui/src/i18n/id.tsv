@@ -3200,3 +3200,34 @@ curves	Smooth	Haluskan
 	This document's layers: {needed} of {budget} for layers	Layer dokumen ini: {needed} dari {budget} untuk layer
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Layer dokumen ini membutuhkan {needed} tetapi boleh memakai {budget}: penggambaran ulang seluruh dokumen memakai CPU
 	GPU Memory (MB, 0 = Automatic)	Memori GPU (MB, 0 = Otomatis)
+	Channel Waves…	Gelombang Saluran…
+	Edge Detection…	Deteksi Tepi…
+	Extract Channel…	Ekstrak Saluran…
+	Gaussian Difference…	Selisih Gaussian…
+	Invert (Linear Light)	Balikkan (Cahaya Linear)
+	Invert Brightness	Balikkan Kecerahan
+	Replace Color Range…	Ganti Rentang Warna…
+	Choose a pattern file (.pat).	Pilih berkas pola (.pat).
+	Import presets from a file…	Impor prasetel dari berkas…
+	Console…	Konsol…
+	Plugins	Plugin
+	Run Script…	Jalankan Skrip…
+	Script-Fu	Script-Fu
+	Scheme expression	Ekspresi Scheme
+	Script-Fu Console	Konsol Script-Fu
+	Script-Fu is not available in this build.	Script-Fu tidak tersedia di versi ini.
+	{name} is not a text file.	{name} bukan berkas teks.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Konsol Python-Fu
+	Python statement	Pernyataan Python
+	Python-Fu is not available in this build.	Python-Fu tidak tersedia di versi ini.
+	Algorithm	Algoritme
+	Differential	Diferensial
+	Laplace	Laplace
+	Normalize	Normalisasi
+	Outer Radius	Radius Luar
+	Phase	Fase
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	Ke

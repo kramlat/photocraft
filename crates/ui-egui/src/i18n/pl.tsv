@@ -3806,3 +3806,34 @@ curves	Smooth	Wygładź
 	This document's layers: {needed} of {budget} for layers	Warstwy tego dokumentu: {needed} z {budget} na warstwy
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Warstwy tego dokumentu potrzebują {needed}, ale mogą zająć {budget}: odświeżanie całego dokumentu używa CPU
 	GPU Memory (MB, 0 = Automatic)	Pamięć GPU (MB, 0 = Automatycznie)
+	Channel Waves…	Fale kanałów…
+	Edge Detection…	Wykrywanie krawędzi…
+	Extract Channel…	Wyodrębnij kanał…
+	Gaussian Difference…	Różnica gaussowska…
+	Invert (Linear Light)	Odwróć (światło liniowe)
+	Invert Brightness	Odwróć jasność
+	Replace Color Range…	Zamień zakres kolorów…
+	Choose a pattern file (.pat).	Wybierz plik deseni (.pat).
+	Import presets from a file…	Importuj ustawienia wstępne z pliku…
+	Console…	Konsola…
+	Plugins	Wtyczki
+	Run Script…	Uruchom skrypt…
+	Script-Fu	Script-Fu
+	Scheme expression	Wyrażenie Scheme
+	Script-Fu Console	Konsola Script-Fu
+	Script-Fu is not available in this build.	Script-Fu nie jest dostępny w tej wersji.
+	{name} is not a text file.	{name} nie jest plikiem tekstowym.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Konsola Python-Fu
+	Python statement	Instrukcja Pythona
+	Python-Fu is not available in this build.	Python-Fu nie jest dostępny w tej wersji.
+	Algorithm	Algorytm
+	Differential	Różniczkowy
+	Laplace	Laplace’a
+	Normalize	Normalizuj
+	Outer Radius	Promień zewnętrzny
+	Phase	Faza
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	Do

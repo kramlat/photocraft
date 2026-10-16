@@ -3908,3 +3908,34 @@ curves	Smooth	Εξομάλυνση
 	This document's layers: {needed} of {budget} for layers	Επίπεδα αυτού του εγγράφου: {needed} από {budget} για επίπεδα
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Τα επίπεδα αυτού του εγγράφου χρειάζονται {needed} αλλά μπορούν να καταλάβουν {budget}: η επανασχεδίαση όλου του εγγράφου γίνεται στη CPU
 	GPU Memory (MB, 0 = Automatic)	Μνήμη GPU (MB, 0 = Αυτόματο)
+	Channel Waves…	Κύματα καναλιού…
+	Edge Detection…	Ανίχνευση ακμών…
+	Extract Channel…	Εξαγωγή καναλιού…
+	Gaussian Difference…	Διαφορά Gauss…
+	Invert (Linear Light)	Αντιστροφή (γραμμικό φως)
+	Invert Brightness	Αντιστροφή φωτεινότητας
+	Replace Color Range…	Αντικατάσταση εύρους χρωμάτων…
+	Choose a pattern file (.pat).	Επιλέξτε αρχείο μοτίβων (.pat).
+	Import presets from a file…	Εισαγωγή προρυθμίσεων από αρχείο…
+	Console…	Κονσόλα…
+	Plugins	Πρόσθετα
+	Run Script…	Εκτέλεση σεναρίου…
+	Script-Fu	Script-Fu
+	Scheme expression	Έκφραση Scheme
+	Script-Fu Console	Κονσόλα Script-Fu
+	Script-Fu is not available in this build.	Το Script-Fu δεν είναι διαθέσιμο σε αυτή την έκδοση.
+	{name} is not a text file.	Το {name} δεν είναι αρχείο κειμένου.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Κονσόλα Python-Fu
+	Python statement	Εντολή Python
+	Python-Fu is not available in this build.	Το Python-Fu δεν είναι διαθέσιμο σε αυτή την έκδοση.
+	Algorithm	Αλγόριθμος
+	Differential	Διαφορικό
+	Laplace	Λαπλάς
+	Normalize	Κανονικοποίηση
+	Outer Radius	Εξωτερική ακτίνα
+	Phase	Φάση
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	Προς

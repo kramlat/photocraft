@@ -3884,3 +3884,34 @@ curves	Smooth	スムーズ
 	This document's layers: {needed} of {budget} for layers	このドキュメントのレイヤー: レイヤー用 {budget} のうち {needed}
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	このドキュメントのレイヤーには {needed} が必要ですが、使えるのは {budget} です: ドキュメント全体の再描画は CPU で行われます
 	GPU Memory (MB, 0 = Automatic)	GPU メモリ（MB、0 = 自動）
+	Channel Waves…	チャンネル波形…
+	Edge Detection…	エッジ検出…
+	Extract Channel…	チャンネルを抽出…
+	Gaussian Difference…	ガウス差分…
+	Invert (Linear Light)	反転（リニアライト）
+	Invert Brightness	明度を反転
+	Replace Color Range…	範囲指定で色を置き換え…
+	Choose a pattern file (.pat).	パターンファイル（.pat）を選択してください。
+	Import presets from a file…	ファイルからプリセットを読み込む…
+	Console…	コンソール…
+	Plugins	プラグイン
+	Run Script…	スクリプトを実行…
+	Script-Fu	Script-Fu
+	Scheme expression	Scheme 式
+	Script-Fu Console	Script-Fu コンソール
+	Script-Fu is not available in this build.	このビルドでは Script-Fu は利用できません。
+	{name} is not a text file.	{name} はテキストファイルではありません。
+	Python-Fu	Python-Fu
+	Python-Fu Console	Python-Fu コンソール
+	Python statement	Python の文
+	Python-Fu is not available in this build.	このビルドでは Python-Fu は利用できません。
+	Algorithm	アルゴリズム
+	Differential	微分
+	Laplace	ラプラス
+	Normalize	正規化
+	Outer Radius	外側の半径
+	Phase	位相
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	変換先

@@ -3694,3 +3694,33 @@ curves	Smooth	Làm mượt
 	This document's layers: {needed} of {budget} for layers	Các lớp của tài liệu này: {needed} trên {budget} dành cho lớp
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Các lớp của tài liệu này cần {needed} nhưng chỉ được dùng {budget}: vẽ lại toàn bộ tài liệu dùng CPU
 	GPU Memory (MB, 0 = Automatic)	Bộ nhớ GPU (MB, 0 = Tự động)
+	Channel Waves…	Sóng kênh…
+	Edge Detection…	Phát hiện cạnh…
+	Extract Channel…	Trích xuất kênh…
+	Gaussian Difference…	Chênh lệch Gauss…
+	Invert (Linear Light)	Đảo ngược (ánh sáng tuyến tính)
+	Invert Brightness	Đảo ngược độ sáng
+	Replace Color Range…	Thay thế dải màu…
+	Choose a pattern file (.pat).	Chọn tệp mẫu (.pat).
+	Import presets from a file…	Nhập thiết lập sẵn từ tệp…
+	Console…	Bảng điều khiển…
+	Plugins	Plugin
+	Run Script…	Chạy tập lệnh…
+	Script-Fu	Script-Fu
+	Scheme expression	Biểu thức Scheme
+	Script-Fu Console	Bảng điều khiển Script-Fu
+	Script-Fu is not available in this build.	Script-Fu không khả dụng trong bản dựng này.
+	{name} is not a text file.	{name} không phải tệp văn bản.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Bảng điều khiển Python-Fu
+	Python statement	Câu lệnh Python
+	Python-Fu is not available in this build.	Python-Fu không khả dụng trong bản dựng này.
+	Algorithm	Thuật toán
+	Differential	Vi phân
+	Laplace	Laplace
+	Normalize	Chuẩn hóa
+	Outer Radius	Bán kính ngoài
+	Phase	Pha
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel

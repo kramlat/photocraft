@@ -3998,3 +3998,34 @@ layerLabel	No Color	Sem cor
 	This document's layers: {needed} of {budget} for layers	Camadas deste documento: {needed} de {budget} para camadas
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	As camadas deste documento precisam de {needed} mas podem ocupar {budget}: o documento inteiro é redesenhado na CPU
 	GPU Memory (MB, 0 = Automatic)	Memória da GPU (MB, 0 = Automático)
+	Channel Waves…	Ondas de canal…
+	Edge Detection…	Detecção de bordas…
+	Extract Channel…	Extrair canal…
+	Gaussian Difference…	Diferença gaussiana…
+	Invert (Linear Light)	Inverter (luz linear)
+	Invert Brightness	Inverter brilho
+	Replace Color Range…	Substituir intervalo de cores…
+	Choose a pattern file (.pat).	Escolha um arquivo de padrões (.pat).
+	Import presets from a file…	Importar predefinições de um arquivo…
+	Console…	Console…
+	Plugins	Plug-ins
+	Run Script…	Executar script…
+	Script-Fu	Script-Fu
+	Scheme expression	Expressão Scheme
+	Script-Fu Console	Console do Script-Fu
+	Script-Fu is not available in this build.	O Script-Fu não está disponível nesta versão.
+	{name} is not a text file.	{name} não é um arquivo de texto.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Console do Python-Fu
+	Python statement	Instrução Python
+	Python-Fu is not available in this build.	O Python-Fu não está disponível nesta versão.
+	Algorithm	Algoritmo
+	Differential	Diferencial
+	Laplace	Laplace
+	Normalize	Normalizar
+	Outer Radius	Raio externo
+	Phase	Fase
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	Para

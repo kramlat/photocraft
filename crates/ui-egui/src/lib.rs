@@ -100,6 +100,7 @@ pub mod gallery_ui;
 pub mod gpu_canvas;
 pub mod gpu_status;
 pub mod gradient_ui;
+pub mod script_ui;
 pub mod guide_layout_ui;
 pub mod guide_select;
 pub mod hold_keys;
@@ -455,6 +456,11 @@ pub struct Services {
     pub automation_write: Option<AutomationWriteFn>,
     pub automation_open_pcraft: Option<AutomationOpenPcraftFn>,
     pub automation_command: Option<AutomationCommandFn>,
+    /// Runs Script-Fu (Scheme) source against the session; installed by the app, which owns the
+    /// interpreter (Plugins › Script-Fu).
+    pub script_run: Option<script_ui::ScriptRunFn>,
+    /// The same for Python-Fu (Plugins › Python-Fu).
+    pub python_run: Option<script_ui::ScriptRunFn>,
     /// Same policy as [`Self::automation_command`], as a function pointer the engine calls for
     /// each step of `actions.play`. Installed on the session only while a control request or
     /// an automation-driven [`PhotocraftApp::run`] runs, so a local play of a recorded `file.*` step still works.
@@ -715,6 +721,10 @@ pub struct PhotocraftApp {
     pub(crate) distort: distort_ui::Distort,
     /// Gradient tool live-mode drags and previews (gradient_ui).
     pub(crate) gradient: gradient_ui::LiveGradient,
+    /// Plugins › Script-Fu console (script_ui).
+    pub(crate) script: script_ui::Console,
+    /// Plugins › Python-Fu console (script_ui).
+    pub(crate) python: script_ui::Console,
     /// Filter › Camera Raw Filter dialog (camera_raw_ui).
     pub(crate) camera_raw: Option<camera_raw_ui::CameraRawDialog>,
     /// A raw file just opened interactively, waiting for the open-time Camera Raw dialog (shown
@@ -918,6 +928,8 @@ impl PhotocraftApp {
             shape_fill_preview: None,
             distort: Default::default(),
             gradient: Default::default(),
+            script: Default::default(),
+            python: Default::default(),
             camera_raw: None,
             pending_raw_open: None,
             raw_redevelop: None,
@@ -1991,6 +2003,7 @@ impl eframe::App for PhotocraftApp {
         brush_panel::window(self, &ctx);
         preset_panels::windows(self, &ctx);
         gradient_ui::editor_window(self, &ctx);
+        script_ui::windows(self, &ctx);
         type_panels_ui::windows(self, &ctx);
         analysis_ui::windows(self, &ctx);
         timeline_ui::windows(self, &ctx);

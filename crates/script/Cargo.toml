@@ -1,0 +1,15 @@
+[package]
+name = "photocraft-script"
+description = "Script-Fu: runs Scheme scripts against the PhotoCraft engine through GIMP-compatible procedure names"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+photocraft-engine = { workspace = true }
+photocraft-scheme = { workspace = true }
+serde_json = { workspace = true }

@@ -46,6 +46,8 @@ pub const TABLE: &[(&str, Class)] = &[
     ("adobe-assets", Class::Standalone),
     // Pen tablet input (the one isolated `unsafe` helper: AppKit interop on macOS).
     ("tablet", Class::Standalone),
+    // Scheme interpreter for the Script-Fu handler (no workspace dependencies).
+    ("scheme", Class::Standalone),
     ("doc", Class::Layer(1)),
     ("ops", Class::Layer(2)),
     ("paint", Class::Layer(2)),
@@ -63,6 +65,8 @@ pub const TABLE: &[(&str, Class)] = &[
     ("engine", Class::Layer(5)),
     ("ui-egui", Class::Layer(6)),
     ("automation", Class::Layer(6)),
+    ("script", Class::Layer(6)),
+    ("pyfu", Class::Layer(7)),
     ("platform", Class::Layer(6)),
     ("testkit", Class::Testkit),
     // L7 apps and tooling

@@ -136,6 +136,9 @@ fn choices(id: &str) -> Option<&'static [(&'static str, &'static str)]> {
 /// (direct specs/Last Filter). Filters outside the core and extended families are unaffected.
 pub(crate) fn validate_params(id: &str, params: &Value) -> Result<()> {
     let bad = |msg| EngineError::BadParams { cmd: id.into(), msg };
+    if let Some(result) = crate::filters_more::validate(id, params) {
+        return result;
+    }
     if let Some(choices) = choices(id) {
         for &(key, allowed) in choices {
             if let Some(value) = params.get(key)

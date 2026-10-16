@@ -4281,3 +4281,33 @@ shape	Appearance	Izgled
 	This document's layers: {needed} of {budget} for layers	Slojevi ovog dokumenta: {needed} od {budget} za slojeve
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Slojevima ovog dokumenta treba {needed}, a smeju da zauzmu {budget}: ceo dokument se ponovo iscrtava na CPU-u
 	GPU Memory (MB, 0 = Automatic)	GPU memorija (MB, 0 = Automatski)
+	Channel Waves…	Talasi kanala…
+	Edge Detection…	Detekcija ivica…
+	Extract Channel…	Izdvoji kanal…
+	Gaussian Difference…	Gausova razlika…
+	Invert (Linear Light)	Invertuj (linearno svetlo)
+	Invert Brightness	Invertuj osvetljenost
+	Replace Color Range…	Zameni opseg boja…
+	Choose a pattern file (.pat).	Izaberite datoteku šablona (.pat).
+	Import presets from a file…	Uvezi unapred podešavanja iz datoteke…
+	Console…	Konzola…
+	Plugins	Dodaci
+	Run Script…	Pokreni skriptu…
+	Script-Fu	Script-Fu
+	Scheme expression	Scheme izraz
+	Script-Fu Console	Script-Fu konzola
+	Script-Fu is not available in this build.	Script-Fu nije dostupan u ovoj verziji.
+	{name} is not a text file.	{name} nije tekstualna datoteka.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Python-Fu konzola
+	Python statement	Python naredba
+	Python-Fu is not available in this build.	Python-Fu nije dostupan u ovoj verziji.
+	Algorithm	Algoritam
+	Differential	Diferencijal
+	Laplace	Laplas
+	Normalize	Normalizuj
+	Outer Radius	Spoljašnji radijus
+	Phase	Faza
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel

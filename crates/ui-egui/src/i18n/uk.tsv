@@ -3907,3 +3907,34 @@ curves	Smooth	Згладити
 	This document's layers: {needed} of {budget} for layers	Шари цього документа: {needed} з {budget} для шарів
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Шарам цього документа потрібно {needed}, але займати вони можуть {budget}: увесь документ перемальовується на CPU
 	GPU Memory (MB, 0 = Automatic)	Пам'ять GPU (МБ, 0 = автоматично)
+	Channel Waves…	Хвилі каналів…
+	Edge Detection…	Виявлення країв…
+	Extract Channel…	Видобути канал…
+	Gaussian Difference…	Різниця гаусіанів…
+	Invert (Linear Light)	Інверсія (лінійне світло)
+	Invert Brightness	Інверсія яскравості
+	Replace Color Range…	Замінити діапазон кольорів…
+	Choose a pattern file (.pat).	Виберіть файл візерунка (.pat).
+	Import presets from a file…	Імпортувати набори з файлу…
+	Console…	Консоль…
+	Plugins	Плагіни
+	Run Script…	Виконати скрипт…
+	Script-Fu	Script-Fu
+	Scheme expression	Вираз Scheme
+	Script-Fu Console	Консоль Script-Fu
+	Script-Fu is not available in this build.	Script-Fu недоступний у цій збірці.
+	{name} is not a text file.	{name} — не текстовий файл.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Консоль Python-Fu
+	Python statement	Інструкція Python
+	Python-Fu is not available in this build.	Python-Fu недоступний у цій збірці.
+	Algorithm	Алгоритм
+	Differential	Диференціал
+	Laplace	Лаплас
+	Normalize	Нормалізувати
+	Outer Radius	Зовнішній радіус
+	Phase	Фаза
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	До

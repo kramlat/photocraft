@@ -4127,3 +4127,33 @@ cameraRaw	Yellow	Sárga
 	This document's layers: {needed} of {budget} for layers	A dokumentum rétegei: {needed} / {budget} a rétegeknek
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	A dokumentum rétegeinek {needed} kell, de {budget} foglalhatnak: a teljes dokumentum újrarajzolása a CPU-n fut
 	GPU Memory (MB, 0 = Automatic)	GPU-memória (MB, 0 = Automatikus)
+	Channel Waves…	Csatornahullámok…
+	Edge Detection…	Éldetektálás…
+	Extract Channel…	Csatorna kinyerése…
+	Gaussian Difference…	Gauss-különbség…
+	Invert (Linear Light)	Invertálás (lineáris fény)
+	Invert Brightness	Fényerő invertálása
+	Replace Color Range…	Színtartomány cseréje…
+	Choose a pattern file (.pat).	Válasszon mintafájlt (.pat).
+	Import presets from a file…	Előbeállítások importálása fájlból…
+	Console…	Konzol…
+	Plugins	Bővítmények
+	Run Script…	Szkript futtatása…
+	Script-Fu	Script-Fu
+	Scheme expression	Scheme-kifejezés
+	Script-Fu Console	Script-Fu konzol
+	Script-Fu is not available in this build.	A Script-Fu nem érhető el ebben a buildben.
+	{name} is not a text file.	A(z) {name} nem szövegfájl.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Python-Fu konzol
+	Python statement	Python-utasítás
+	Python-Fu is not available in this build.	A Python-Fu nem érhető el ebben a buildben.
+	Algorithm	Algoritmus
+	Differential	Differenciális
+	Laplace	Laplace
+	Normalize	Normalizálás
+	Outer Radius	Külső sugár
+	Phase	Fázis
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel

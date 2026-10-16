@@ -4170,3 +4170,33 @@ navigator	Zoom	Zoom
 	This document's layers: {needed} of {budget} for layers	Capas de este documento: {needed} de {budget} para capas
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Las capas de este documento necesitan {needed} pero pueden ocupar {budget}: los redibujados de todo el documento usan la CPU
 	GPU Memory (MB, 0 = Automatic)	Memoria de GPU (MB, 0 = Automático)
+	Channel Waves…	Ondas de canal…
+	Edge Detection…	Detección de bordes…
+	Extract Channel…	Extraer canal…
+	Gaussian Difference…	Diferencia gaussiana…
+	Invert (Linear Light)	Invertir (luz lineal)
+	Invert Brightness	Invertir brillo
+	Replace Color Range…	Reemplazar rango de color…
+	Choose a pattern file (.pat).	Elija un archivo de motivo (.pat).
+	Import presets from a file…	Importar ajustes preestablecidos desde un archivo…
+	Console…	Consola…
+	Plugins	Plugins
+	Run Script…	Ejecutar script…
+	Script-Fu	Script-Fu
+	Scheme expression	Expresión Scheme
+	Script-Fu Console	Consola de Script-Fu
+	Script-Fu is not available in this build.	Script-Fu no está disponible en esta versión.
+	{name} is not a text file.	{name} no es un archivo de texto.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Consola de Python-Fu
+	Python statement	Instrucción de Python
+	Python-Fu is not available in this build.	Python-Fu no está disponible en esta versión.
+	Algorithm	Algoritmo
+	Differential	Diferencial
+	Laplace	Laplace
+	Normalize	Normalizar
+	Outer Radius	Radio exterior
+	Phase	Fase
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel

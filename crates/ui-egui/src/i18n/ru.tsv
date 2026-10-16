@@ -3178,3 +3178,34 @@ curves	Smooth	Сгладить
 	This document's layers: {needed} of {budget} for layers	Слои этого документа: {needed} из {budget} для слоёв
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Слоям этого документа нужно {needed}, но занимать они могут {budget}: весь документ перерисовывается на CPU
 	GPU Memory (MB, 0 = Automatic)	Память GPU (МБ, 0 = автоматически)
+	Channel Waves…	Волны каналов…
+	Edge Detection…	Обнаружение краёв…
+	Extract Channel…	Извлечь канал…
+	Gaussian Difference…	Разность гауссианов…
+	Invert (Linear Light)	Инверсия (линейный свет)
+	Invert Brightness	Инверсия яркости
+	Replace Color Range…	Заменить диапазон цветов…
+	Choose a pattern file (.pat).	Выберите файл узора (.pat).
+	Import presets from a file…	Импортировать наборы из файла…
+	Console…	Консоль…
+	Plugins	Плагины
+	Run Script…	Выполнить скрипт…
+	Script-Fu	Script-Fu
+	Scheme expression	Выражение Scheme
+	Script-Fu Console	Консоль Script-Fu
+	Script-Fu is not available in this build.	Script-Fu недоступен в этой сборке.
+	{name} is not a text file.	{name} — не текстовый файл.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Консоль Python-Fu
+	Python statement	Инструкция Python
+	Python-Fu is not available in this build.	Python-Fu недоступен в этой сборке.
+	Algorithm	Алгоритм
+	Differential	Дифференциал
+	Laplace	Лаплас
+	Normalize	Нормализовать
+	Outer Radius	Внешний радиус
+	Phase	Фаза
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel
+	To	В

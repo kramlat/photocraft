@@ -3816,3 +3816,33 @@ navigator	Zoom	Zvětšení
 	This document's layers: {needed} of {budget} for layers	Vrstvy tohoto dokumentu: {needed} z {budget} pro vrstvy
 	This document's layers need {needed} but may hold {budget}: whole-document redraws use the CPU	Vrstvy tohoto dokumentu potřebují {needed}, ale mohou zabrat {budget}: překreslení celého dokumentu probíhá na CPU
 	GPU Memory (MB, 0 = Automatic)	Paměť GPU (MB, 0 = Automaticky)
+	Channel Waves…	Vlny kanálů…
+	Edge Detection…	Detekce hran…
+	Extract Channel…	Extrahovat kanál…
+	Gaussian Difference…	Gaussův rozdíl…
+	Invert (Linear Light)	Invertovat (lineární světlo)
+	Invert Brightness	Invertovat jas
+	Replace Color Range…	Nahradit rozsah barev…
+	Choose a pattern file (.pat).	Vyberte soubor vzorku (.pat).
+	Import presets from a file…	Importovat předvolby ze souboru…
+	Console…	Konzole…
+	Plugins	Doplňky
+	Run Script…	Spustit skript…
+	Script-Fu	Script-Fu
+	Scheme expression	Výraz Scheme
+	Script-Fu Console	Konzole Script-Fu
+	Script-Fu is not available in this build.	Script-Fu není v tomto sestavení k dispozici.
+	{name} is not a text file.	{name} není textový soubor.
+	Python-Fu	Python-Fu
+	Python-Fu Console	Konzole Python-Fu
+	Python statement	Příkaz Pythonu
+	Python-Fu is not available in this build.	Python-Fu není v tomto sestavení k dispozici.
+	Algorithm	Algoritmus
+	Differential	Diferenciál
+	Laplace	Laplace
+	Normalize	Normalizovat
+	Outer Radius	Vnější poloměr
+	Phase	Fáze
+	Prewitt	Prewitt
+	Roberts	Roberts
+	Sobel	Sobel

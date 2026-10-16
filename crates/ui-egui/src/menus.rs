@@ -90,6 +90,9 @@ pub(crate) fn invoke_unguarded(app: &mut PhotocraftApp, ctx: &egui::Context, id:
         crate::tool_memory::select(app, tool);
         return Ok(json!({"tool": tool}));
     }
+    if let Some(r) = crate::script_ui::invoke(app, id, &params) {
+        return r;
+    }
     if id == "ui.symmetryTransform" {
         return crate::symmetry_ui::begin(app).map(|_| Value::Null);
     }
@@ -697,6 +700,7 @@ pub fn is_enabled(app: &PhotocraftApp, id: &str) -> bool {
             app.session.active().is_some() && app.services.export.is_some()
         }
         i if i.starts_with("window.toggle.") => true,
+        i if i.starts_with("plugins.scriptFu.") || i.starts_with("plugins.pythonFu.") => true,
         "window.togglePanels" => true,
         // With one document open the key stays quiet, as in Photoshop, rather than reporting why.
         "window.nextDocument" | "window.previousDocument" => app.session.active().is_some(),
@@ -825,6 +829,8 @@ fn checked(app: &PhotocraftApp, id: &str) -> Option<bool> {
         "window.toggle.options" => p.options_bar,
         "window.toggle.brushSettings" => p.brush_settings,
         "window.toggle.brushes" => p.brushes,
+        "plugins.scriptFu.console" => app.script.open,
+        "plugins.pythonFu.console" => app.python.open,
         _ => return None,
     })
 }

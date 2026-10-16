@@ -24,12 +24,16 @@ mod blur;
 mod blur2;
 pub mod camera_raw;
 pub mod color_to_alpha;
+mod colorops;
+pub use colorops::Component as ChannelSource;
 pub mod content_aware;
 mod denoise;
 pub mod dff;
 pub mod direct;
 mod distort;
 mod distort2;
+mod edgeops;
+pub use edgeops::EdgeAlgorithm;
 pub mod erase;
 pub mod exif;
 pub mod features;
@@ -284,6 +288,39 @@ pub enum FilterParams {
     Solarize,
     Invert,
     Desaturate,
+    /// Inverts the HSB brightness only; hue and saturation stay.
+    InvertBrightness,
+    /// Inverts in linear light.
+    InvertLinear,
+    /// Colours within `fuzziness` % (per channel) of `from` move by `to - from`.
+    ReplaceColorRange {
+        from: [f32; 3],
+        to: [f32; 3],
+        fuzziness: f32,
+    },
+    /// Each selected channel becomes a sine wave of its value: frequency in cycles, phase in degrees.
+    ChannelWaves {
+        frequency: [f32; 3],
+        phase: [f32; 3],
+        modify: [bool; 3],
+    },
+    /// One colour component as a grey image.
+    ExtractChannel {
+        source: ChannelSource,
+        invert: bool,
+    },
+    /// Edge detection operators; amount is a multiplier.
+    EdgeDetection {
+        algorithm: EdgeAlgorithm,
+        amount: f32,
+    },
+    /// `|blur(radius1) - blur(radius2)|`, radii in pixels.
+    GaussianDifference {
+        radius1: f32,
+        radius2: f32,
+        normalize: bool,
+        invert: bool,
+    },
     /// Angle −999…999 degrees.
     Twirl {
         angle: f32,
@@ -564,8 +601,23 @@ impl FilterParams {
             FilterParams::MotionBlur { distance, .. } => Halo::Radius((distance.abs() / 2.0).ceil() as i32 + 2),
             FilterParams::Mosaic { cell_size } => Halo::Radius(cell_size.max(1.0).ceil() as i32 + 1),
             FilterParams::Emboss { height, .. } => Halo::Radius(height.abs().ceil() as i32 + 2),
-            FilterParams::FindEdges => Halo::Radius(1),
-            FilterParams::AddNoise { .. } | FilterParams::Solarize | FilterParams::Invert | FilterParams::Desaturate => Halo::Radius(0),
+            FilterParams::FindEdges | FilterParams::EdgeDetection { .. } => Halo::Radius(1),
+            FilterParams::GaussianDifference { radius1, radius2, normalize, .. } => {
+                if *normalize {
+                    Halo::Bounds
+                } else {
+                    Halo::Radius(edgeops::dog_halo(*radius1, *radius2))
+                }
+            }
+            FilterParams::AddNoise { .. }
+            | FilterParams::Solarize
+            | FilterParams::Invert
+            | FilterParams::Desaturate
+            | FilterParams::InvertBrightness
+            | FilterParams::InvertLinear
+            | FilterParams::ReplaceColorRange { .. }
+            | FilterParams::ChannelWaves { .. }
+            | FilterParams::ExtractChannel { .. } => Halo::Radius(0),
             FilterParams::RadialBlur { .. }
             | FilterParams::Offset { .. }
             | FilterParams::Twirl { .. }
@@ -630,6 +682,13 @@ impl FilterParams {
             FilterParams::Solarize => "Solarize",
             FilterParams::Invert => "Invert",
             FilterParams::Desaturate => "Desaturate",
+            FilterParams::InvertBrightness => "Invert Brightness",
+            FilterParams::InvertLinear => "Invert (Linear Light)",
+            FilterParams::ReplaceColorRange { .. } => "Replace Color Range",
+            FilterParams::ChannelWaves { .. } => "Channel Waves",
+            FilterParams::ExtractChannel { .. } => "Extract Channel",
+            FilterParams::EdgeDetection { .. } => "Edge Detection",
+            FilterParams::GaussianDifference { .. } => "Gaussian Difference",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -752,6 +811,17 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         FilterParams::Solarize => stylize::solarize(src, out, ctx),
         FilterParams::Invert => stylize::per_pixel(src, out, ctx, |v| 1.0 - v),
         FilterParams::Desaturate => stylize::desaturate(src, out, ctx),
+        FilterParams::InvertBrightness => colorops::value_invert(src, out, ctx),
+        FilterParams::InvertLinear => colorops::linear_invert(src, out, ctx),
+        FilterParams::ReplaceColorRange { from, to, fuzziness } => {
+            colorops::color_exchange(src, out, ctx, *from, *to, [(fuzziness / 100.0).clamp(0.0, 1.0); 3])
+        }
+        FilterParams::ChannelWaves { frequency, phase, modify } => colorops::alien_map(src, out, ctx, *frequency, *phase, *modify),
+        FilterParams::ExtractChannel { source, invert } => colorops::component_extract(src, out, ctx, *source, *invert),
+        FilterParams::EdgeDetection { algorithm, amount } => edgeops::edge_detect(src, out, ctx, *algorithm, *amount),
+        FilterParams::GaussianDifference { radius1, radius2, normalize, invert } => {
+            edgeops::difference_of_gaussians(src, out, ctx, *radius1, *radius2, *normalize, *invert)
+        }
         FilterParams::Twirl { angle } => distort::twirl(src, out, ctx, *angle),
         FilterParams::Pinch { amount } => distort::pinch(src, out, ctx, *amount),
         FilterParams::Spherize { amount, mode } => distort::spherize(src, out, ctx, *amount, *mode),
