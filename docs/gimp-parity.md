@@ -19,21 +19,21 @@
 
 ## Filters still to do
 
-72 GIMP operations had no PhotoCraft counterpart when this list was made. 31 are done (the
-table below), `rgb-clip` is not applicable (integer documents never leave 0–1; 32-bit documents
-clamp on display), and **40 are left**:
+72 GIMP operations had no PhotoCraft counterpart when this list was made. 45 are done or covered
+(the table below, plus the existing features named under it), `rgb-clip` is not applicable (integer
+documents never leave 0–1; 32-bit documents clamp on display), and **26 are left**:
 
 - **Blur and enhance (9):** variable-blur, mean-curvature-blur, snn-mean, wavelet-decompose,
   antialias, stress, fattal02, mantiuk06, reinhard05 (the last three are tone mappers).
-- **Distort and map (15):** apply-lens, panorama-projection, stereographic-projection, tile-glass,
-  tile-paper, fractal-trace, illusion, recursive-transform, video-degradation, engrave, bump-map,
-  normal-map, tile-seamless, shift, curve-bend.
-- **Artistic and light (8):** cartoon, cubism, photocopy, softglow, bloom, supernova, sparkle,
-  gradient-flare.
-- **Edge detect (1):** edge-neon.
-- **Colours (1):** color-rotate.
+- **Distort and map (8):** apply-lens, panorama-projection, stereographic-projection, fractal-trace,
+  recursive-transform, bump-map, normal-map, tile-seamless.
+- **Artistic and light (3):** cubism, sparkle, gradient-flare.
 - **Render (2):** diffraction-patterns, fractal-explorer.
 - **Misc (4):** distance-transform, value-propagate, waterpixels, slic.
+
+Found to be covered already by existing filters (so not new work): color-rotate (Hue/Saturation's
+colour ranges), edge-neon (Filter Gallery › Glowing Edges), cartoon (Poster Edges), photocopy
+(Photocopy), softglow and bloom (Diffuse Glow), invert-gamma (Invert).
 
 Operations GIMP has that PhotoCraft already covers under a Photoshop name (blurs, sharpens,
 Median, High Pass, Unsharp Mask, Lens Correction, Polar Coordinates, Spherize, Twirl/Pinch, Ripple,

@@ -238,6 +238,12 @@ const FULL_RESOLUTION_PREVIEW: &[&str] = &[
     "filter.noise.scatterPixels",
     "filter.other.stretchLevels",
     "filter.other.enhanceColors",
+    "filter.distort.shiftRows",
+    "filter.distort.glassTiles",
+    "filter.distort.paperTiles",
+    "filter.stylize.engrave",
+    "filter.video.pixelDisplay",
+    "filter.render.supernova",
 ];
 
 /// Whether `command` with `params` previews at full resolution: [`FULL_RESOLUTION_PREVIEW`], every

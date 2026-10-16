@@ -38,8 +38,11 @@ mod extrafx;
 pub use extrafx::NoiseKind;
 mod patternfx;
 pub use patternfx::WaveShape;
+mod stylefx;
 mod tonefx;
 pub use tonefx::{DitherMethod, ScatterMode, StretchMode};
+mod warpfx;
+pub use warpfx::{BendCurve, TileGaps};
 pub mod erase;
 pub mod exif;
 pub mod features;
@@ -420,6 +423,58 @@ pub enum FilterParams {
         foreground: [f32; 4],
         background: [f32; 4],
     },
+    /// Rows (columns when `vertical`) slid by random distances up to `distance` px.
+    ShiftRows {
+        vertical: bool,
+        distance: f32,
+        seed: u32,
+    },
+    /// Displaces the image along a curve; `amount` -100–100 %.
+    Bend {
+        amount: f32,
+        vertical_axis: bool,
+        curve: BendCurve,
+    },
+    /// Square lenses of `size` px; `refraction` 0–100 %.
+    GlassTiles {
+        size: f32,
+        refraction: f32,
+    },
+    /// Randomly shifted square tiles with gaps between.
+    PaperTiles {
+        size: f32,
+        jitter: f32,
+        gaps: TileGaps,
+        seed: u32,
+    },
+    /// Rotated copies averaged about a centre.
+    Illusion {
+        copies: u32,
+        center_x: f32,
+        center_y: f32,
+    },
+    /// Parallel engraved lines whose width follows the darkness.
+    Engrave {
+        spacing: f32,
+        angle: f32,
+        contrast: f32,
+    },
+    /// An RGB stripe screen with scanlines.
+    PixelDisplay {
+        cell: f32,
+        strength: f32,
+        scanlines: f32,
+    },
+    /// A bright star with spikes.
+    Supernova {
+        center_x: f32,
+        center_y: f32,
+        radius: f32,
+        rays: u32,
+        randomness: f32,
+        color: [f32; 3],
+        seed: u32,
+    },
     /// Angle −999…999 degrees.
     Twirl {
         angle: f32,
@@ -725,7 +780,14 @@ impl FilterParams {
             | FilterParams::Plasma { .. }
             | FilterParams::Spiral { .. }
             | FilterParams::Maze { .. }
-            | FilterParams::SineWaves { .. } => Halo::Radius(0),
+            | FilterParams::SineWaves { .. }
+            | FilterParams::Engrave { .. }
+            | FilterParams::PixelDisplay { .. }
+            | FilterParams::Supernova { .. } => Halo::Radius(0),
+            FilterParams::ShiftRows { distance, .. } => Halo::Radius(warpfx::shift_halo(*distance)),
+            FilterParams::Bend { .. } | FilterParams::Illusion { .. } => Halo::Bounds,
+            FilterParams::GlassTiles { size, .. } => Halo::Radius(size.clamp(2.0, 2000.0).ceil() as i32 + 1),
+            FilterParams::PaperTiles { size, jitter, .. } => Halo::Radius(warpfx::paper_halo(*jitter, *size)),
             FilterParams::StretchLevels { .. } | FilterParams::EnhanceColors => Halo::Bounds,
             FilterParams::Dither { method, .. } => {
                 if *method == DitherMethod::FloydSteinberg {
@@ -830,6 +892,14 @@ impl FilterParams {
             FilterParams::Spiral { .. } => "Spiral",
             FilterParams::Maze { .. } => "Maze",
             FilterParams::SineWaves { .. } => "Sine Waves",
+            FilterParams::ShiftRows { .. } => "Shift Rows",
+            FilterParams::Bend { .. } => "Bend",
+            FilterParams::GlassTiles { .. } => "Glass Tiles",
+            FilterParams::PaperTiles { .. } => "Paper Tiles",
+            FilterParams::Illusion { .. } => "Illusion",
+            FilterParams::Engrave { .. } => "Engrave",
+            FilterParams::PixelDisplay { .. } => "Pixel Display",
+            FilterParams::Supernova { .. } => "Supernova",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -968,6 +1038,16 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         FilterParams::Kaleidoscope { segments, angle, center_x, center_y } => extrafx::kaleidoscope(src, out, ctx, *segments, *angle, (*center_x, *center_y)),
         FilterParams::LongShadow { angle, length, color, fade } => extrafx::long_shadow(src, out, ctx, *angle, *length, *color, *fade),
         FilterParams::Vignette { amount, size, softness, roundness } => extrafx::vignette(src, out, ctx, *amount, *size, *softness, *roundness),
+        FilterParams::ShiftRows { vertical, distance, seed } => warpfx::shift_rows(src, out, ctx, *vertical, *distance, *seed),
+        FilterParams::Bend { amount, vertical_axis, curve } => warpfx::bend(src, out, ctx, *amount, *vertical_axis, *curve),
+        FilterParams::GlassTiles { size, refraction } => warpfx::glass_tiles(src, out, ctx, *size, *refraction),
+        FilterParams::PaperTiles { size, jitter, gaps, seed } => warpfx::paper_tiles(src, out, ctx, *size, *jitter, *gaps, *seed),
+        FilterParams::Illusion { copies, center_x, center_y } => warpfx::illusion(src, out, ctx, *copies, (*center_x, *center_y)),
+        FilterParams::Engrave { spacing, angle, contrast } => stylefx::engrave(src, out, ctx, *spacing, *angle, *contrast),
+        FilterParams::PixelDisplay { cell, strength, scanlines } => stylefx::pixel_display(src, out, ctx, *cell, *strength, *scanlines),
+        FilterParams::Supernova { center_x, center_y, radius, rays, randomness, color, seed } => {
+            stylefx::supernova(src, out, ctx, (*center_x, *center_y), *radius, *rays, *randomness, *color, *seed)
+        }
         FilterParams::StretchLevels { mode } => tonefx::stretch_levels(src, out, ctx, *mode),
         FilterParams::EnhanceColors => tonefx::enhance_colors(src, out, ctx),
         FilterParams::Dither { method, levels, seed } => tonefx::dither(src, out, ctx, *method, *levels, *seed),

@@ -3,7 +3,7 @@
 //! Difference. They run through [`crate::filters::run_filter`] like every other filter, so
 //! selections, smart filters, history and `filter.lastFilter` behave the same.
 
-use photocraft_algo::{ChannelSource, DitherMethod, EdgeAlgorithm, FilterParams, NoiseKind, ScatterMode, StretchMode, WaveShape};
+use photocraft_algo::{BendCurve, ChannelSource, DitherMethod, EdgeAlgorithm, FilterParams, NoiseKind, ScatterMode, StretchMode, TileGaps, WaveShape};
 use serde_json::Value;
 
 use crate::commands::CommandSpec;
@@ -212,6 +212,50 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             foreground: rgba(p, "foreground", [0.0, 0.0, 0.0, 1.0]),
             background: rgba(p, "background", [1.0, 1.0, 1.0, 1.0]),
         },
+        "filter.distort.shiftRows" => {
+            FilterParams::ShiftRows { vertical: s(p, "direction", "horizontal") == "vertical", distance: f(p, "distance", 10.0).clamp(0.0, 10_000.0), seed: seed(p) }
+        }
+        "filter.distort.bend" => FilterParams::Bend {
+            amount: f(p, "amount", 40.0).clamp(-100.0, 100.0),
+            // Bending "vertically" moves columns up and down along a curve across the width.
+            vertical_axis: s(p, "direction", "horizontal") == "vertical",
+            curve: if s(p, "curve", "arc") == "wave" { BendCurve::Wave } else { BendCurve::Arc },
+        },
+        "filter.distort.glassTiles" => FilterParams::GlassTiles { size: f(p, "tileSize", 32.0).clamp(2.0, 2000.0), refraction: f(p, "refraction", 40.0).clamp(0.0, 100.0) },
+        "filter.distort.paperTiles" => FilterParams::PaperTiles {
+            size: f(p, "tileSize", 32.0).clamp(2.0, 2000.0),
+            jitter: f(p, "jitter", 8.0).clamp(0.0, 2000.0),
+            gaps: match s(p, "gaps", "transparent") {
+                "black" => TileGaps::Black,
+                "white" => TileGaps::White,
+                _ => TileGaps::Transparent,
+            },
+            seed: seed(p),
+        },
+        "filter.distort.illusion" => FilterParams::Illusion {
+            copies: f(p, "copies", 4.0).round().clamp(2.0, 32.0) as u32,
+            center_x: f(p, "centerX", 0.5).clamp(0.0, 1.0),
+            center_y: f(p, "centerY", 0.5).clamp(0.0, 1.0),
+        },
+        "filter.stylize.engrave" => FilterParams::Engrave {
+            spacing: f(p, "spacing", 6.0).clamp(2.0, 200.0),
+            angle: f(p, "angle", 45.0).clamp(-180.0, 180.0),
+            contrast: f(p, "contrast", 70.0).clamp(0.0, 100.0),
+        },
+        "filter.video.pixelDisplay" => FilterParams::PixelDisplay {
+            cell: f(p, "cellSize", 3.0).clamp(1.0, 50.0),
+            strength: f(p, "strength", 80.0).clamp(0.0, 100.0),
+            scanlines: f(p, "scanlines", 30.0).clamp(0.0, 100.0),
+        },
+        "filter.render.supernova" => FilterParams::Supernova {
+            center_x: f(p, "centerX", 0.5).clamp(0.0, 1.0),
+            center_y: f(p, "centerY", 0.5).clamp(0.0, 1.0),
+            radius: f(p, "radius", 60.0).clamp(2.0, 20_000.0),
+            rays: f(p, "rays", 40.0).round().clamp(3.0, 200.0) as u32,
+            randomness: f(p, "randomness", 60.0).clamp(0.0, 100.0),
+            color: rgb(p, "color", [1.0, 1.0, 1.0]),
+            seed: seed(p),
+        },
         _ => return crate::gallery_cmds::params_for(id, p),
     })
 }
@@ -240,6 +284,14 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.render.spiral" => &[("spacing", 2.0, 10_000.0), ("thickness", 1.0, 10_000.0)],
         "filter.render.maze" => &[("cellSize", 4.0, 2000.0), ("wallWidth", 1.0, 1000.0)],
         "filter.render.sineWaves" => &[("wavelength", 2.0, 10_000.0), ("angle", -360.0, 360.0), ("phase", -360.0, 360.0), ("contrast", 0.0, 100.0)],
+        "filter.distort.shiftRows" => &[("distance", 0.0, 10_000.0)],
+        "filter.distort.bend" => &[("amount", -100.0, 100.0)],
+        "filter.distort.glassTiles" => &[("tileSize", 2.0, 2000.0), ("refraction", 0.0, 100.0)],
+        "filter.distort.paperTiles" => &[("tileSize", 2.0, 2000.0), ("jitter", 0.0, 2000.0)],
+        "filter.distort.illusion" => &[("copies", 2.0, 32.0), ("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0)],
+        "filter.stylize.engrave" => &[("spacing", 2.0, 200.0), ("angle", -180.0, 180.0), ("contrast", 0.0, 100.0)],
+        "filter.video.pixelDisplay" => &[("cellSize", 1.0, 50.0), ("strength", 0.0, 100.0), ("scanlines", 0.0, 100.0)],
+        "filter.render.supernova" => &[("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0), ("radius", 2.0, 20_000.0), ("rays", 3.0, 200.0), ("randomness", 0.0, 100.0)],
         "filter.other.stretchLevels" | "filter.other.enhanceColors" => &[],
         "filter.other.invertBrightness" | "filter.other.invertLinear" | "filter.other.extractChannel" => &[],
         _ => return None,
@@ -274,6 +326,9 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.dither" => choice("method", "bayer2|bayer4|bayer8|random|floydSteinberg"),
         "filter.noise.scatterPixels" => choice("mode", "random|pick|smear|spread"),
         "filter.render.sineWaves" => choice("shape", "linear|radial|cross"),
+        "filter.distort.shiftRows" => choice("direction", "horizontal|vertical"),
+        "filter.distort.bend" => choice("direction", "horizontal|vertical").or_else(|| choice("curve", "arc|wave")),
+        "filter.distort.paperTiles" => choice("gaps", "transparent|black|white"),
         _ => None,
     };
     if let Some(msg) = msg {
@@ -282,7 +337,7 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
     for key in ["foreground", "background", "color"] {
         if matches!(
             id,
-            "filter.render.noisePattern" | "filter.render.checkerboard" | "filter.render.grid" | "filter.stylize.longShadow" | "filter.render.spiral" | "filter.render.maze" | "filter.render.sineWaves"
+            "filter.render.noisePattern" | "filter.render.checkerboard" | "filter.render.grid" | "filter.stylize.longShadow" | "filter.render.spiral" | "filter.render.maze" | "filter.render.sineWaves" | "filter.render.supernova"
         )
             && p.get(key).is_some_and(|v| !v.is_array() && v.as_str().is_none_or(|h| h.len() != 7 || !h.starts_with('#')))
         {
@@ -381,6 +436,24 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Filter", "Render"],
             r##"{"shape":"linear|radial|cross"="linear","wavelength":2..10000=32,"angle":-360..360=0,"phase":-360..360=0,"contrast":0..100=100,"foreground":json,"background":json}"##
         ),
+        cmd!("filter.distort.shiftRows", "Shift Rows…", ["Filter", "Distort"], r##"{"direction":"horizontal|vertical"="horizontal","distance":0..10000=10,"seed":u32=0}"##),
+        cmd!("filter.distort.bend", "Bend…", ["Filter", "Distort"], r##"{"amount":-100..100=40,"direction":"horizontal|vertical"="horizontal","curve":"arc|wave"="arc"}"##),
+        cmd!("filter.distort.glassTiles", "Glass Tiles…", ["Filter", "Distort"], r##"{"tileSize":2..2000=32,"refraction":0..100=40}"##),
+        cmd!(
+            "filter.distort.paperTiles",
+            "Paper Tiles…",
+            ["Filter", "Distort"],
+            r##"{"tileSize":2..2000=32,"jitter":0..2000=8,"gaps":"transparent|black|white"="transparent","seed":u32=0}"##
+        ),
+        cmd!("filter.distort.illusion", "Illusion…", ["Filter", "Distort"], r##"{"copies":2..32=4,"centerX":0..1=0.5,"centerY":0..1=0.5}"##),
+        cmd!("filter.stylize.engrave", "Engrave…", ["Filter", "Stylize"], r##"{"spacing":2..200=6,"angle":-180..180=45,"contrast":0..100=70}"##),
+        cmd!("filter.video.pixelDisplay", "Pixel Display…", ["Filter", "Video"], r##"{"cellSize":1..50=3,"strength":0..100=80,"scanlines":0..100=30}"##),
+        cmd!(
+            "filter.render.supernova",
+            "Supernova…",
+            ["Filter", "Render"],
+            r##"{"centerX":0..1=0.5,"centerY":0..1=0.5,"radius":2..20000=60,"rays":3..200=40,"randomness":0..100=60,"color":json,"seed":u32=0}"##
+        ),
         cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5}"##),
         cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":json,"fade":bool=true}"##),
     ]
@@ -392,7 +465,7 @@ mod tests {
 
     use crate::Session;
 
-    const IDS: [&str; 21] = [
+    const IDS: [&str; 29] = [
         "filter.other.invertBrightness",
         "filter.other.invertLinear",
         "filter.other.replaceColorRange",
@@ -414,6 +487,14 @@ mod tests {
         "filter.render.spiral",
         "filter.render.maze",
         "filter.render.sineWaves",
+        "filter.distort.shiftRows",
+        "filter.distort.bend",
+        "filter.distort.glassTiles",
+        "filter.distort.paperTiles",
+        "filter.distort.illusion",
+        "filter.stylize.engrave",
+        "filter.video.pixelDisplay",
+        "filter.render.supernova",
     ];
 
     fn session(depth: u64) -> Session {
