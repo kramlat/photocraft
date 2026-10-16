@@ -928,3 +928,37 @@ fn opening_type_in_a_missing_font_warns() {
     // The importer's own warning for the same font isn't doubled.
     assert_eq!(app.open_bytes("warned.psd", b"x").unwrap(), vec![warning]);
 }
+
+/// A `.pat` dropped anywhere that isn't the canvas or the tab strip (over the Patterns palette,
+/// say) joins the pattern library in a group named after the file, and no document opens.
+#[test]
+fn a_pat_file_dropped_on_a_palette_joins_the_library() {
+    let dir = std::env::temp_dir().join(format!("photocraft-drop-pat-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    // A 2×1 GIMP pattern.
+    let mut gpat = Vec::new();
+    for v in [33u32, 1, 2, 1, 3] {
+        gpat.extend_from_slice(&v.to_be_bytes());
+    }
+    gpat.extend_from_slice(b"GPAT");
+    gpat.extend_from_slice(b"Big Blue\0");
+    gpat.extend_from_slice(&[0, 0, 127, 0, 0, 255]);
+    let file = dir.join("Blues.pat");
+    std::fs::write(&file, &gpat).unwrap();
+    let pointer = Rc::new(std::cell::Cell::new(egui::pos2(5.0, 5.0)));
+    let reported = pointer.clone();
+    let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1280.0, 800.0)).with_max_steps(8).build_eframe(move |cc| {
+        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+        let services = Services { cursor_pos: Some(Box::new(move |_: &egui::Context| Some(reported.get()))), ..Default::default() };
+        PhotocraftApp::new(photocraft_engine::Session::new(), services)
+    });
+    h.run_steps(2);
+    h.input_mut().dropped_files.push(dropped(file, Err("read from the path".into())));
+    h.run_steps(2);
+    let app = h.state();
+    assert!(app.session.documents().is_empty(), "a preset file opens no document");
+    let group = app.session.presets.pattern_groups.iter().find(|g| g.name == "Blues").expect("a group named after the file");
+    assert_eq!(group.items.len(), 1);
+    assert!(app.session.patterns.items.iter().any(|p| p.name == "Big Blue" && group.items.contains(&p.id)));
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -283,6 +283,17 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
             None => s.patterns.items.push(pat),
         }
     }
+    // A file's patterns form a Patterns panel group named after it, as gradients do.
+    if let Some(name) = p.get("group").and_then(Value::as_str).map(str::trim).filter(|g| !g.is_empty()) {
+        let groups = &mut s.presets.pattern_groups;
+        for g in groups.iter_mut() {
+            g.items.retain(|id| !ids.contains(id));
+        }
+        let gi = crate::presets::group_index(groups, Some(name));
+        if let Some(g) = groups.get_mut(gi) {
+            g.items.extend(ids.iter().cloned());
+        }
+    }
     Ok(json!({"imported": ids, "count": ids.len()}))
 }
 
@@ -413,7 +424,7 @@ pub fn specs() -> Vec<CommandSpec> {
             label: "Import Patterns…",
             menu: &[],
             shortcut: None,
-            params: r##"{"path":".pat file"?,"data":base64 bytes? (instead of a path)} → {imported:[ids],count}"##,
+            params: r##"{"path":".pat file (Photoshop or GIMP)"?,"data":base64 bytes? (instead of a path),"group":string? (Patterns panel group for them)} → {imported:[ids],count}"##,
             enabled: always,
             journal: true,
             run: import,
@@ -510,6 +521,11 @@ mod tests {
         let v = s.execute("pattern.import", json!({"data": photocraft_paint::tile::b64_encode(&bytes)})).unwrap();
         assert_eq!(v["count"], v["imported"].as_array().unwrap().len());
         assert_eq!(resolve(&s, "Crimson").unwrap().id, id);
+        // `group` files them under a Patterns panel group named for the file.
+        s.execute("pattern.import", json!({"data": photocraft_paint::tile::b64_encode(&bytes), "group": "Lace"})).unwrap();
+        let lace = s.presets.pattern_groups.iter().find(|g| g.name == "Lace").unwrap();
+        assert!(lace.items.contains(&id));
+        assert_eq!(s.presets.pattern_groups.iter().filter(|g| g.items.contains(&id)).count(), 1);
         std::fs::remove_dir_all(dir).ok();
         assert!(s.execute("pattern.import", json!({"path": "/nonexistent.pat"})).is_err());
         for bad in [json!({}), json!({"data": "not base64!"}), json!({"data": "aGVsbG8="})] {

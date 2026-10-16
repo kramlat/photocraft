@@ -322,6 +322,8 @@ pub(crate) enum Ev {
     DeleteGroup(String),
     NewGroup,
     New,
+    /// The footer's Import… button (palettes that take preset files).
+    Import,
 }
 
 fn group_open(st: &PresetUi, panel: &str, gi: usize, name: &str) -> bool {
@@ -585,6 +587,9 @@ pub(crate) fn browser(
             if crate::icons::button(ui, "folder-plus", 24.0, false, tl!("Create new group")).clicked() {
                 ev.push(Ev::NewGroup);
             }
+            if matches!(panel, "patterns" | "gradients") && crate::icons::button(ui, "folder-open", 24.0, false, tl!("Import presets from a file…")).clicked() {
+                ev.push(Ev::Import);
+            }
         });
     });
     let measured = ui.min_rect().bottom() - footer_top;
@@ -638,6 +643,7 @@ fn generic(app: &mut PhotocraftApp, panel: &str, prefix: &str, e: &Ev, new_param
                 app.ui.presets_ui.renaming = Some((panel.into(), format!("group:{g}"), g));
             }
         }
+        Ev::Import => crate::preset_files_ui::import_dialog(app, panel),
         Ev::New => {
             if let Some(r) = run(app, &format!("{prefix}.new"), new_params) {
                 let name = r.get("name").or(r.get("pattern")).and_then(Value::as_str).unwrap_or_default().to_string();

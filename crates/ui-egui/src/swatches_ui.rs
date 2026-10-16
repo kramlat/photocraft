@@ -110,6 +110,7 @@ fn handle(app: &mut PhotocraftApp, e: Ev, background: bool) {
         Ev::DeleteGroup(g) => drop(run(app, "swatches.deleteGroup", json!({"group": g}))),
         Ev::NewGroup => new_group(app),
         Ev::New => new_swatch(app),
+        Ev::Import => {}
     }
 }
 

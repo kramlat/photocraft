@@ -199,6 +199,46 @@ fn import_image(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({ "name": name, "width": tw, "height": th }))
 }
 
+/// Brushes panel › Import Brushes… with a GIMP `.gbr` or `.gih`: each tip becomes a sampled-tip
+/// preset, all in one group named after the file (a lone `.gbr` joins the group too).
+fn import_gimp(s: &mut Session, p: &Value) -> Result<Value> {
+    let cmd = "brush.presets.importGimp";
+    let (bytes, stem) = file_bytes(p, cmd, ".gbr or .gih file")?;
+    let is_gih = p.get("path").and_then(Value::as_str).or(p.get("fileName").and_then(Value::as_str)).is_some_and(|n| n.to_ascii_lowercase().ends_with(".gih"));
+    let file = if is_gih { photocraft_io::gimp_brush::read_gih(&bytes) } else { photocraft_io::gimp_brush::read_gbr(&bytes) }.map_err(|e| bad(cmd, e))?;
+    let group = match p.get("group") {
+        Some(v) => v.as_str().map(str::trim).filter(|g| !g.is_empty()).ok_or_else(|| bad(cmd, "`group` must be a non-empty string"))?.to_string(),
+        None if !stem.is_empty() => stem,
+        None => file.name.clone(),
+    };
+    let mut taken: Vec<String> = s.tools.presets.iter().map(|x| x.name.clone()).collect();
+    let mut added = Vec::new();
+    for (i, tip) in file.tips.iter().enumerate() {
+        let (mut brush, _, _) = crate::brush_cmds::sampled_brush(cmd, &tip.paint, tip.width, tip.height)?;
+        brush.spacing = tip.spacing;
+        let base = match (tip.name.is_empty(), file.tips.len()) {
+            (false, 1) => tip.name.clone(),
+            (_, 1) => group.clone(),
+            (false, _) => format!("{} {}", file.name, tip.name),
+            _ => format!("{} {}", file.name, i + 1),
+        };
+        let name = unique(&base, &taken);
+        taken.push(name.clone());
+        added.push(photocraft_paint::BrushPreset { name, brush, builtin: false, group: group.clone(), folder: Vec::new(), captures: Default::default() });
+    }
+    let names: Vec<String> = added.iter().map(|a| a.name.clone()).collect();
+    s.tools.presets.extend(added);
+    s.brush_presets_changed();
+    if p.get("select").and_then(Value::as_bool).unwrap_or(false)
+        && let Some(first) = names.first()
+        && let Some(pr) = photocraft_paint::presets::find(&s.tools.presets, first)
+    {
+        s.tools.brush = pr.brush.clone().picked_over(&s.tools.brush);
+        s.tools.brush_changed();
+    }
+    Ok(json!({ "group": group, "imported": names, "count": names.len() }))
+}
+
 /// Brush-file import command specs.
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -210,6 +250,16 @@ pub fn specs() -> Vec<CommandSpec> {
             params: r##"{"path":".abr file"?,"data":base64 bytes?,"group":string?=file name,"replace":bool=true (replace a group of the same name),"select":bool=false (make the first imported preset current)} → {group, imported, count, folders (nested folders kept from the file), version, warnings}"##,
             enabled: always,
             run: import_abr,
+            journal: true,
+        },
+        CommandSpec {
+            id: "brush.presets.importGimp",
+            label: "Import GIMP Brushes…",
+            menu: &[],
+            shortcut: None,
+            params: r##"{"path":".gbr or .gih file"?,"data":base64 bytes?,"fileName":string? (with data: tells .gih from .gbr),"group":string?=file name,"select":bool=false} → {group, imported, count}"##,
+            enabled: always,
+            run: import_gimp,
             journal: true,
         },
         CommandSpec {
@@ -445,6 +495,40 @@ mod tests {
         }
         let only_noise = photocraft_paint::tile::b64_encode(&write(&grads[1..]));
         assert!(s.execute("gradient.presets.importGrd", json!({"data": only_noise})).is_err());
+    }
+
+    fn gimp_tip(name: &str, px: &[u8]) -> Vec<u8> {
+        let mut out = Vec::new();
+        for v in [28 + name.len() as u32 + 1, 2, 2, 2, 1] {
+            out.extend_from_slice(&v.to_be_bytes());
+        }
+        out.extend_from_slice(b"GIMP");
+        out.extend_from_slice(&50u32.to_be_bytes());
+        out.extend_from_slice(name.as_bytes());
+        out.push(0);
+        out.extend_from_slice(px);
+        out
+    }
+
+    #[test]
+    fn gimp_brushes_import_as_a_group() {
+        let mut s = Session::new();
+        let n = s.tools.presets.len();
+        let gbr = photocraft_paint::tile::b64_encode(&gimp_tip("Dab", &[255, 255, 255, 255]));
+        let r = s.execute("brush.presets.importGimp", json!({"data": gbr, "group": "Gimp"})).unwrap();
+        assert_eq!(r["imported"], json!(["Dab"]));
+        let preset = s.tools.presets.iter().find(|p| p.name == "Dab").unwrap();
+        assert_eq!((preset.group.as_str(), preset.brush.spacing), ("Gimp", 0.5));
+        let mut gih = b"Hose\n2 ncells:2\n".to_vec();
+        gih.extend(gimp_tip("a", &[255, 0, 0, 0]));
+        gih.extend(gimp_tip("b", &[0, 0, 0, 255]));
+        let r = s.execute("brush.presets.importGimp", json!({"data": photocraft_paint::tile::b64_encode(&gih), "fileName": "hose.gih"})).unwrap();
+        assert_eq!(r["count"], 2);
+        assert_eq!(r["imported"], json!(["Hose a", "Hose b"]));
+        assert_eq!(s.tools.presets.len(), n + 3);
+        for p in [json!({}), json!({"data": photocraft_paint::tile::b64_encode(b"junk")}), json!({"data": photocraft_paint::tile::b64_encode(&gimp_tip("e", &[0; 4]))})] {
+            assert!(s.execute("brush.presets.importGimp", p.clone()).is_err(), "{p}");
+        }
     }
 
     #[test]

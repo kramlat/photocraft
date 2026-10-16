@@ -151,8 +151,46 @@ pub fn export_global_blocks(doc: &Document) -> Vec<photocraft_doc::PsdGlobalBloc
     out
 }
 
-/// Reads a `.pat` pattern file.
+/// Largest side of a GIMP pattern tile read here.
+const GPAT_MAX_SIDE: u32 = 16_384;
+
+/// Reads a GIMP `.pat` file (`GPAT`): big-endian header size, version, width, height, bytes per
+/// pixel (1 grey, 2 grey + alpha, 3 RGB, 4 RGBA), the magic, a NUL-terminated name, then
+/// 8-bit interleaved pixels. One pattern per file.
+fn read_gimp_pat(bytes: &[u8]) -> Result<Vec<Pattern>, String> {
+    let bad = |what: &str| format!("not a readable GIMP .pat file: {what}");
+    let word = |i: usize| bytes.get(i * 4..i * 4 + 4).and_then(|b| <[u8; 4]>::try_from(b).ok()).map(u32::from_be_bytes);
+    let (Some(header), Some(version), Some(w), Some(h), Some(bpp)) = (word(0), word(1), word(2), word(3), word(4)) else {
+        return Err(bad("truncated header"));
+    };
+    if version != 1 {
+        return Err(bad(&format!("unsupported version {version}")));
+    }
+    if w == 0 || h == 0 || w > GPAT_MAX_SIDE || h > GPAT_MAX_SIDE {
+        return Err(bad("bad size"));
+    }
+    let (mode, alpha) = match bpp {
+        1 => (ColorMode::Grayscale, false),
+        2 => (ColorMode::Grayscale, true),
+        3 => (ColorMode::Rgb, false),
+        4 => (ColorMode::Rgb, true),
+        _ => return Err(bad("unsupported bytes per pixel")),
+    };
+    let header = header as usize;
+    let name = bytes.get(24..header).ok_or_else(|| bad("truncated name"))?;
+    let name = String::from_utf8_lossy(name.split(|b| *b == 0).next().unwrap_or_default()).trim().to_string();
+    let len = (w as usize).checked_mul(h as usize).and_then(|n| n.checked_mul(bpp as usize)).ok_or_else(|| bad("bad size"))?;
+    let pixels = header.checked_add(len).and_then(|end| bytes.get(header..end)).ok_or_else(|| bad("truncated pixels"))?;
+    let surface = Surface::from_interleaved(PixelFormat::new(mode, SampleType::U8, alpha), Rect::new(0, 0, w as i32, h as i32), pixels);
+    let name = if name.is_empty() { "Pattern".to_string() } else { name };
+    Ok(vec![Pattern::new(name, surface, w, h)])
+}
+
+/// Reads a `.pat` pattern file: Photoshop's (`8BPT`) or GIMP's (`GPAT`).
 pub fn read_pat(bytes: &[u8]) -> Result<Vec<Pattern>, String> {
+    if bytes.get(20..24) == Some(b"GPAT") {
+        return read_gimp_pat(bytes);
+    }
     let ps = photocraft_psd::patterns::parse_pat_file(bytes).map_err(|e| format!("not a readable .pat file: {e}"))?;
     Ok(ps.iter().filter_map(from_psd).collect())
 }
@@ -216,5 +254,45 @@ mod tests {
         d2.metadata.psd_global_blocks = out;
         assert_eq!(from_global_blocks(&d2), d.patterns);
         assert_eq!(read_pat(&write_pat(&d.patterns).unwrap()).unwrap(), d.patterns);
+    }
+
+    fn gpat(w: u32, h: u32, bpp: u32, name: &str, pixels: &[u8]) -> Vec<u8> {
+        let mut out = Vec::new();
+        for v in [24 + name.len() as u32 + 1, 1, w, h, bpp] {
+            out.extend_from_slice(&v.to_be_bytes());
+        }
+        out.extend_from_slice(b"GPAT");
+        out.extend_from_slice(name.as_bytes());
+        out.push(0);
+        out.extend_from_slice(pixels);
+        out
+    }
+
+    #[test]
+    fn gimp_pat_files_read() {
+        let rgb = gpat(2, 1, 3, "Big Blue", &[10, 20, 30, 40, 50, 60]);
+        let p = &read_pat(&rgb).unwrap()[0];
+        assert_eq!((p.name.as_str(), p.width, p.height), ("Big Blue", 2, 1));
+        assert_eq!(p.surface.format(), PixelFormat::new(ColorMode::Rgb, SampleType::U8, false));
+        assert_eq!(p.surface.to_interleaved(p.rect()), [10, 20, 30, 40, 50, 60]);
+        let ga = &read_pat(&gpat(1, 2, 2, "", &[1, 2, 3, 4])).unwrap()[0];
+        assert_eq!(ga.name, "Pattern");
+        assert_eq!(ga.surface.format(), PixelFormat::new(ColorMode::Grayscale, SampleType::U8, true));
+    }
+
+    #[test]
+    fn hostile_gimp_pat_files_error() {
+        let ok = gpat(2, 2, 3, "x", &[0; 12]);
+        assert!(read_pat(&ok[..ok.len() - 1]).is_err(), "truncated pixels");
+        assert!(read_pat(&ok[..22]).is_err(), "truncated header");
+        assert!(read_pat(&gpat(0, 2, 3, "x", &[])).is_err());
+        assert!(read_pat(&gpat(u32::MAX, u32::MAX, 4, "x", &[])).is_err());
+        assert!(read_pat(&gpat(1, 1, 7, "x", &[0; 7])).is_err());
+        let mut v2 = ok.clone();
+        v2[7] = 2;
+        assert!(read_pat(&v2).is_err());
+        let mut short_header = ok;
+        short_header[3] = 20;
+        assert!(read_pat(&short_header).is_err(), "header smaller than its fixed part");
     }
 }

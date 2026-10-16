@@ -15,7 +15,7 @@ use crate::PhotocraftApp;
 /// the Swatches panel through [`crate::swatches_ui::import_bytes`]).
 /// `.psp` is Photoshop's live `Keyboard Shortcuts.psp` (the same XML as a `.kys`); other `.psp`
 /// settings files are refused with a clear message.
-pub const PRESET_EXTS: &[&str] = &["abr", "grd", "pat", "aco", "ase", "kys", "psp"];
+pub const PRESET_EXTS: &[&str] = &["abr", "gbr", "gih", "grd", "pat", "aco", "ase", "kys", "psp"];
 
 fn ext(name: &str) -> String {
     std::path::Path::new(name).extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default()
@@ -32,7 +32,7 @@ pub const BRUSH_IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "tif", "tiff", "ps
 /// Brushes panel / brush preset picker › Import Brushes…: an `.abr` joins the brush library as a
 /// group (as File › Open does), an image file becomes a new brush preset with that image as its tip.
 pub fn import_brushes(app: &mut PhotocraftApp) -> Result<Value, String> {
-    let exts: Vec<&str> = std::iter::once("abr").chain(BRUSH_IMAGE_EXTS.iter().copied()).collect();
+    let exts: Vec<&str> = ["abr", "gbr", "gih"].into_iter().chain(BRUSH_IMAGE_EXTS.iter().copied()).collect();
     app.pick_file_bytes_filtered(&exts, |app, name, bytes| match open(app, &name, &bytes) {
         Some(r) => r.map(|()| Value::Null),
         None => import_brush_image(app, &name, &bytes),
@@ -73,6 +73,27 @@ pub(crate) fn import_gradients_dialog(app: &mut PhotocraftApp) {
     }
 }
 
+/// A palette's Import… button: patterns take `.pat` (Photoshop or GIMP), gradients `.grd`. The
+/// same files also import by dropping them anywhere on the window.
+pub(crate) fn import_dialog(app: &mut PhotocraftApp, panel: &str) {
+    if panel == "gradients" {
+        return import_gradients_dialog(app);
+    }
+    let result = app.pick_file_bytes_filtered(&["pat"], |app, name, bytes| {
+        if ext(&name) != "pat" {
+            return Err(tl!("Choose a pattern file (.pat).").into());
+        }
+        open(app, &name, &bytes).ok_or_else(|| tl!("Choose a pattern file (.pat).").to_string())??;
+        Ok(Value::Null)
+    });
+    if let Err(error) = result
+        && error != crate::file_dialog::CANCELLED
+    {
+        app.ui.status = error;
+        app.ui.status_error = true;
+    }
+}
+
 /// Command params for the file: a real path keeps the journal small; browser files arrive as bytes.
 fn source(name: &str, bytes: &[u8]) -> Value {
     #[cfg(not(target_arch = "wasm32"))]
@@ -87,6 +108,7 @@ fn source(name: &str, bytes: &[u8]) -> Value {
 pub fn open(app: &mut PhotocraftApp, name: &str, bytes: &[u8]) -> Option<Result<(), String>> {
     let (cmd, what) = match ext(name).as_str() {
         "abr" => ("brush.presets.importAbr", "brushes"),
+        "gbr" | "gih" => ("brush.presets.importGimp", "brushes"),
         "grd" => ("gradient.presets.importGrd", "gradients"),
         "pat" => ("pattern.import", "patterns"),
         "aco" | "ase" => return Some(crate::swatches_ui::import_bytes(app, name, bytes, false).map(|_| ())),
@@ -95,6 +117,9 @@ pub fn open(app: &mut PhotocraftApp, name: &str, bytes: &[u8]) -> Option<Result<
     };
     let stem = std::path::Path::new(name).file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| tl!("Imported").into());
     let mut p = source(name, bytes);
+    if p.get("data").is_some() && matches!(ext(name).as_str(), "gbr" | "gih") {
+        p["fileName"] = json!(name);
+    }
     p["group"] = json!(stem);
     if what == "brushes" {
         p["select"] = json!(true);
