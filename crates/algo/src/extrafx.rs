@@ -102,7 +102,7 @@ fn value(x: f32, y: f32, seed: u32) -> f32 {
 }
 
 /// One octave of `kind` at lattice position `(x, y)`, normalised to `0..=1`.
-fn octave(kind: NoiseKind, x: f32, y: f32, seed: u32) -> f32 {
+pub(crate) fn octave(kind: NoiseKind, x: f32, y: f32, seed: u32) -> f32 {
     match kind {
         NoiseKind::Perlin => (0.5 + perlin(x, y, seed) * 0.9).clamp(0.0, 1.0),
         NoiseKind::Simplex => (0.5 + simplex(x, y, seed) * 0.5).clamp(0.0, 1.0),

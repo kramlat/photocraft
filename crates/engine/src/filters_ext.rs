@@ -400,7 +400,7 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
 
 /// Ids whose rendering uses the foreground/background colours.
 fn uses_colours(id: &str) -> bool {
-    matches!(id, "filter.render.fibers" | "filter.render.noisePattern" | "filter.render.checkerboard" | "filter.stylize.tiles" | "filter.pixelate.pointillize") || crate::gallery_cmds::uses_colours(id)
+    matches!(id, "filter.render.fibers" | "filter.render.noisePattern" | "filter.render.checkerboard" | "filter.render.spiral" | "filter.render.maze" | "filter.render.sineWaves" | "filter.stylize.tiles" | "filter.pixelate.pointillize") || crate::gallery_cmds::uses_colours(id)
 }
 
 /// Fills in session state a filter reads (the current colours) as explicit params, so the

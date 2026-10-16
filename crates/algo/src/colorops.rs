@@ -47,7 +47,7 @@ fn map_rgba(src: &Image, out: Rect, ctx: &Ctx, f: impl Fn([f32; 4]) -> [f32; 4])
 }
 
 /// `(hue 0..1, saturation, value)` of a straight RGB colour.
-fn to_hsv(c: [f32; 3]) -> [f32; 3] {
+pub(crate) fn to_hsv(c: [f32; 3]) -> [f32; 3] {
     let (mx, mn) = (c[0].max(c[1]).max(c[2]), c[0].min(c[1]).min(c[2]));
     let d = mx - mn;
     let h = if d <= 0.0 {
@@ -62,7 +62,7 @@ fn to_hsv(c: [f32; 3]) -> [f32; 3] {
     [h, if mx > 0.0 { d / mx } else { 0.0 }, mx]
 }
 
-fn from_hsv(h: f32, s: f32, v: f32) -> [f32; 3] {
+pub(crate) fn from_hsv(h: f32, s: f32, v: f32) -> [f32; 3] {
     let k = |n: f32| {
         let p = (n + h * 6.0).rem_euclid(6.0);
         v - v * s * p.min(4.0 - p).clamp(0.0, 1.0)

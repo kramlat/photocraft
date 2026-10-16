@@ -17,70 +17,36 @@
 - **So the real gaps are** (1) the GEGL filter set below and (2) reading `.xcf` (filters and modes survive
   there as data).
 
-## Filters GIMP offers that PhotoCraft has no counterpart for
+## Filters still to do
 
-Names are GEGL operation names. "Has" means a PhotoCraft filter does the same job under another name.
+72 GIMP operations had no PhotoCraft counterpart when this list was made. 31 are done (the
+table below), `rgb-clip` is not applicable (integer documents never leave 0–1; 32-bit documents
+clamp on display), and **40 are left**:
 
-**Blur / enhance:** variable-blur, mean-curvature-blur, snn-mean, bilateral-style selective gaussian
-(has: Surface Blur), wavelet-decompose (plug-in), antialias, stress, noise-reduction (has: Reduce Noise),
-high-pass (has), unsharp-mask (has), local-contrast / retinex-style tone ops: fattal02, mantiuk06, reinhard05.
+- **Blur and enhance (9):** variable-blur, mean-curvature-blur, snn-mean, wavelet-decompose,
+  antialias, stress, fattal02, mantiuk06, reinhard05 (the last three are tone mappers).
+- **Distort and map (15):** apply-lens, panorama-projection, stereographic-projection, tile-glass,
+  tile-paper, fractal-trace, illusion, recursive-transform, video-degradation, engrave, bump-map,
+  normal-map, tile-seamless, shift, curve-bend.
+- **Artistic and light (8):** cartoon, cubism, photocopy, softglow, bloom, supernova, sparkle,
+  gradient-flare.
+- **Edge detect (1):** edge-neon.
+- **Colours (1):** color-rotate.
+- **Render (2):** diffraction-patterns, fractal-explorer.
+- **Misc (4):** distance-transform, value-propagate, waterpixels, slic.
 
-**Distorts / map:** apply-lens, lens-distortion (has: Lens Correction), mirrors (kaleidoscope),
-panorama-projection, stereographic-projection (little planet), polar-coordinates (has), spherize (has),
-whirl-pinch (has: Twirl, Pinch), ripple (has), waves (has), tile-glass, tile-paper, fractal-trace, illusion,
-recursive-transform, video-degradation, engrave, newsprint (has: Color Halftone, partly), bump-map,
-normal-map, tile-seamless, displace (has), shift, wind (has), curve-bend.
-
-**Artistic / light:** cartoon, cubism, photocopy, softglow, bloom, long-shadow, vignette (has, Lens
-Correction), supernova, lens-flare (has), sparkle, gradient-flare.
-
-**Noise:** noise-rgb / noise-hsv / noise-cie-lch variants (has: Add Noise), noise-hurl, noise-pick,
-noise-slur, noise-spread.
-
-**Edge detect:** edge-sobel, edge-laplace, edge-neon, edge (generic), difference-of-gaussians
-(has: Find Edges).
-
-**Colours:** alien-map, color-exchange, color-rotate, color-enhance, component-extract, value-invert,
-invert-gamma, invert-linear, rgb-clip, stretch-contrast, stretch-contrast-hsv, mono-mixer (has: Black &
-White), dither, bayer-matrix, color-temperature (has: Camera Raw), channel-mixer (has), saturation (has),
-hue-chroma (has), sepia (has: Photo Filter).
-
-**Render:** checkerboard, grid, maze, plasma, sinus, spiral, linear-sinusoid, diffraction-patterns,
-cell-noise, simplex-noise, perlin-noise, noise-solid (has: Clouds, Fibers), fractal-explorer.
-
-**Misc:** distance-transform, value-propagate, waterpixels, slic, long-shadow, convolution-matrix
-(has: Custom), gaussian-blur-selective (has).
-
-## Naming policy
-
-The UI speaks Photoshop. A GIMP-only operation gets the name and parameter wording a Photoshop user
-would expect (Fuzziness, Amount, Radius, Channel), never GIMP's operation name. Script procedures keep
-their GIMP names (`gimp-image-new`) because existing scripts depend on them, but each maps onto a
-PhotoCraft command.
-
-## Added so far (clean-room, from published definitions)
-
-| PhotoCraft | Menu | Covers |
-|---|---|---|
-| Invert Brightness | Filter › Other | value-invert |
-| Invert (Linear Light) | Filter › Other | invert-linear |
-| Replace Color Range… | Filter › Other | color-exchange |
-| Channel Waves… | Filter › Other | alien-map |
-| Extract Channel… | Filter › Other | component-extract |
-| Gaussian Difference… | Filter › Other | difference-of-gaussians |
-| Edge Detection… (Sobel, Prewitt, Roberts, Gradient, Differential, Laplace) | Filter › Stylize | edge-sobel, edge-laplace, edge |
-| Noise Pattern… (Perlin, Simplex, Cell, Value) | Filter › Render | perlin-noise, simplex-noise, cell-noise |
-| Checkerboard…, Grid… | Filter › Render | checkerboard, grid |
-| Vignette… | Filter › Render | vignette |
-| Kaleidoscope… | Filter › Distort | mirrors |
-| Long Shadow… | Filter › Stylize | long-shadow |
+Operations GIMP has that PhotoCraft already covers under a Photoshop name (blurs, sharpens,
+Median, High Pass, Unsharp Mask, Lens Correction, Polar Coordinates, Spherize, Twirl/Pinch, Ripple,
+Wave, Wind, Emboss, Find Edges, Add Noise, Custom, Color to Alpha, Channel Mixer, Black & White,
+Photo Filter, Invert, Posterize, Threshold, Shadows/Highlights, Lens Flare, Clouds, Fibers…) are not
+listed.
 
 ## Suggested order
 
-1. **XCF import** (`photocraft-io`): layers, groups, masks, channels, paths, modes; the data the filters
-   above would otherwise be applied to.
-2. **Cheap, self-contained maths first:** the Colours and Edge-detect groups, Render patterns, Noise variants.
-3. **Heavier:** tone mappers (fattal02, mantiuk06, reinhard05), variable/curvature blurs, projections.
+1. **Cheap, self-contained maths first:** the remaining distorts (shift, curve-bend, tile-glass,
+   tile-paper, illusion, engrave, video-degradation), colour-rotate, edge-neon, the artistic filters.
+2. **Heavier:** tone mappers (fattal02, mantiuk06, reinhard05), variable/curvature blurs,
+   projections, the segmentation filters (slic, waterpixels).
 
 ## Licence note
 

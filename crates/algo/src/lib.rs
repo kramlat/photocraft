@@ -36,6 +36,10 @@ mod edgeops;
 pub use edgeops::EdgeAlgorithm;
 mod extrafx;
 pub use extrafx::NoiseKind;
+mod patternfx;
+pub use patternfx::WaveShape;
+mod tonefx;
+pub use tonefx::{DitherMethod, ScatterMode, StretchMode};
 pub mod erase;
 pub mod exif;
 pub mod features;
@@ -365,6 +369,57 @@ pub enum FilterParams {
         softness: f32,
         roundness: f32,
     },
+    /// Stretches the occupied range of the reference area to the full range.
+    StretchLevels {
+        mode: StretchMode,
+    },
+    /// Stretches saturation and brightness over their occupied ranges.
+    EnhanceColors,
+    /// Reduces each channel to `levels` values, spreading the error.
+    Dither {
+        method: DitherMethod,
+        levels: u32,
+        seed: u32,
+    },
+    /// Replaces `amount` % of the pixels according to `mode`, reaching `radius` px.
+    ScatterPixels {
+        mode: ScatterMode,
+        amount: f32,
+        radius: f32,
+        seed: u32,
+    },
+    /// Swirling colour; turbulence 0.1–7, saturation 0–100.
+    Plasma {
+        turbulence: f32,
+        saturation: f32,
+        seed: u32,
+    },
+    /// An Archimedean spiral.
+    Spiral {
+        spacing: f32,
+        thickness: f32,
+        clockwise: bool,
+        foreground: [f32; 4],
+        background: [f32; 4],
+    },
+    /// A random maze.
+    Maze {
+        cell: f32,
+        wall: f32,
+        seed: u32,
+        foreground: [f32; 4],
+        background: [f32; 4],
+    },
+    /// Sine wave bands.
+    SineWaves {
+        shape: WaveShape,
+        wavelength: f32,
+        angle: f32,
+        phase: f32,
+        contrast: f32,
+        foreground: [f32; 4],
+        background: [f32; 4],
+    },
     /// Angle −999…999 degrees.
     Twirl {
         angle: f32,
@@ -666,7 +721,20 @@ impl FilterParams {
             | FilterParams::Checkerboard { .. }
             | FilterParams::Grid { .. }
             | FilterParams::Kaleidoscope { .. }
-            | FilterParams::Vignette { .. } => Halo::Radius(0),
+            | FilterParams::Vignette { .. }
+            | FilterParams::Plasma { .. }
+            | FilterParams::Spiral { .. }
+            | FilterParams::Maze { .. }
+            | FilterParams::SineWaves { .. } => Halo::Radius(0),
+            FilterParams::StretchLevels { .. } | FilterParams::EnhanceColors => Halo::Bounds,
+            FilterParams::Dither { method, .. } => {
+                if *method == DitherMethod::FloydSteinberg {
+                    Halo::Bounds
+                } else {
+                    Halo::Radius(0)
+                }
+            }
+            FilterParams::ScatterPixels { radius, .. } => Halo::Radius(tonefx::scatter_halo(*radius)),
             FilterParams::LongShadow { length, .. } => Halo::Radius(extrafx::long_shadow_halo(*length)),
             FilterParams::RadialBlur { .. }
             | FilterParams::Offset { .. }
@@ -706,7 +774,16 @@ impl FilterParams {
     /// the reference bounds even where the layer is transparent, as Photoshop's does on an
     /// empty layer, while still reading no neighbourhood.
     pub fn renders_from_nothing(&self) -> bool {
-        matches!(self, FilterParams::Fibers { .. } | FilterParams::NoisePattern { .. } | FilterParams::Checkerboard { .. })
+        matches!(
+            self,
+            FilterParams::Fibers { .. }
+                | FilterParams::NoisePattern { .. }
+                | FilterParams::Checkerboard { .. }
+                | FilterParams::Plasma { .. }
+                | FilterParams::Spiral { .. }
+                | FilterParams::Maze { .. }
+                | FilterParams::SineWaves { .. }
+        )
     }
 
     /// Human-readable name.
@@ -745,6 +822,14 @@ impl FilterParams {
             FilterParams::Kaleidoscope { .. } => "Kaleidoscope",
             FilterParams::LongShadow { .. } => "Long Shadow",
             FilterParams::Vignette { .. } => "Vignette",
+            FilterParams::StretchLevels { .. } => "Stretch Levels",
+            FilterParams::EnhanceColors => "Enhance Colors",
+            FilterParams::Dither { .. } => "Dither",
+            FilterParams::ScatterPixels { .. } => "Scatter Pixels",
+            FilterParams::Plasma { .. } => "Plasma",
+            FilterParams::Spiral { .. } => "Spiral",
+            FilterParams::Maze { .. } => "Maze",
+            FilterParams::SineWaves { .. } => "Sine Waves",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -883,6 +968,18 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         FilterParams::Kaleidoscope { segments, angle, center_x, center_y } => extrafx::kaleidoscope(src, out, ctx, *segments, *angle, (*center_x, *center_y)),
         FilterParams::LongShadow { angle, length, color, fade } => extrafx::long_shadow(src, out, ctx, *angle, *length, *color, *fade),
         FilterParams::Vignette { amount, size, softness, roundness } => extrafx::vignette(src, out, ctx, *amount, *size, *softness, *roundness),
+        FilterParams::StretchLevels { mode } => tonefx::stretch_levels(src, out, ctx, *mode),
+        FilterParams::EnhanceColors => tonefx::enhance_colors(src, out, ctx),
+        FilterParams::Dither { method, levels, seed } => tonefx::dither(src, out, ctx, *method, *levels, *seed),
+        FilterParams::ScatterPixels { mode, amount, radius, seed } => tonefx::scatter_pixels(src, out, ctx, *mode, *amount, *radius, *seed),
+        FilterParams::Plasma { turbulence, saturation, seed } => patternfx::plasma(src, out, ctx, *turbulence, *saturation, *seed),
+        FilterParams::Spiral { spacing, thickness, clockwise, foreground, background } => {
+            patternfx::spiral(src, out, ctx, *spacing, *thickness, *clockwise, (*foreground, *background))
+        }
+        FilterParams::Maze { cell, wall, seed, foreground, background } => patternfx::maze(src, out, ctx, *cell, *wall, *seed, (*foreground, *background)),
+        FilterParams::SineWaves { shape, wavelength, angle, phase, contrast, foreground, background } => {
+            patternfx::sine_waves(src, out, ctx, *shape, *wavelength, *angle, *phase, *contrast, (*foreground, *background))
+        }
         FilterParams::GaussianDifference { radius1, radius2, normalize, invert } => {
             edgeops::difference_of_gaussians(src, out, ctx, *radius1, *radius2, *normalize, *invert)
         }

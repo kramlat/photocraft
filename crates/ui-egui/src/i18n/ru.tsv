@@ -3223,3 +3223,27 @@ curves	Smooth	Сгладить
 	Value	Значение
 	Fade	Затухание
 	Softness	Мягкость
+	Maze…	Лабиринт…
+	Plasma…	Плазма…
+	Sine Waves…	Синусоиды…
+	Spiral…	Спираль…
+	Dither…	Растрирование…
+	Enhance Colors	Улучшить цвета
+	Stretch Levels…	Растянуть уровни…
+	Scatter Pixels…	Разбросать пиксели…
+	Turbulence	Турбулентность
+	Thickness	Толщина
+	Clockwise	По часовой стрелке
+	Cell Size	Размер ячейки
+	Wall Width	Толщина стен
+	Wavelength	Длина волны
+	Together	Вместе
+	Bayer2	Bayer 2×2
+	Bayer4	Bayer 4×4
+	Bayer8	Bayer 8×8
+	Floyd Steinberg	Флойд–Стейнберг
+	Pick	Выбор
+	Smear	Размазывание
+	Spread	Разброс
+	Radial	Радиальная
+	Cross	Крестообразная

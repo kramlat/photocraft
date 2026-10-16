@@ -2870,3 +2870,26 @@ curves	Smooth	平滑
 	Value	值
 	Softness	柔和度
 	Length	长度
+	Maze…	迷宫…
+	Plasma…	等离子…
+	Sine Waves…	正弦波…
+	Spiral…	螺旋…
+	Dither…	仿色…
+	Enhance Colors	增强颜色
+	Stretch Levels…	拉伸色阶…
+	Scatter Pixels…	散布像素…
+	Method	方法
+	Turbulence	湍流
+	Thickness	粗细
+	Clockwise	顺时针
+	Cell Size	单元格大小
+	Wall Width	墙宽
+	Wavelength	波长
+	Together	一起
+	Bayer2	Bayer 2×2
+	Bayer4	Bayer 4×4
+	Bayer8	Bayer 8×8
+	Floyd Steinberg	Floyd–Steinberg
+	Pick	拾取
+	Smear	涂抹
+	Cross	交叉

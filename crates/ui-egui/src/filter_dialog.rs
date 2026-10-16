@@ -230,6 +230,14 @@ const FULL_RESOLUTION_PREVIEW: &[&str] = &[
     "filter.render.checkerboard",
     "filter.render.grid",
     "filter.stylize.longShadow",
+    "filter.render.plasma",
+    "filter.render.spiral",
+    "filter.render.maze",
+    "filter.render.sineWaves",
+    "filter.other.dither",
+    "filter.noise.scatterPixels",
+    "filter.other.stretchLevels",
+    "filter.other.enhanceColors",
 ];
 
 /// Whether `command` with `params` previews at full resolution: [`FULL_RESOLUTION_PREVIEW`], every

@@ -3,7 +3,7 @@
 //! Difference. They run through [`crate::filters::run_filter`] like every other filter, so
 //! selections, smart filters, history and `filter.lastFilter` behave the same.
 
-use photocraft_algo::{ChannelSource, EdgeAlgorithm, FilterParams, NoiseKind};
+use photocraft_algo::{ChannelSource, DitherMethod, EdgeAlgorithm, FilterParams, NoiseKind, ScatterMode, StretchMode, WaveShape};
 use serde_json::Value;
 
 use crate::commands::CommandSpec;
@@ -118,7 +118,7 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             },
             size: f(p, "size", 40.0).clamp(1.0, 10_000.0),
             detail: f(p, "detail", 3.0).round().clamp(1.0, 8.0) as u32,
-            seed: p.get("seed").and_then(Value::as_u64).and_then(|n| u32::try_from(n).ok()).unwrap_or(0),
+            seed: seed(p),
             foreground: rgba(p, "foreground", [0.0, 0.0, 0.0, 1.0]),
             background: rgba(p, "background", [1.0, 1.0, 1.0, 1.0]),
         },
@@ -150,8 +150,75 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             softness: f(p, "softness", 60.0).clamp(0.0, 100.0),
             roundness: f(p, "roundness", 50.0).clamp(0.0, 100.0),
         },
+        "filter.other.stretchLevels" => FilterParams::StretchLevels {
+            mode: match s(p, "mode", "channels") {
+                "together" => StretchMode::Together,
+                "brightness" => StretchMode::Brightness,
+                _ => StretchMode::Channels,
+            },
+        },
+        "filter.other.enhanceColors" => FilterParams::EnhanceColors,
+        "filter.other.dither" => FilterParams::Dither {
+            method: match s(p, "method", "bayer4") {
+                "bayer2" => DitherMethod::Bayer2,
+                "bayer8" => DitherMethod::Bayer8,
+                "random" => DitherMethod::Random,
+                "floydSteinberg" => DitherMethod::FloydSteinberg,
+                _ => DitherMethod::Bayer4,
+            },
+            levels: f(p, "levels", 4.0).round().clamp(2.0, 32.0) as u32,
+            seed: seed(p),
+        },
+        "filter.noise.scatterPixels" => FilterParams::ScatterPixels {
+            mode: match s(p, "mode", "random") {
+                "pick" => ScatterMode::Pick,
+                "smear" => ScatterMode::Smear,
+                "spread" => ScatterMode::Spread,
+                _ => ScatterMode::Random,
+            },
+            amount: f(p, "amount", 20.0).clamp(0.0, 100.0),
+            radius: f(p, "radius", 4.0).clamp(1.0, 200.0),
+            seed: seed(p),
+        },
+        "filter.render.plasma" => FilterParams::Plasma {
+            turbulence: f(p, "turbulence", 2.0).clamp(0.1, 7.0),
+            saturation: f(p, "saturation", 80.0).clamp(0.0, 100.0),
+            seed: seed(p),
+        },
+        "filter.render.spiral" => FilterParams::Spiral {
+            spacing: f(p, "spacing", 16.0).clamp(2.0, 10_000.0),
+            thickness: f(p, "thickness", 8.0).clamp(1.0, 10_000.0),
+            clockwise: b(p, "clockwise", true),
+            foreground: rgba(p, "foreground", [0.0, 0.0, 0.0, 1.0]),
+            background: rgba(p, "background", [1.0, 1.0, 1.0, 1.0]),
+        },
+        "filter.render.maze" => FilterParams::Maze {
+            cell: f(p, "cellSize", 16.0).clamp(4.0, 2000.0),
+            wall: f(p, "wallWidth", 2.0).clamp(1.0, 1000.0),
+            seed: seed(p),
+            foreground: rgba(p, "foreground", [0.0, 0.0, 0.0, 1.0]),
+            background: rgba(p, "background", [1.0, 1.0, 1.0, 1.0]),
+        },
+        "filter.render.sineWaves" => FilterParams::SineWaves {
+            shape: match s(p, "shape", "linear") {
+                "radial" => WaveShape::Radial,
+                "cross" => WaveShape::Cross,
+                _ => WaveShape::Linear,
+            },
+            wavelength: f(p, "wavelength", 32.0).clamp(2.0, 10_000.0),
+            angle: f(p, "angle", 0.0).clamp(-360.0, 360.0),
+            phase: f(p, "phase", 0.0).clamp(-360.0, 360.0),
+            contrast: f(p, "contrast", 100.0).clamp(0.0, 100.0),
+            foreground: rgba(p, "foreground", [0.0, 0.0, 0.0, 1.0]),
+            background: rgba(p, "background", [1.0, 1.0, 1.0, 1.0]),
+        },
         _ => return crate::gallery_cmds::params_for(id, p),
     })
+}
+
+/// A `seed` param: any `u32`, else 0.
+fn seed(p: &Value) -> u32 {
+    p.get("seed").and_then(Value::as_u64).and_then(|n| u32::try_from(n).ok()).unwrap_or(0)
 }
 
 /// Bounds and choices of this module's params; `None` for ids it doesn't own.
@@ -167,6 +234,13 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.distort.kaleidoscope" => &[("segments", 2.0, 64.0), ("angle", -360.0, 360.0), ("centerX", 0.0, 1.0), ("centerY", 0.0, 1.0)],
         "filter.stylize.longShadow" => &[("angle", -360.0, 360.0), ("length", 1.0, 2000.0)],
         "filter.render.vignette" => &[("amount", -100.0, 100.0), ("size", 0.0, 100.0), ("softness", 0.0, 100.0), ("roundness", 0.0, 100.0)],
+        "filter.other.dither" => &[("levels", 2.0, 32.0)],
+        "filter.noise.scatterPixels" => &[("amount", 0.0, 100.0), ("radius", 1.0, 200.0)],
+        "filter.render.plasma" => &[("turbulence", 0.1, 7.0), ("saturation", 0.0, 100.0)],
+        "filter.render.spiral" => &[("spacing", 2.0, 10_000.0), ("thickness", 1.0, 10_000.0)],
+        "filter.render.maze" => &[("cellSize", 4.0, 2000.0), ("wallWidth", 1.0, 1000.0)],
+        "filter.render.sineWaves" => &[("wavelength", 2.0, 10_000.0), ("angle", -360.0, 360.0), ("phase", -360.0, 360.0), ("contrast", 0.0, 100.0)],
+        "filter.other.stretchLevels" | "filter.other.enhanceColors" => &[],
         "filter.other.invertBrightness" | "filter.other.invertLinear" | "filter.other.extractChannel" => &[],
         _ => return None,
     };
@@ -184,6 +258,7 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.extractChannel" => &["invert"],
         "filter.other.gaussianDifference" => &["normalize", "invert"],
         "filter.stylize.longShadow" => &["fade"],
+        "filter.render.spiral" => &["clockwise"],
         _ => &[],
     };
     for key in flags {
@@ -195,13 +270,20 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.other.extractChannel" => choice("channel", CHANNELS),
         "filter.stylize.edgeDetection" => choice("algorithm", EDGE_ALGORITHMS),
         "filter.render.noisePattern" => choice("type", "perlin|simplex|cell|value"),
+        "filter.other.stretchLevels" => choice("mode", "channels|together|brightness"),
+        "filter.other.dither" => choice("method", "bayer2|bayer4|bayer8|random|floydSteinberg"),
+        "filter.noise.scatterPixels" => choice("mode", "random|pick|smear|spread"),
+        "filter.render.sineWaves" => choice("shape", "linear|radial|cross"),
         _ => None,
     };
     if let Some(msg) = msg {
         return bad(msg);
     }
     for key in ["foreground", "background", "color"] {
-        if matches!(id, "filter.render.noisePattern" | "filter.render.checkerboard" | "filter.render.grid" | "filter.stylize.longShadow")
+        if matches!(
+            id,
+            "filter.render.noisePattern" | "filter.render.checkerboard" | "filter.render.grid" | "filter.stylize.longShadow" | "filter.render.spiral" | "filter.render.maze" | "filter.render.sineWaves"
+        )
             && p.get(key).is_some_and(|v| !v.is_array() && v.as_str().is_none_or(|h| h.len() != 7 || !h.starts_with('#')))
         {
             return bad(format!("`{key}` must be #rrggbb or [r, g, b]"));
@@ -276,6 +358,29 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!("filter.render.checkerboard", "Checkerboard…", ["Filter", "Render"], r##"{"size":1..10000=32,"foreground":json,"background":json}"##),
         cmd!("filter.render.grid", "Grid…", ["Filter", "Render"], r##"{"spacing":2..10000=32,"lineWidth":1..1000=1,"color":json}"##),
         cmd!("filter.render.vignette", "Vignette…", ["Filter", "Render"], r##"{"amount":-100..100=-60,"size":0..100=40,"softness":0..100=60,"roundness":0..100=50}"##),
+        cmd!("filter.other.stretchLevels", "Stretch Levels…", ["Filter", "Other"], r##"{"mode":"channels|together|brightness"="channels"}"##),
+        cmd!("filter.other.enhanceColors", "Enhance Colors", ["Filter", "Other"], "{}"),
+        cmd!(
+            "filter.other.dither",
+            "Dither…",
+            ["Filter", "Other"],
+            r##"{"method":"bayer2|bayer4|bayer8|random|floydSteinberg"="bayer4","levels":2..32=4,"seed":u32=0}"##
+        ),
+        cmd!(
+            "filter.noise.scatterPixels",
+            "Scatter Pixels…",
+            ["Filter", "Noise"],
+            r##"{"mode":"random|pick|smear|spread"="random","amount":0..100=20,"radius":1..200=4,"seed":u32=0}"##
+        ),
+        cmd!("filter.render.plasma", "Plasma…", ["Filter", "Render"], r##"{"turbulence":0.1..7=2,"saturation":0..100=80,"seed":u32=0}"##),
+        cmd!("filter.render.spiral", "Spiral…", ["Filter", "Render"], r##"{"spacing":2..10000=16,"thickness":1..10000=8,"clockwise":bool=true,"foreground":json,"background":json}"##),
+        cmd!("filter.render.maze", "Maze…", ["Filter", "Render"], r##"{"cellSize":4..2000=16,"wallWidth":1..1000=2,"seed":u32=0,"foreground":json,"background":json}"##),
+        cmd!(
+            "filter.render.sineWaves",
+            "Sine Waves…",
+            ["Filter", "Render"],
+            r##"{"shape":"linear|radial|cross"="linear","wavelength":2..10000=32,"angle":-360..360=0,"phase":-360..360=0,"contrast":0..100=100,"foreground":json,"background":json}"##
+        ),
         cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5}"##),
         cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":json,"fade":bool=true}"##),
     ]
@@ -287,7 +392,7 @@ mod tests {
 
     use crate::Session;
 
-    const IDS: [&str; 13] = [
+    const IDS: [&str; 21] = [
         "filter.other.invertBrightness",
         "filter.other.invertLinear",
         "filter.other.replaceColorRange",
@@ -301,6 +406,14 @@ mod tests {
         "filter.render.vignette",
         "filter.distort.kaleidoscope",
         "filter.stylize.longShadow",
+        "filter.other.stretchLevels",
+        "filter.other.enhanceColors",
+        "filter.other.dither",
+        "filter.noise.scatterPixels",
+        "filter.render.plasma",
+        "filter.render.spiral",
+        "filter.render.maze",
+        "filter.render.sineWaves",
     ];
 
     fn session(depth: u64) -> Session {
