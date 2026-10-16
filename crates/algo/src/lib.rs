@@ -38,6 +38,8 @@ mod extrafx;
 pub use extrafx::NoiseKind;
 mod patternfx;
 pub use patternfx::WaveShape;
+mod detailfx;
+pub use detailfx::{Directions, PropagateMode, WaveletOutput};
 mod fractalfx;
 pub use fractalfx::{FractalKind, TraceInside};
 mod projfx;
@@ -588,6 +590,28 @@ pub enum FilterParams {
         max_distance: f32,
         invert: bool,
     },
+    /// Spreads the most extreme neighbouring values.
+    PropagateValues {
+        mode: PropagateMode,
+        lower: f32,
+        upper: f32,
+        rate: f32,
+        iterations: u32,
+        directions: Directions,
+    },
+    /// Stretches each pixel between local envelopes found by random sampling.
+    LocalContrast {
+        radius: f32,
+        samples: u32,
+        repeats: u32,
+        strength: f32,
+        seed: u32,
+    },
+    /// One scale of a wavelet decomposition.
+    WaveletScale {
+        scale: u32,
+        output: WaveletOutput,
+    },
     /// Angle −999…999 degrees.
     Twirl {
         angle: f32,
@@ -905,6 +929,9 @@ impl FilterParams {
             FilterParams::FractalTrace { .. } | FilterParams::Droste { .. } | FilterParams::DistanceMap { .. } => Halo::Bounds,
             FilterParams::EdgePreservingMean { radius, iterations } => Halo::Radius(smoothfx::mean_halo(*radius, *iterations)),
             FilterParams::SmoothEdges { .. } => Halo::Radius(2),
+            FilterParams::PropagateValues { iterations, .. } => Halo::Radius(detailfx::propagate_halo(*iterations)),
+            FilterParams::LocalContrast { radius, .. } => Halo::Radius(detailfx::stretch_halo(*radius)),
+            FilterParams::WaveletScale { scale, .. } => Halo::Radius(detailfx::wavelet_halo(*scale)),
             FilterParams::ShiftRows { distance, .. } => Halo::Radius(warpfx::shift_halo(*distance)),
             FilterParams::Bend { .. } | FilterParams::Illusion { .. } => Halo::Bounds,
             FilterParams::GlassTiles { size, .. } => Halo::Radius(size.clamp(2.0, 2000.0).ceil() as i32 + 1),
@@ -1038,6 +1065,9 @@ impl FilterParams {
             FilterParams::EdgePreservingMean { .. } => "Edge-Preserving Mean",
             FilterParams::SmoothEdges { .. } => "Smooth Edges",
             FilterParams::DistanceMap { .. } => "Distance Map",
+            FilterParams::PropagateValues { .. } => "Propagate Values",
+            FilterParams::LocalContrast { .. } => "Local Contrast Stretch",
+            FilterParams::WaveletScale { .. } => "Wavelet Scale",
             FilterParams::Twirl { .. } => "Twirl",
             FilterParams::Pinch { .. } => "Pinch",
             FilterParams::Spherize { .. } => "Spherize",
@@ -1178,6 +1208,11 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         }
         FilterParams::LongShadow { angle, length, color, fade } => extrafx::long_shadow(src, out, ctx, *angle, *length, *color, *fade),
         FilterParams::Vignette { amount, size, softness, roundness } => extrafx::vignette(src, out, ctx, *amount, *size, *softness, *roundness),
+        FilterParams::PropagateValues { mode, lower, upper, rate, iterations, directions } => {
+            detailfx::propagate(src, out, ctx, *mode, *lower, *upper, *rate, *iterations, *directions)
+        }
+        FilterParams::LocalContrast { radius, samples, repeats, strength, seed } => detailfx::local_contrast(src, out, ctx, *radius, *samples, *repeats, *strength, *seed),
+        FilterParams::WaveletScale { scale, output } => detailfx::wavelet_scale(src, out, ctx, *scale, *output),
         FilterParams::FractalExplorer { kind, center_x, center_y, zoom, iterations, julia_x, julia_y, colour_speed } => {
             fractalfx::explorer(src, out, ctx, *kind, (*center_x, *center_y), *zoom, *iterations, (*julia_x, *julia_y), *colour_speed)
         }

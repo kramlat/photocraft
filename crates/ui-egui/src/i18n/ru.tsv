@@ -3298,3 +3298,17 @@ curves	Smooth	Сгладить
 	Color Speed	Скорость цвета
 	Lobes	Лепестки
 	Max Distance	Максимальное расстояние
+	Propagate Values…	Распространение значений…
+	Local Contrast Stretch…	Локальное растяжение контраста…
+	Wavelet Scale…	Вейвлет-масштаб…
+	Lighter	Светлее
+	Darker	Темнее
+	More Opaque	Более непрозрачные
+	More Transparent	Более прозрачные
+	Lower Limit	Нижний предел
+	Upper Limit	Верхний предел
+	Up	Вверх
+	Down	Вниз
+	Samples	Выборки
+	Repeats	Повторы
+	Residual	Остаток

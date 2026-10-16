@@ -3990,3 +3990,16 @@ curves	Smooth	スムーズ
 	Color Speed	色の速さ
 	Lobes	ローブ数
 	Max Distance	最大距離
+	Propagate Values…	値を伝播…
+	Local Contrast Stretch…	ローカルコントラストを伸張…
+	Wavelet Scale…	ウェーブレットスケール…
+	Lighter	明るく
+	Darker	暗く
+	More Opaque	より不透明に
+	More Transparent	より透明に
+	Lower Limit	下限
+	Upper Limit	上限
+	Up	上
+	Samples	サンプル数
+	Repeats	繰り返し
+	Residual	残差

@@ -19,18 +19,19 @@
 
 ## Filters still to do
 
-72 GIMP operations had no PhotoCraft counterpart when this list was made. 61 are done or covered
+72 GIMP operations had no PhotoCraft counterpart when this list was made. 66 are done or covered
 (the table below, plus the existing features named under it), `rgb-clip` is not applicable (integer
-documents never leave 0–1; 32-bit documents clamp on display), and **10 are left**:
+documents never leave 0–1; 32-bit documents clamp on display), and **6 are left**:
 
-- **Blur and enhance (7):** variable-blur, mean-curvature-blur, wavelet-decompose, stress, fattal02,
-  mantiuk06, reinhard05 (the last three are tone mappers).
-- **Misc (3):** value-propagate, waterpixels, slic.
+- **Tone mapping and blur (4):** fattal02, mantiuk06, reinhard05 (the three HDR tone mappers) and
+  mean-curvature-blur.
+- **Segmentation (2):** waterpixels, slic.
 
 Found to be covered already by existing filters (so not new work): color-rotate (Hue/Saturation's
 colour ranges), edge-neon (Filter Gallery › Glowing Edges), cartoon (Poster Edges), photocopy
 (Photocopy), softglow and bloom (Diffuse Glow), invert-gamma (Invert), gradient-flare (Lens
-Flare, Supernova and Sparkle).
+Flare, Supernova and Sparkle), variable-blur (Lens Blur with a layer-mask depth map, and Field Blur
+pins).
 
 Operations GIMP has that PhotoCraft already covers under a Photoshop name (blurs, sharpens,
 Median, High Pass, Unsharp Mask, Lens Correction, Polar Coordinates, Spherize, Twirl/Pinch, Ripple,
@@ -40,9 +41,9 @@ listed.
 
 ## Suggested order
 
-1. **Next:** value-propagate, stress, wavelet-decompose, variable-blur.
-2. **Heavier:** tone mappers (fattal02, mantiuk06, reinhard05), mean-curvature-blur, the
-   segmentation filters (slic, waterpixels).
+1. **Next:** mean-curvature-blur, then the tone mappers (fattal02, mantiuk06, reinhard05; the
+   HDR toning in `crates/algo/src/hdr.rs` is the starting point).
+2. **Last:** the segmentation filters (slic, waterpixels).
 
 ## Licence note
 

@@ -2947,3 +2947,16 @@ curves	Smooth	平滑
 	Lobes	波瓣数
 	Max Distance	最大距离
 	Alpha	Alpha
+	Propagate Values…	传播数值…
+	Local Contrast Stretch…	局部对比度拉伸…
+	Wavelet Scale…	小波尺度…
+	Lighter	更亮
+	Darker	更暗
+	More Opaque	更不透明
+	More Transparent	更透明
+	Lower Limit	下限
+	Upper Limit	上限
+	Up	上
+	Samples	采样数
+	Repeats	重复次数
+	Residual	残差

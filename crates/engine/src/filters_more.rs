@@ -3,7 +3,7 @@
 //! Difference. They run through [`crate::filters::run_filter`] like every other filter, so
 //! selections, smart filters, history and `filter.lastFilter` behave the same.
 
-use photocraft_algo::{BendCurve, ChannelSource, DistanceSource, DitherMethod, EdgeAlgorithm, FilterParams, FractalKind, NoiseKind, ScatterMode, StretchMode, TileGaps, TraceInside, WaveShape};
+use photocraft_algo::{BendCurve, ChannelSource, Directions, DistanceSource, DitherMethod, EdgeAlgorithm, FilterParams, FractalKind, NoiseKind, PropagateMode, ScatterMode, StretchMode, TileGaps, TraceInside, WaveShape, WaveletOutput};
 use serde_json::Value;
 
 use crate::commands::CommandSpec;
@@ -335,6 +335,30 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             max_distance: f(p, "maxDistance", 32.0).clamp(1.0, 5000.0),
             invert: b(p, "invert", false),
         },
+        "filter.other.propagateValues" => FilterParams::PropagateValues {
+            mode: match s(p, "mode", "lighter") {
+                "darker" => PropagateMode::Darker,
+                "moreOpaque" => PropagateMode::MoreOpaque,
+                "moreTransparent" => PropagateMode::MoreTransparent,
+                _ => PropagateMode::Lighter,
+            },
+            lower: f(p, "lowerLimit", 0.0).clamp(0.0, 100.0),
+            upper: f(p, "upperLimit", 100.0).clamp(0.0, 100.0),
+            rate: f(p, "rate", 100.0).clamp(0.0, 100.0),
+            iterations: f(p, "iterations", 1.0).round().clamp(1.0, 100.0) as u32,
+            directions: Directions { left: b(p, "left", true), right: b(p, "right", true), up: b(p, "up", true), down: b(p, "down", true) },
+        },
+        "filter.other.localContrastStretch" => FilterParams::LocalContrast {
+            radius: f(p, "radius", 50.0).clamp(1.0, 500.0),
+            samples: f(p, "samples", 20.0).round().clamp(2.0, 200.0) as u32,
+            repeats: f(p, "repeats", 2.0).round().clamp(1.0, 8.0) as u32,
+            strength: f(p, "strength", 100.0).clamp(0.0, 100.0),
+            seed: seed(p),
+        },
+        "filter.other.waveletScale" => FilterParams::WaveletScale {
+            scale: f(p, "scale", 2.0).round().clamp(1.0, 8.0) as u32,
+            output: if s(p, "output", "detail") == "residual" { WaveletOutput::Residual } else { WaveletOutput::Detail },
+        },
         _ => return crate::gallery_cmds::params_for(id, p),
     })
 }
@@ -394,6 +418,9 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.blur.edgePreservingMean" => &[("radius", 1.0, 50.0), ("iterations", 1.0, 20.0)],
         "filter.other.smoothEdges" => &[("tolerance", 0.0, 100.0), ("strength", 0.0, 100.0)],
         "filter.other.distanceMap" => &[("threshold", 0.0, 100.0), ("maxDistance", 1.0, 5000.0)],
+        "filter.other.propagateValues" => &[("lowerLimit", 0.0, 100.0), ("upperLimit", 0.0, 100.0), ("rate", 0.0, 100.0), ("iterations", 1.0, 100.0)],
+        "filter.other.localContrastStretch" => &[("radius", 1.0, 500.0), ("samples", 2.0, 200.0), ("repeats", 1.0, 8.0), ("strength", 0.0, 100.0)],
+        "filter.other.waveletScale" => &[("scale", 1.0, 8.0)],
         "filter.other.stretchLevels" | "filter.other.enhanceColors" => &[],
         "filter.other.invertBrightness" | "filter.other.invertLinear" | "filter.other.extractChannel" => &[],
         _ => return None,
@@ -415,6 +442,7 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.distort.kaleidoscope" => &["mirror"],
         "filter.stylize.normalMap" => &["flipY"],
         "filter.other.distanceMap" => &["invert"],
+        "filter.other.propagateValues" => &["left", "right", "up", "down"],
         "filter.render.spiral" => &["clockwise"],
         _ => &[],
     };
@@ -437,6 +465,8 @@ pub(crate) fn validate(id: &str, p: &Value) -> Option<Result<()>> {
         "filter.render.fractalExplorer" => choice("type", "mandelbrot|julia|burningShip"),
         "filter.distort.fractalTrace" => choice("type", "mandelbrot|julia|burningShip").or_else(|| choice("inside", "original|transparent|black")),
         "filter.other.distanceMap" => choice("source", "brightness|alpha"),
+        "filter.other.propagateValues" => choice("mode", "lighter|darker|moreOpaque|moreTransparent"),
+        "filter.other.waveletScale" => choice("output", "detail|residual"),
         _ => None,
     };
     if let Some(msg) = msg {
@@ -602,6 +632,19 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Filter", "Other"],
             r##"{"source":"brightness|alpha"="brightness","threshold":0..100=50,"maxDistance":1..5000=32,"invert":bool=false}"##
         ),
+        cmd!(
+            "filter.other.propagateValues",
+            "Propagate Values…",
+            ["Filter", "Other"],
+            r##"{"mode":"lighter|darker|moreOpaque|moreTransparent"="lighter","lowerLimit":0..100=0,"upperLimit":0..100=100,"rate":0..100=100,"iterations":1..100=1,"left":bool=true,"right":bool=true,"up":bool=true,"down":bool=true}"##
+        ),
+        cmd!(
+            "filter.other.localContrastStretch",
+            "Local Contrast Stretch…",
+            ["Filter", "Other"],
+            r##"{"radius":1..500=50,"samples":2..200=20,"repeats":1..8=2,"strength":0..100=100,"seed":u32=0}"##
+        ),
+        cmd!("filter.other.waveletScale", "Wavelet Scale…", ["Filter", "Other"], r##"{"scale":1..8=2,"output":"detail|residual"="detail"}"##),
         cmd!("filter.distort.kaleidoscope", "Kaleidoscope…", ["Filter", "Distort"], r##"{"segments":2..64=6,"angle":-360..360=0,"centerX":0..1=0.5,"centerY":0..1=0.5,"mirror":bool=false}"##),
         cmd!("filter.stylize.longShadow", "Long Shadow…", ["Filter", "Stylize"], r##"{"angle":-360..360=45,"length":1..2000=50,"color":color=#000000,"fade":bool=true}"##),
     ]
@@ -613,7 +656,7 @@ mod tests {
 
     use crate::Session;
 
-    const IDS: [&str; 44] = [
+    const IDS: [&str; 47] = [
         "filter.other.invertBrightness",
         "filter.other.invertLinear",
         "filter.other.replaceColorRange",
@@ -658,6 +701,9 @@ mod tests {
         "filter.blur.edgePreservingMean",
         "filter.other.smoothEdges",
         "filter.other.distanceMap",
+        "filter.other.propagateValues",
+        "filter.other.localContrastStretch",
+        "filter.other.waveletScale",
     ];
 
     fn session(depth: u64) -> Session {
@@ -696,6 +742,14 @@ mod tests {
                         s.execute("select.rect", json!({"x": 3 * k, "y": 3 * k, "width": 24 - 3 * k, "height": 3})).unwrap();
                         s.execute("edit.fill", json!({"color": "#ffffff"})).unwrap();
                     }
+                    s.execute("select.all", json!({})).unwrap();
+                }
+                if matches!(id, "filter.other.propagateValues" | "filter.other.waveletScale") {
+                    // Contrast to work on: a few bright and dark squares on the blue.
+                    s.execute("select.rect", json!({"x": 4, "y": 4, "width": 3, "height": 3})).unwrap();
+                    s.execute("edit.fill", json!({"color": "#ffffff"})).unwrap();
+                    s.execute("select.rect", json!({"x": 16, "y": 16, "width": 3, "height": 3})).unwrap();
+                    s.execute("edit.fill", json!({"color": "#000000"})).unwrap();
                     s.execute("select.all", json!({})).unwrap();
                 }
                 if id == "filter.blur.edgePreservingMean" {

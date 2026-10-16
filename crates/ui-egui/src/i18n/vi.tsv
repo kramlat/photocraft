@@ -3799,3 +3799,15 @@ curves	Smooth	Làm mượt
 	Color Speed	Tốc độ màu
 	Lobes	Số thùy
 	Max Distance	Khoảng cách tối đa
+	Propagate Values…	Lan truyền giá trị…
+	Local Contrast Stretch…	Kéo giãn tương phản cục bộ…
+	Wavelet Scale…	Thang wavelet…
+	Lighter	Sáng hơn
+	Darker	Tối hơn
+	More Opaque	Đục hơn
+	More Transparent	Trong hơn
+	Lower Limit	Giới hạn dưới
+	Upper Limit	Giới hạn trên
+	Samples	Số mẫu
+	Repeats	Số lần lặp lại
+	Residual	Phần dư
