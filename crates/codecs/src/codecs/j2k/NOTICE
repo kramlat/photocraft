@@ -1,0 +1,4 @@
+This directory is a fork of pure_jpeg2k 2.0.0 (https://github.com/jpfielding/dicos.rs),
+Copyright JP Fielding, licensed MIT OR Apache-2.0 (the same terms as this repository).
+Changes: tests and the decoder entry points removed, `crate::` paths rewritten, and the encoder
+(encoder.rs) generalised from one component to up to four. See encoder.rs.

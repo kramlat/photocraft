@@ -1,0 +1,3 @@
+This directory is a fork of zune-jpegxl 0.5.2 (https://github.com/etemesi254/zune-image),
+Copyright (c) 2023 Caleb Etemesi, licensed MIT OR Apache-2.0 OR Zlib. Changes: `crate::` paths,
+the std/threads cfgs, and the alpha channel header fix in encoder.rs.

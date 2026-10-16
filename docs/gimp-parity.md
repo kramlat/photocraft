@@ -51,7 +51,7 @@ direction GIMP offers), ⬜ = to do. Adobe column: whether Photoshop has it too 
 | WBMP | ✅ | yes |
 | Cineon (r) | ✅ | yes |
 | PDF (load), PostScript/EPS | ⬜ | yes (PDF, EPS) |
-| JPEG XL, JPEG 2000 | ⬜ | JPEG 2000 yes, JXL yes |
+| JPEG XL (lossless write), JPEG 2000 (lossless write) | ✅ | yes, yes |
 | DICOM, Amiga IFF | ⬜ | yes |
 | Photoshop Raw / raw data | ⬜ | yes |
 | ICNS, PSP, TIM, PVR, FLI/FLC, CEL, PIX (Dr. Halo), MacPaint, WMF, XMC, FAX G3, Seattle FilmWorks, MNG | ⬜ | no |

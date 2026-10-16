@@ -11,7 +11,7 @@ dispatch), `crates/psd`, `crates/raw`, `crates/heif`, `crates/affinity`. More de
 [raster formats](../book/src/formats/raster-formats.md), [PSD/PSB](../book/src/formats/psd-psb.md),
 [OpenRaster](ora.md), [Paint.NET](pdn.md).
 
-**Summary.** By count, 15 of Photoshop's 31 formats are fully supported in the directions Photoshop supports them, 4 partially (55%,
+**Summary.** By count, 17 of Photoshop's 31 formats are fully supported in the directions Photoshop supports them, 4 partially (61%,
 measured). Weighted by use (PSD/PSB 40%, JPEG 15%, PNG 15%, TIFF 10%, camera raw 8%, WebP/AVIF/
 HEIF/JXL 6%, PDF 3%, everything else 3%), presence is ~80% and ready-for-real-work ~60%: PSD
 is broad but not yet reliable against Photoshop (gap G1), and Photoshop PDF, AVIF read and JPEG
@@ -31,7 +31,7 @@ XL are missing (gap G10). Remaining: 300–500 h including PSD fidelity.
 | BMP | R/W | yes | yes | 8-bit; palette BMPs open in Indexed Color mode |
 | WebP | R/W | yes | yes | Lossless and our own lossy VP8 encoder; ICC/EXIF/XMP; Save keeps an opened file lossy (at its quality) or lossless (#2399) |
 | AVIF | R/W | no (#463) | optional feature, off by default | |
-| JPEG XL | R/W | inside DNG only | no | |
+| JPEG XL | R/W | yes, 8/16-bit gray/RGB(A), float as 32-bit (jxl-oxide, native builds only: not in the browser build) | yes, lossless (a fork of zune-jpegxl with 16-bit alpha and gray+alpha fixes), at least 2 × 2 pixels | Lossy JXL write is not available (no permissively licensed pure-Rust lossy encoder); checked against libjxl both ways (`cjxl`/`djxl`), also inside DNG |
 | HEIF/HEIC | R/W(HEIF) | yes (pure-Rust heic-rs, `heif` feature, on in releases) | no | 8/16-bit |
 | OpenEXR | R/W | yes | yes | f16/f32; deep EXR and Cryptomatte readers (`corpus/exr`) |
 | Radiance HDR | R/W | yes | yes | f32 |
@@ -42,7 +42,7 @@ XL are missing (gap G10). Remaining: 300–500 h including PSD fidelity.
 | Photoshop EPS, DCS 1.0/2.0, EPS TIFF/PICT preview | R/W | no | no | |
 | Generic EPS / AI | R (rasterize) | no | no | |
 | SVG | R (rasterize) | yes, as editable shape layers or a vector smart object | no | Better than Photoshop for editing; gradients approximated (FILE-215-9) |
-| JPEG 2000 | R/W | no (#1047) | no | |
+| JPEG 2000 | R/W | yes, JP2 and bare codestreams, 1–4 components, up to 16 bits, palettes resolved, ICC kept (hayro-jpeg2000) | yes, lossless JP2, 16-bit components, gray/RGB with alpha through a `cdef` box (a fork of pure_jpeg2k extended to several components) | Checked against OpenJPEG both ways; no lossy (9/7) or tiled write, one layer |
 | Cineon / DPX | R (DPX), R/W (CIN) | DPX: luma, RGB, RGBA at 8/10/12/16 bits, both byte orders (#1049); Cineon: 10-bit gray/RGB, read-only | DPX: 8/10/12/16 bits (`dpxBits`, `--dpx-bits`); Cineon no | Writes DPX, which Photoshop only reads; header fields (creator, project, copyright, transfer, frame rate, time code…) round-trip; Cineon read-only, no RLE |
 | DICOM | R/W | no | no | |
 | PCX | R/W | yes | yes | 8-bit gray (one plane, gray palette) and 24-bit RGB (three planes), RLE; reads 1/2/4/8-bit palettes too; DPI kept |
@@ -144,6 +144,7 @@ remaining gaps in #1606 stay tracked with per-sample corpus ceilings.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-16 | minor | JPEG XL and JPEG 2000 read and write (JXL and JP2 writes are lossless) |
 | 2026-10-16 | minor | Sun Raster, SGI, XBM, WBMP, Farbfeld, XWD and Alias PIX read and write; PCX now writes (Photoshop R/W); open-folder batch lists every readable codec extension |
 | 2026-10-14 | minor | PSD smart filter masks: Photoshop stores a smart object's filtered pixels without its filter mask and mixes the unfiltered ones (`FEid`) back in; import now mixes them and export writes them that way, so sf-filter-mask-hard, -gradient and sf-stack-blend-and-mask pass; Photoshop-oracle floor 185 → 188 of 258 |
 | 2026-10-13 | minor | Lossy DNG (compression 34892) decodes: 8-bit baseline JPEG tiles and strips, CFA and LinearRaw, partial edge tiles; the stored values take the normal levels and LinearizationTable (FILE-215-11, lossy DNG part) |

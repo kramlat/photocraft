@@ -111,9 +111,9 @@ pub(crate) fn decode(b: &[u8], limits: &Limits) -> Result<Image, CodecError> {
         }
     }
     // A colour-mapped file whose every pixel is gray opens as Grayscale (what the writer emits).
-    let gray = !(bits == 8 && planes == 3) && pixels.chunks_exact(3).all(|p| p[0] == p[1] && p[1] == p[2]);
+    let gray = !(bits == 8 && planes == 3) && pixels.as_chunks::<3>().0.iter().all(|p| p[0] == p[1] && p[1] == p[2]);
     let mut image = if gray {
-        Image::from_u8(w, h, ChannelLayout::Gray, pixels.chunks_exact(3).map(|p| p[0]).collect())?
+        Image::from_u8(w, h, ChannelLayout::Gray, pixels.as_chunks::<3>().0.iter().map(|p| p[0]).collect())?
     } else {
         Image::from_u8(w, h, ChannelLayout::Rgb, pixels)?
     };
@@ -165,8 +165,8 @@ pub(crate) fn encode(src: &Image, plan: Plan, _opts: &EncodeOptions) -> Result<V
     let mut row = vec![0u8; stride];
     for y in 0..h {
         for p in 0..planes {
-            for x in 0..w {
-                row[x] = img.data()[(y * w + x) * planes + p];
+            for (x, v) in row.iter_mut().enumerate().take(w) {
+                *v = img.data()[(y * w + x) * planes + p];
             }
             rle_plane(&row, &mut out);
         }

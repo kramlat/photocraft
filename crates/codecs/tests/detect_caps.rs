@@ -61,6 +61,8 @@ fn default_build_formats_all_symmetric() {
         Format::Fits,
         Format::Dpx,
         Format::Pcx,
+        Format::Jxl,
+        Format::Jp2,
         Format::SunRaster,
         Format::Sgi,
         Format::Xbm,

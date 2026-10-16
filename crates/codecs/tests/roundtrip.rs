@@ -162,6 +162,12 @@ mod xwd {
 mod pcx {
     cases!(Format::Pcx);
 }
+mod jxl {
+    cases!(Format::Jxl);
+}
+mod jp2 {
+    cases!(Format::Jp2);
+}
 mod aliaspix {
     cases!(Format::AliasPix);
 }
@@ -273,6 +279,11 @@ fn webp_lossy_request_is_a_lossy_file() {
 #[test]
 fn one_pixel_images_roundtrip() {
     for f in rw_formats() {
+        // The JPEG XL encoder underneath refuses a side under two pixels.
+        if f == Format::Jxl {
+            assert!(encode(&synth(1, 1, ChannelLayout::Rgb, SampleType::U8, 1, 0.0), f, &EncodeOptions::default()).is_err());
+            continue;
+        }
         let img = synth(1, 1, ChannelLayout::Rgb, SampleType::U8, 1, 0.0);
         let back = decode(&encode(&img, f, &EncodeOptions::default()).unwrap()).unwrap();
         assert_eq!(back.dimensions(), (1, 1), "{f:?}");
@@ -344,4 +355,27 @@ fn legacy_formats_read_foreign_files() {
     sun.extend_from_slice(&[0x80, 0x05, 0x10]);
     let img = decode(&sun).unwrap();
     assert_eq!((img.layout(), img.data()), (ChannelLayout::Rgb, &[0x10u8; 6][..]));
+}
+
+/// Files written by other programs (ImageMagick, libjxl, OpenJPEG; see `tests/fixtures/foreign`)
+/// decode to the pixels they were made from.
+#[test]
+fn foreign_encoders_files_decode_exactly() {
+    let want: Vec<u8> = (0..5u32).flat_map(|y| (0..7u32).flat_map(move |x| (0..3u32).map(move |c| ((x * 30 + y * 7 + c * 60) % 256) as u8))).collect();
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/foreign");
+    for (name, format) in [
+        ("sample.jp2", Format::Jp2),
+        ("sample.j2k", Format::Jp2),
+        ("sample.jxl", Format::Jxl),
+        ("sample.sgi", Format::Sgi),
+        ("sample.sun", Format::SunRaster),
+        ("sample.xwd", Format::Xwd),
+        ("sample.pcx", Format::Pcx),
+    ] {
+        let bytes = std::fs::read(dir.join(name)).unwrap();
+        assert_eq!(detect(&bytes), Some(format), "{name}");
+        let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
+        let rgb8 = img.converted(ChannelLayout::Rgb, SampleType::U8);
+        assert_eq!(rgb8.data(), &want[..], "{name}");
+    }
 }

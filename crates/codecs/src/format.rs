@@ -49,6 +49,10 @@ pub enum Format {
     Xwd,
     /// Alias|Wavefront PIX: RLE, 24-bit or 8-bit.
     AliasPix,
+    /// JPEG XL: read (native builds), lossless write.
+    Jxl,
+    /// JPEG 2000 (JP2 and bare codestreams).
+    Jp2,
 }
 
 /// What a format can hold **and** what this crate reads/writes for it.
@@ -114,7 +118,7 @@ const TIFF_LAYOUTS: &[ChannelLayout] = &[L::Gray, L::GrayA, L::Rgb, L::Rgba, L::
 
 impl Format {
     /// Every format known to the crate (enabled or not).
-    pub const ALL: [Format; 27] = [
+    pub const ALL: [Format; 29] = [
         Format::Png,
         Format::Jpeg,
         Format::Tiff,
@@ -142,6 +146,8 @@ impl Format {
         Format::Farbfeld,
         Format::Xwd,
         Format::AliasPix,
+        Format::Jxl,
+        Format::Jp2,
     ];
 
     pub fn caps(self) -> FormatCaps {
@@ -183,6 +189,8 @@ impl Format {
             Format::Farbfeld => "Farbfeld",
             Format::Xwd => "XWD",
             Format::AliasPix => "Alias PIX",
+            Format::Jxl => "JPEG XL",
+            Format::Jp2 => "JPEG 2000",
         }
     }
 
@@ -217,6 +225,8 @@ impl Format {
             Format::Farbfeld => &["ff"],
             Format::Xwd => &["xwd"],
             Format::AliasPix => &["pix"],
+            Format::Jxl => &["jxl"],
+            Format::Jp2 => &["jp2", "j2k", "j2c", "jpf", "jpx"],
         }
     }
 
@@ -249,6 +259,8 @@ impl Format {
             Format::Farbfeld => "image/x-farbfeld",
             Format::Xwd => "image/x-xwindowdump",
             Format::AliasPix => "image/x-alias-pix",
+            Format::Jxl => "image/jxl",
+            Format::Jp2 => "image/jp2",
         }
     }
 
@@ -311,6 +323,8 @@ pub fn caps(format: Format) -> FormatCaps {
         Format::Farbfeld => FormatCaps { depths: &[S::U16], layouts: &[L::Rgba], ..base },
         Format::Xwd => FormatCaps { layouts: &[L::Rgb], alpha: false, ..base },
         Format::AliasPix => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
+        Format::Jxl => FormatCaps { read: cfg!(not(target_arch = "wasm32")), depths: &[S::U8, S::U16], layouts: RGB_GRAY, icc: true, ..base },
+        Format::Jp2 => FormatCaps { depths: &[S::U16], layouts: RGB_GRAY, icc: true, ..base },
     }
 }
 
@@ -382,6 +396,12 @@ pub fn detect(bytes: &[u8]) -> Option<Format> {
     }
     if crate::codecs::xbm::looks_like_xbm(b) {
         return Some(Format::Xbm);
+    }
+    if crate::codecs::jxl::is_jxl(b) {
+        return Some(Format::Jxl);
+    }
+    if crate::codecs::jp2::is_jp2(b) {
+        return Some(Format::Jp2);
     }
     if b.starts_with(b"SIMPLE  =") {
         return Some(Format::Fits);
