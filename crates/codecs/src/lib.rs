@@ -21,6 +21,7 @@ mod format;
 mod image;
 mod lab;
 mod options;
+mod raw_data;
 pub mod orientation;
 pub mod resolution;
 pub mod source_settings;
@@ -38,13 +39,14 @@ pub use crate::format::{ASYMMETRIC_EXCEPTIONS, Format, FormatCaps, caps, detect,
 pub use crate::image::{
     ChannelLayout, CryptomatteBuffer, CryptomatteLayer, DecodeWarning, DeepChannel, DeepImage, ExrChannelInfo, ExrPartInfo, Image, Metadata, SampleType,
 };
+pub use crate::raw_data::{RawParams, decode_raw, encode_raw};
 pub use crate::options::{DecodeOptions, DpxBits, EncodeOptions, ExrCompression, Limits, PngCompression, TiffCompression};
 pub use crate::orientation::{exif_orientation, upright_exif, upright_xmp};
 pub use crate::resolution::{exif_resolution, export_exif, export_xmp, photoshop_resolution, xmp_resolution};
 pub use crate::source_settings::{WebpEncoding, jpeg_quality, webp_encoding};
 pub use half::f16;
 
-use crate::codecs::{aliaspix, dds, dicom, dpx, exr, farbfeld, fits, heif, icns, iff, jp2, jpeg, jxl, pcx, png, pnm, sgi, sunras, tiff, via_image, webp, xbm, xpm, xwd};
+use crate::codecs::{aliaspix, dds, dicom, dpx, exr, farbfeld, fits, fli, heif, icns, iff, jp2, jpeg, jxl, pcx, png, pnm, sgi, sunras, tiff, tim, via_image, webp, xbm, xcursor, xpm, xwd};
 
 /// Detect the format and decode with default [`Limits`].
 pub fn decode(bytes: &[u8]) -> Result<Image, CodecError> {
@@ -88,6 +90,9 @@ pub fn decode_as_with(format: Format, bytes: &[u8], opts: &DecodeOptions) -> Res
         Format::Dicom => dicom::decode(bytes, l),
         Format::Iff => iff::decode(bytes, l),
         Format::Icns => icns::decode(bytes, l),
+        Format::Tim => tim::decode(bytes, l),
+        Format::Xcursor => xcursor::decode(bytes, l),
+        Format::Fli => fli::decode(bytes, l),
         Format::Xpm => xpm::decode(bytes, l),
         Format::Dds => dds::decode(bytes, l),
         Format::Fits => fits::decode(bytes, l),
@@ -275,6 +280,7 @@ pub fn encode(image: &Image, format: Format, opts: &EncodeOptions) -> Result<Vec
         Format::Dicom => dicom::encode(image, plan, opts),
         Format::Iff => iff::encode(image, plan, opts),
         Format::Icns => Err(CodecError::unsupported(format, "ICNS is import-only; save as PNG instead")),
+        Format::Tim | Format::Xcursor | Format::Fli => Err(CodecError::unsupported(format, "this format is import-only; save as PNG instead")),
         Format::Xpm => Err(CodecError::unsupported(format, "XPM is import-only; save as PNG instead")),
         Format::Dds => Err(CodecError::unsupported(format, "DDS is import-only; save as PNG instead")),
         Format::Fits => fits::encode(image, plan, opts),

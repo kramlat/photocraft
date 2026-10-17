@@ -2974,3 +2974,11 @@ curves	Smooth	平滑
 	Compactness	紧凑度
 	Outline	轮廓
 	Outline Color	轮廓颜色
+	Open Photoshop Raw…	打开 Photoshop Raw…
+	Save Photoshop Raw…	存储 Photoshop Raw…
+	Bit Depth	位深度
+	Byte Order	字节顺序
+	IBM PC	IBM PC
+	Macintosh	Macintosh
+	Interleaved (RGBRGB…)	交错 (RGBRGB…)
+	Header (bytes)	文件头（字节）

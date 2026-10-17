@@ -3326,3 +3326,11 @@ curves	Smooth	Сгладить
 	Compactness	Компактность
 	Outline	Контур
 	Outline Color	Цвет контура
+	Open Photoshop Raw…	Открыть Photoshop Raw…
+	Save Photoshop Raw…	Сохранить Photoshop Raw…
+	Bit Depth	Глубина цвета
+	Byte Order	Порядок байтов
+	IBM PC	IBM PC
+	Macintosh	Macintosh
+	Interleaved (RGBRGB…)	Чередование (RGBRGB…)
+	Header (bytes)	Заголовок (байты)

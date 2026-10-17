@@ -571,6 +571,9 @@ fn wraps(id: &str) -> bool {
     matches!(
         id,
         "file.openAs"
+            | "file.openExrParts"
+            | "file.openRaw"
+            | "file.saveRaw"
             | "file.saveACopy"
             | "file.placeEmbedded"
             | "file.placeLinked"
@@ -970,6 +973,67 @@ fn open_exr_parts_dialog(app: &mut PhotocraftApp) -> Option<Result<Value, String
     }))
 }
 
+/// File › Open Photoshop Raw…: pick any file, then state its shape (a first guess at the size
+/// is filled in from the file's length, as 8-bit RGB). The dialog is a plain command form.
+fn open_raw_dialog(app: &mut PhotocraftApp) -> Result<Value, String> {
+    app.pick_file_bytes_filtered(&[], |app, name, bytes| {
+        let pixels = (bytes.len() / 3).max(1);
+        let width = (pixels as f64).sqrt().floor().max(1.0) as u64;
+        let height = (pixels as u64).div_ceil(width);
+        let mut fields = Map::new();
+        fields.insert("path".into(), json!(name));
+        fields.insert("width".into(), json!(width));
+        fields.insert("height".into(), json!(height));
+        fields.insert("channels".into(), json!(3));
+        fields.insert("depth".into(), json!(8));
+        fields.insert("byteOrder".into(), json!("ibm"));
+        fields.insert("interleaved".into(), json!(true));
+        fields.insert("header".into(), json!(0));
+        let mut labels = Map::new();
+        if let Some(file) = name.rsplit(['/', '\\']).next() {
+            labels.insert("path".into(), json!(file));
+        }
+        for (k, v) in [
+            ("width", "Width"),
+            ("height", "Height"),
+            ("channels", "Channels"),
+            ("depth", "Bit Depth"),
+            ("byteOrder", "Byte Order"),
+            ("ibm", "IBM PC"),
+            ("mac", "Macintosh"),
+            ("interleaved", "Interleaved (RGBRGB…)"),
+            ("header", "Header (bytes)"),
+        ] {
+            labels.insert(k.into(), json!(crate::i18n::t(v)));
+        }
+        fields.insert("__labels".into(), Value::Object(labels));
+        let choices = json!({"byteOrder": ["ibm", "mac"]});
+        Ok(json!({"dialog": form(app, "file.openRaw", "Open Photoshop Raw…", Value::Object(fields), choices)}))
+    })
+}
+
+/// File › Save Photoshop Raw…: pick the file, then choose the byte order and arrangement.
+fn save_raw_dialog(app: &mut PhotocraftApp) -> Result<Value, String> {
+    let doc = app.session.active().ok_or("no document")?.doc.clone();
+    let stem = doc.name.rsplit_once('.').map_or(doc.name.as_str(), |(a, _)| a);
+    app.pick_save(&format!("{stem}.raw"), |app, path| {
+        let mut fields = Map::new();
+        fields.insert("path".into(), json!(path));
+        fields.insert("byteOrder".into(), json!("ibm"));
+        fields.insert("interleaved".into(), json!(true));
+        let mut labels = Map::new();
+        if let Some(file) = path.rsplit(['/', '\\']).next() {
+            labels.insert("path".into(), json!(file));
+        }
+        for (k, v) in [("byteOrder", "Byte Order"), ("ibm", "IBM PC"), ("mac", "Macintosh"), ("interleaved", "Interleaved (RGBRGB…)")] {
+            labels.insert(k.into(), json!(crate::i18n::t(v)));
+        }
+        fields.insert("__labels".into(), Value::Object(labels));
+        let choices = json!({"byteOrder": ["ibm", "mac"]});
+        Ok(json!({"dialog": form(app, "file.saveRaw", "Save Photoshop Raw…", Value::Object(fields), choices)}))
+    })
+}
+
 fn form(app: &mut PhotocraftApp, command: &str, label: &str, fields: Value, choices: Value) -> u64 {
     let mut f = Map::new();
     f.insert("__command".into(), json!(command));
@@ -1195,6 +1259,8 @@ fn front(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &Value)
     match id {
         "file.openAs" => Some(app.open_dialog_file()),
         "file.openExrParts" => open_exr_parts_dialog(app),
+        "file.openRaw" => Some(open_raw_dialog(app)),
+        "file.saveRaw" => Some(save_raw_dialog(app)),
         "file.saveACopy" => Some(save_a_copy(app)),
         "file.placeEmbedded" | "file.placeLinked" => {
             if app.ui.transform.is_some() {

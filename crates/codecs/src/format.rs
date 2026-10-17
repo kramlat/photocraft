@@ -53,6 +53,12 @@ pub enum Format {
     Jxl,
     /// JPEG 2000 (JP2 and bare codestreams).
     Jp2,
+    /// Sony PlayStation TIM texture; read-only.
+    Tim,
+    /// X11 cursor (Xcursor); read-only.
+    Xcursor,
+    /// Autodesk FLI/FLC animation: the first frame; read-only.
+    Fli,
     /// Apple icon: reads the largest picture; read-only.
     Icns,
     /// Amiga IFF ILBM/PBM: indexed, EHB, HAM and 24/32-bit; writes 24-bit and 8-bit gray.
@@ -91,6 +97,9 @@ pub struct FormatCaps {
 /// The test-suite asserts that every other enabled format is read+write.
 pub const ASYMMETRIC_EXCEPTIONS: &[(Format, &str)] = &[
     (Format::Xpm, "XPM is a legacy Unix icon interchange format. Reading existing XPM icons is supported; writing modern image assets should use PNG instead."),
+    (Format::Tim, "TIM is a PlayStation texture format, supported for opening game assets; save the picture as PNG instead."),
+    (Format::Xcursor, "X11 cursors are supported for opening; writing one is a cursor-theme job (many sizes and hotspots), not Save As."),
+    (Format::Fli, "FLI/FLC is an animation; the first frame is read. Save the picture as PNG or GIF instead."),
     (
         Format::Icns,
         "ICNS is supported for opening Apple icons (the largest picture is read). An icon file holds a handful of fixed square sizes, so writing one is an icon-export job, not Save As; export a 512 or 1024 pixel PNG instead.",
@@ -128,7 +137,7 @@ const TIFF_LAYOUTS: &[ChannelLayout] = &[L::Gray, L::GrayA, L::Rgb, L::Rgba, L::
 
 impl Format {
     /// Every format known to the crate (enabled or not).
-    pub const ALL: [Format; 32] = [
+    pub const ALL: [Format; 35] = [
         Format::Png,
         Format::Jpeg,
         Format::Tiff,
@@ -161,6 +170,9 @@ impl Format {
         Format::Dicom,
         Format::Iff,
         Format::Icns,
+        Format::Tim,
+        Format::Xcursor,
+        Format::Fli,
     ];
 
     pub fn caps(self) -> FormatCaps {
@@ -207,6 +219,9 @@ impl Format {
             Format::Dicom => "DICOM",
             Format::Iff => "Amiga IFF",
             Format::Icns => "ICNS",
+            Format::Tim => "PlayStation TIM",
+            Format::Xcursor => "X11 cursor",
+            Format::Fli => "FLI/FLC",
         }
     }
 
@@ -246,6 +261,9 @@ impl Format {
             Format::Dicom => &["dcm", "dicom", "dic"],
             Format::Iff => &["iff", "ilbm", "lbm", "ham"],
             Format::Icns => &["icns"],
+            Format::Tim => &["tim"],
+            Format::Xcursor => &["xmc", "xcursor"],
+            Format::Fli => &["fli", "flc"],
         }
     }
 
@@ -283,6 +301,9 @@ impl Format {
             Format::Dicom => "image/x-dicom",
             Format::Iff => "image/x-ilbm",
             Format::Icns => "image/x-icns",
+            Format::Tim => "image/x-psx-tim",
+            Format::Xcursor => "image/x-xcursor",
+            Format::Fli => "image/x-fli",
         }
     }
 
@@ -346,6 +367,9 @@ pub fn caps(format: Format) -> FormatCaps {
         Format::Xwd => FormatCaps { layouts: &[L::Rgb], alpha: false, ..base },
         Format::AliasPix => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
         Format::Jxl => FormatCaps { read: cfg!(not(target_arch = "wasm32")), depths: &[S::U8, S::U16], layouts: RGB_GRAY, icc: true, ..base },
+        Format::Tim => FormatCaps { write: false, layouts: &[L::Rgb], alpha: false, ..base },
+        Format::Xcursor => FormatCaps { write: false, layouts: &[L::Rgba], ..base },
+        Format::Fli => FormatCaps { write: false, layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
         Format::Icns => FormatCaps { write: false, layouts: RGB_GRAY, ..base },
         Format::Iff => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
         Format::Dicom => FormatCaps { depths: &[S::U8, S::U16], layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
@@ -422,6 +446,12 @@ pub fn detect(bytes: &[u8]) -> Option<Format> {
     if crate::codecs::xbm::looks_like_xbm(b) {
         return Some(Format::Xbm);
     }
+    if crate::codecs::xcursor::is_xcursor(b) {
+        return Some(Format::Xcursor);
+    }
+    if crate::codecs::tim::is_tim(b) {
+        return Some(Format::Tim);
+    }
     if crate::codecs::icns::is_icns(b) {
         return Some(Format::Icns);
     }
@@ -448,6 +478,9 @@ pub fn detect(bytes: &[u8]) -> Option<Format> {
     }
     if crate::codecs::xbm::looks_like_wbmp(b) {
         return Some(Format::Wbmp);
+    }
+    if crate::codecs::fli::is_fli(b) {
+        return Some(Format::Fli);
     }
     if looks_like_tga(b) {
         return Some(Format::Tga);

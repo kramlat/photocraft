@@ -54,6 +54,19 @@ pub fn import_flat(name: &str, bytes: &[u8]) -> Result<ImportResult, IoError> {
     Ok(r)
 }
 
+/// Headerless Photoshop Raw data, read as the shape the user states (File › Open As… › Raw).
+pub fn import_raw(name: &str, bytes: &[u8], params: &codecs::RawParams) -> Result<ImportResult, IoError> {
+    let img = codecs::decode_raw(bytes, params, &codecs::Limits::default())?;
+    image_to_document(name, &img)
+}
+
+/// The flattened document as headerless Photoshop Raw data.
+pub fn export_raw(doc: &Document, big_endian: bool, interleaved: bool) -> Result<(Vec<u8>, Vec<String>), IoError> {
+    let mut warnings = Vec::new();
+    let img = document_to_image(doc, &mut warnings)?;
+    Ok((codecs::encode_raw(&img, big_endian, interleaved)?, warnings))
+}
+
 /// Every frame of a GIF as a single-layer document, handed to `each` in order with its delay in
 /// milliseconds (a still GIF has one). One frame at a time becomes a document, so the caller
 /// can flatten and drop it. Returns the number of frames; stops at the first error `each` gives.
