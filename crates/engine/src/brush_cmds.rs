@@ -29,7 +29,7 @@ fn num(p: &Value, k: &str) -> Option<f32> {
 fn flag(p: &Value, k: &str, d: bool) -> bool {
     p.get(k).and_then(Value::as_bool).unwrap_or(d)
 }
-fn color(v: Option<&Value>, d: [f32; 4]) -> [f32; 4] {
+pub(crate) fn color(v: Option<&Value>, d: [f32; 4]) -> [f32; 4] {
     match v {
         Some(Value::Array(a)) if a.len() >= 3 => {
             let c: Vec<f32> = a.iter().map(|x| x.as_f64().unwrap_or(0.0) as f32).collect();

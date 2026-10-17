@@ -2054,3 +2054,40 @@ fn periodic_clone_interior_matches_ordinary_brush_masks_and_transparency() {
         }
     }
 }
+
+#[test]
+fn art_history_brush_restyles_a_history_state_through_the_stroke() {
+    let mut s = session(80, 40, 8, "rgb");
+    s.execute("paint.stroke", json!({"points": [[0, 20], [80, 20]], "size": 30, "hardness": 1.0, "color": "#ff0000"})).unwrap();
+    s.execute("paint.stroke", json!({"points": [[0, 20], [80, 20]], "size": 30, "hardness": 1.0, "color": "#00ff00"})).unwrap();
+    // State 1 is the red band. The art brush paints strokes of it where the pointer goes.
+    let p = json!({"points": [[10, 20], [40, 20]], "size": 14, "hardness": 100, "state": 1, "style": "looseMedium", "fidelity": 100, "area": 30});
+    s.execute("paint.artHistoryBrush", p.clone()).unwrap();
+    let hit = rgba(&s, 25, 20);
+    assert!(hit[0] > 0.99 && hit[1] < 0.01, "{hit:?}");
+    assert!(rgba(&s, 70, 20)[1] > 0.99, "outside the stroke the layer is untouched");
+    // Undo is one step, and the same call paints the same pixels.
+    let first = rgba(&s, 22, 20);
+    s.execute("history.undo", json!({})).unwrap();
+    assert!(rgba(&s, 25, 20)[1] > 0.99);
+    s.execute("paint.artHistoryBrush", p).unwrap();
+    assert_eq!(rgba(&s, 22, 20), first);
+    assert!(s.execute("paint.artHistoryBrush", json!({"points": [[5, 5]], "style": "nope"})).is_err());
+    assert!(s.execute("paint.artHistoryBrush", json!({"points": [[5, 5]], "state": 99})).is_err());
+}
+
+#[test]
+fn art_history_brush_live_stroke_agrees_with_the_commit() {
+    let mut s = session(60, 40, 8, "rgb");
+    s.execute("paint.stroke", json!({"points": [[0, 20], [60, 20]], "size": 30, "hardness": 1.0, "color": "#3366cc"})).unwrap();
+    s.execute("paint.stroke", json!({"points": [[0, 20], [60, 20]], "size": 30, "hardness": 1.0, "color": "#ffffff"})).unwrap();
+    let p = json!({"points": [[8, 20], [30, 22], [50, 20]], "size": 12, "hardness": 100, "state": 1, "style": "tightMedium", "fidelity": 30, "area": 40});
+    let live = crate::retouch_cmds::LiveRetouch::begin(&s, "paint.artHistoryBrush", &p).unwrap();
+    let shown = live.doc.clone();
+    s.offer_live_retouch(live).unwrap();
+    s.execute("paint.artHistoryBrush", p).unwrap();
+    let committed = &s.active().unwrap().doc;
+    let a = crate::file_cmds::flattened(&shown, shown.pixel_format());
+    let b = crate::file_cmds::flattened(committed, committed.pixel_format());
+    assert_eq!(a.read_region(shown.bounds()), b.read_region(committed.bounds()));
+}

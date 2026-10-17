@@ -355,6 +355,8 @@ enum LivePaint {
     Clone { which: SampleLayers, map: crate::presets::clone_source::Mapping, cmd: &'static str },
     /// The History Brush's history state.
     History(Surface),
+    /// The Art History Brush's state, restyled as strokes ([`photocraft_paint::arthistory`]).
+    Art(Surface, photocraft_paint::arthistory::ArtParams),
 }
 
 /// A retouching stroke shown while it is drawn: the dabs so far composited onto a copy of the
@@ -401,7 +403,8 @@ impl LiveRetouch {
                 }
             }
             "paint.historyBrush" => LivePaint::History(history_source(s, id, p, cmd)?),
-            other => return Err(bad(other, "live retouching strokes are the Clone Stamp, Healing Brush and History Brush")),
+            "paint.artHistoryBrush" => LivePaint::Art(history_source(s, id, p, cmd)?, art_params(p, cmd)?),
+            other => return Err(bad(other, "live retouching strokes are the Clone Stamp, Healing Brush, History Brush and Art History Brush")),
         };
         let st = s.active().ok_or(EngineError::NoDocument)?;
         let (pre, base) = (st.doc.clone(), (st.doc.id, st.revision));
@@ -415,6 +418,7 @@ impl LiveRetouch {
         let brush = Box::new(stroke.brush.clone());
         let paint = match paint {
             LivePaint::History(src) if src.format() != pre_surf.format() => LivePaint::History(src.convert(pre_surf.format())),
+            LivePaint::Art(src, ap) if src.format() != pre_surf.format() => LivePaint::Art(src.convert(pre_surf.format()), ap),
             other => other,
         };
         let mut live = Self {
@@ -466,7 +470,8 @@ impl LiveRetouch {
                 crate::presets::clone_source::resolve(s, &self.params, (f.x, f.y), &self.cmd)?.0 == *map
             }
             LivePaint::History(_) if self.cmd == "paint.historyBrush" => true,
-            _ => return Err(bad(&self.cmd, "only Clone Stamp and History Brush strokes commit their live pixels")),
+            LivePaint::Art(..) if self.cmd == "paint.artHistoryBrush" => true,
+            _ => return Err(bad(&self.cmd, "only Clone Stamp, History Brush and Art History Brush strokes commit their live pixels")),
         };
         if !source_unchanged || *self.brush != stroke.brush || id != self.id {
             return Err(bad(&self.cmd, "the brush, layer or clone source changed during the stroke"));
@@ -544,6 +549,7 @@ impl LiveRetouch {
                 clone_sample(&self.pre, self.id, &self.pre_surf, *which, r, map, *cmd == "paint.cloneStamp" && flag(&self.params, "wrap", false), cmd)?
             }
             LivePaint::History(src) => Region::read(src, r),
+            LivePaint::Art(src, ap) => art_region(src, self.pre.bounds(), r, ap),
         };
         let (surf, _) = crate::channel_cmds::target_surface(std::sync::Arc::make_mut(&mut self.doc), self.id, &self.params)?;
         surf.write_region(r, &self.pre_surf.read_region(r));
@@ -625,6 +631,50 @@ fn history_source(s: &Session, id: Option<LayerId>, p: &Value, cmd: &str) -> Res
     crate::channel_cmds::read_target_surface(source_doc.as_ref(), id, p)
         .cloned()
         .map_err(|_| EngineError::Other("the target did not exist (as pixels, a mask or a channel) in that history state".into()))
+}
+
+/// The Art History Brush's options: Style, Fidelity (%) and Area (px).
+fn art_params(p: &Value, cmd: &str) -> Result<photocraft_paint::arthistory::ArtParams> {
+    use photocraft_paint::arthistory::{ArtParams, ArtStyle};
+    let style = match p.get("style").and_then(Value::as_str) {
+        None => ArtStyle::TightShort,
+        Some(n) => ArtStyle::parse(n).ok_or_else(|| bad(cmd, format!("unknown style \"{n}\"")))?,
+    };
+    let num = |k: &str, d: f64| p.get(k).and_then(Value::as_f64).unwrap_or(d);
+    Ok(ArtParams { style, fidelity: (num("fidelity", 50.0) / 100.0).clamp(0.0, 1.0) as f32, area: num("area", 50.0).clamp(1.0, 500.0) as f32, seed: num("seed", 1.0) as u32 })
+}
+
+/// The Art History Brush's paint for `r`: the strokes drawn from `src`.
+fn art_region(src: &Surface, bounds: Rect, r: Rect, ap: &photocraft_paint::arthistory::ArtParams) -> Region {
+    let read = Region::read(src, r.inflate(ap.margin()));
+    photocraft_paint::arthistory::art_paint(&read, bounds, r, ap)
+}
+
+fn art_history_brush(s: &mut Session, p: &Value) -> Result<Value> {
+    const CMD: &str = "paint.artHistoryBrush";
+    let (stroke, id) = parse_brush(s, p, CMD)?;
+    let mode = blend_param(p, CMD)?;
+    let ap = art_params(p, CMD)?;
+    let live = s.live_commit.take().filter(|l| l.matches(s, CMD, p, &stroke.points));
+    let from_live = live.is_some();
+    let src_surface = history_source(s, id, p, CMD)?;
+    let bounds = s.active().ok_or(EngineError::NoDocument)?.doc.bounds();
+    let dmg = run_stroke(s, "Art History Brush", id, p, |_, surf, sel, lock| {
+        if let Some(l) = live {
+            *surf = l.surface;
+            return Ok(l.bounds);
+        }
+        let fmt = surf.format();
+        let src = if src_surface.format() == fmt { src_surface } else { src_surface.convert(fmt) };
+        let (rect, cov) = stroke_coverage(&stroke);
+        let paint = art_region(&src, bounds, rect, &ap);
+        Ok(apply_coverage(surf, rect, &cov, stroke.brush.opacity, sel, lock, &paint, mode))
+    })?;
+    let mut r = json!({ "damage": damage_json(dmg) });
+    if from_live {
+        r["fromLive"] = json!(true);
+    }
+    Ok(r)
 }
 
 fn history_brush(s: &mut Session, p: &Value) -> Result<Value> {
@@ -1356,6 +1406,16 @@ pub fn specs() -> Vec<CommandSpec> {
             params: brush_params!(r#","strength":1..100=50,"fingerPainting":bool=false (starts with the foreground colour),"sampleAllLayers":bool=false"#),
             enabled: has_pixel_layer,
             run: |s, p| dab_cmd(s, p, "paint.smudge"),
+            journal: true,
+        },
+        CommandSpec {
+            id: "paint.artHistoryBrush",
+            label: "Art History Brush",
+            menu: &[],
+            shortcut: None,
+            params: brush_params!(r#","state":index (the history state to restyle; default 0 = the oldest held state),"style":"tightShort|tightMedium|tightLong|looseMedium|looseLong|looseCurl|dab|tightCurl|tightCurlLong|looseCurlLong"="tightShort","fidelity":0..100=50 (how closely strokes follow the source's colours and edges),"area":1..500=50 (px; the size of the strokes),"seed":0..1000000=1"#),
+            enabled: has_pixel_layer,
+            run: art_history_brush,
             journal: true,
         },
         CommandSpec {

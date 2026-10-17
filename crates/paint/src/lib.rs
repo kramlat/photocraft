@@ -18,11 +18,13 @@ use photocraft_geom::{Point, Rect};
 use photocraft_raster::Surface;
 use serde::{Deserialize, Serialize};
 
+pub mod arthistory;
 pub mod bg_erase;
 pub mod brush;
 pub mod curve;
 pub mod dynamics;
 pub mod mixer;
+pub mod mypaint;
 pub mod outline;
 pub mod presets;
 pub mod procedural;

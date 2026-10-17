@@ -40,6 +40,7 @@ pub mod edit_menu_cmds;
 pub mod eraser_cmds;
 pub mod export_preset_cmds;
 pub mod exr_cmds;
+pub mod mypaint_cmds;
 pub mod raw_cmds;
 pub mod extra_cmds;
 pub mod file_cmds;
@@ -465,6 +466,8 @@ pub struct Session {
     pub edit_state: edit_menu_cmds::EditState,
     /// The pattern library (Window › Patterns; see `pattern.*`).
     pub patterns: pattern_cmds::PatternLibrary,
+    /// The MyPaint brush library (`mypaint.brushes.*`).
+    pub mypaint: mypaint_cmds::Library,
     /// Image › Analysis: Measurement Log and Select Data Points (see `analysis_cmds`).
     pub analysis: analysis_cmds::AnalysisState,
     /// Window › Gradients, Patterns (groups), Styles, Shapes, Tool Presets and Clone Source.

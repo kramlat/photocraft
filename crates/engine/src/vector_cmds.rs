@@ -1201,6 +1201,7 @@ pub const STROKE_PATH_TOOLS: &[(&str, &str)] = &[
     ("healingBrush", "paint.healingBrush"),
     ("spotHealingBrush", "paint.spotHealing"),
     ("historyBrush", "paint.historyBrush"),
+    ("artHistoryBrush", "paint.artHistoryBrush"),
     ("blur", "paint.blur"),
     ("sharpen", "paint.sharpen"),
     ("smudge", "paint.smudge"),
