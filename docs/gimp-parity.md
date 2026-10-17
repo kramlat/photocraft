@@ -50,7 +50,8 @@ direction GIMP offers), ⬜ = to do. Adobe column: whether Photoshop has it too 
 | Sun Raster, SGI, XBM, Farbfeld, XWD, Alias PIX | ✅ | no |
 | WBMP | ✅ | yes |
 | Cineon (r) | ✅ | yes |
-| PDF (load), PostScript/EPS | ⬜ | yes (PDF, EPS) |
+| PDF (load; one page per open) | ✅ | yes |
+| PostScript/EPS | ⬜ | yes |
 | JPEG XL (lossless write), JPEG 2000 (lossless write) | ✅ | yes, yes |
 | DICOM, Amiga IFF | ✅ | yes |
 | Photoshop Raw / raw data | ✅ | yes |

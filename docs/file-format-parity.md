@@ -38,7 +38,7 @@ XL are missing (gap G10). Remaining: 300–500 h including PSD fidelity.
 | Portable Bit Map (PBM/PGM/PPM/PNM/PFM/PAM) | R/W | yes | yes | 8/16/32f |
 | FITS | R/W (FITS Liberator plug-in) | yes | yes | 8/16/32f gray or RGB, header cards kept; no fpack, no debayer |
 | Targa | R/W | yes | yes | 8-bit |
-| Photoshop PDF | R/W | no (#2541) | yes, one flattened page (Save As / Save a Copy / CLI, #3401; also print and artboards-to-PDF) | No vector/text PDF, no multi-page save, no PDF presentation, layers are not preserved (FILE-215-10); read still missing (#2541) |
+| Photoshop PDF | R/W | yes, rasterised: File › Open (page 1 at 150 ppi) or File › Open PDF… (page and resolution) on white; vector, text and layers are not kept editable; no password-protected files (hayro, pure Rust; compared with poppler on a vector/text/gradient page, text and curves match to anti-aliasing) | yes, one flattened page (Save As / Save a Copy / CLI, #3401; also print and artboards-to-PDF) | No vector/text PDF write, no multi-page save, no PDF presentation, layers are not preserved (FILE-215-10); Photoshop's Import PDF editable-image selection not done |
 | Photoshop EPS, DCS 1.0/2.0, EPS TIFF/PICT preview | R/W | no | no | |
 | Generic EPS / AI | R (rasterize) | no | no | |
 | SVG | R (rasterize) | yes, as editable shape layers or a vector smart object | no | Better than Photoshop for editing; gradients approximated (FILE-215-9) |
@@ -146,6 +146,7 @@ remaining gaps in #1606 stay tracked with per-sample corpus ceilings.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-16 | minor | PDF opens (rasterised page, choice of page and resolution) |
 | 2026-10-16 | minor | Photoshop Raw open and save; TIM, X11 cursor and FLI read |
 | 2026-10-16 | minor | DICOM and Amiga IFF read and write, ICNS read |
 | 2026-10-16 | minor | JPEG XL and JPEG 2000 read and write (JXL and JP2 writes are lossless) |

@@ -54,6 +54,7 @@ pub use ora::losses as ora_losses;
 mod xcf;
 pub use xcf::losses as xcf_losses;
 pub mod pattern_map;
+pub mod pdf_import;
 pub mod pdf;
 mod pdn;
 pub mod pixels;
@@ -315,6 +316,9 @@ fn import_stages(name: &str, bytes: &[u8], ctl: &photocraft_raster::Interrupt, m
     }
     if raw::is_raw(bytes) {
         return raw::import_raw(name, bytes);
+    }
+    if pdf_import::is_pdf(bytes) {
+        return pdf_import::import(name, bytes, 0, pdf_import::DEFAULT_DPI);
     }
     if is_svg_input(name, bytes) {
         return svg::import_svg_with_group_depth(name, bytes, max_group_depth);

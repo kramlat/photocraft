@@ -42,6 +42,8 @@ roxmltree = "0.20"
 # SVG import (svg.rs): usvg parses, resvg rasterises what the shape model can't hold. Both are
 # already in the tree through the UI's icon loader; text shaping needs the fonts feature set.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# PDF import (pdf_import.rs): a pure-Rust PDF rasteriser (Apache-2.0 OR MIT), native builds only.
+hayro = "0.8"
 resvg = { version = "0.45", default-features = false, features = ["text", "system-fonts", "raster-images"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

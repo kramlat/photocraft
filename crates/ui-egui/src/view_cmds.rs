@@ -572,6 +572,7 @@ fn wraps(id: &str) -> bool {
         id,
         "file.openAs"
             | "file.openExrParts"
+            | "file.openPdf"
             | "file.openRaw"
             | "file.saveRaw"
             | "file.saveACopy"
@@ -973,6 +974,26 @@ fn open_exr_parts_dialog(app: &mut PhotocraftApp) -> Option<Result<Value, String
     }))
 }
 
+/// File › Open PDF…: pick a PDF, then choose the page and the resolution it is drawn at.
+fn open_pdf_dialog(app: &mut PhotocraftApp) -> Result<Value, String> {
+    app.pick_file_bytes_filtered(&["pdf"], |app, name, _bytes| {
+        let info = app.run("file.pdfInfo", json!({"path": name})).map_err(|e| e.to_string())?;
+        let pages = info["pages"].as_array().map_or(1, Vec::len);
+        let mut fields = Map::new();
+        fields.insert("path".into(), json!(name));
+        fields.insert("page".into(), json!(1));
+        fields.insert("resolution".into(), json!(150));
+        let mut labels = Map::new();
+        if let Some(file) = name.rsplit(['/', '\\']).next() {
+            labels.insert("path".into(), json!(file));
+        }
+        labels.insert("page".into(), json!(format!("{} (1–{pages})", crate::i18n::t("Page"))));
+        labels.insert("resolution".into(), json!(crate::i18n::t("Resolution (pixels/inch)")));
+        fields.insert("__labels".into(), Value::Object(labels));
+        Ok(json!({"dialog": form(app, "file.openPdf", "Open PDF…", Value::Object(fields), json!({}))}))
+    })
+}
+
 /// File › Open Photoshop Raw…: pick any file, then state its shape (a first guess at the size
 /// is filled in from the file's length, as 8-bit RGB). The dialog is a plain command form.
 fn open_raw_dialog(app: &mut PhotocraftApp) -> Result<Value, String> {
@@ -1259,6 +1280,7 @@ fn front(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &Value)
     match id {
         "file.openAs" => Some(app.open_dialog_file()),
         "file.openExrParts" => open_exr_parts_dialog(app),
+        "file.openPdf" => Some(open_pdf_dialog(app)),
         "file.openRaw" => Some(open_raw_dialog(app)),
         "file.saveRaw" => Some(save_raw_dialog(app)),
         "file.saveACopy" => Some(save_a_copy(app)),
