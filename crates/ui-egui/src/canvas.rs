@@ -439,6 +439,7 @@ enum EngineStroke {
     Brush(Box<photocraft_engine::brush_cmds::LiveStroke>),
     Retouch(photocraft_engine::retouch_cmds::LiveRetouch),
     Dab(photocraft_engine::retouch_cmds::LiveDab),
+    MyPaint(Box<photocraft_engine::mypaint_cmds::LiveMyPaint>),
 }
 
 impl EngineStroke {
@@ -447,7 +448,7 @@ impl EngineStroke {
     fn wants_time(&self) -> bool {
         match self {
             EngineStroke::Brush(l) => l.wants_time(),
-            EngineStroke::Retouch(_) | EngineStroke::Dab(_) => false,
+            EngineStroke::Retouch(_) | EngineStroke::Dab(_) | EngineStroke::MyPaint(_) => false,
         }
     }
 
@@ -456,6 +457,7 @@ impl EngineStroke {
             Self::Brush(s) => &s.doc,
             Self::Retouch(s) => &s.doc,
             Self::Dab(s) => &s.doc,
+            Self::MyPaint(s) => &s.doc,
         }
     }
     fn bounds(&self) -> DRect {
@@ -463,6 +465,7 @@ impl EngineStroke {
             Self::Brush(s) => s.bounds(),
             Self::Retouch(s) => s.bounds(),
             Self::Dab(s) => s.bounds(),
+            Self::MyPaint(s) => s.bounds(),
         }
     }
     fn push(&mut self, pts: &[photocraft_engine::paint::StrokePoint]) -> photocraft_engine::Result<DRect> {
@@ -470,6 +473,7 @@ impl EngineStroke {
             Self::Brush(s) => s.push(pts),
             Self::Retouch(s) => s.push(pts),
             Self::Dab(s) => s.push(pts),
+            Self::MyPaint(s) => s.push(pts),
         }
     }
     /// The jitter seed the commit must reuse (the Clone Stamp's comes from the session brush).
@@ -478,6 +482,7 @@ impl EngineStroke {
             Self::Brush(s) => Some(s.seed),
             Self::Retouch(_) => None,
             Self::Dab(_) => None,
+            Self::MyPaint(s) => Some(s.seed),
         }
     }
 }
@@ -548,11 +553,29 @@ fn stroke_params(app: &PhotocraftApp, d: &Drag, points: &[Vec<f64>]) -> serde_js
     if tool == Tool::Pencil {
         p["autoErase"] = json!(app.ui.tool_options.pencil_auto_erase);
     }
+    if tool == Tool::Ink {
+        p["brush"] = ink_brush(&app.ui.tool_options);
+    }
     // Block mode: the engine sizes the square from the stroke's zoom (16 / zoom px, #2770).
     if crate::eraser_ui::block_mode(app, tool) {
         p["block"] = json!(true);
     }
     p
+}
+
+/// The Ink tool's brush, laid over the session brush (which keeps its size, colour and opacity): a
+/// hard nib at the Nib Angle, thin where the pointer is quick and thick where it slows, with the
+/// stroke smoothed.
+fn ink_brush(o: &crate::state::ToolOptions) -> serde_json::Value {
+    let sensitivity = f64::from(o.ink_sensitivity.clamp(0.0, 100.0)) / 100.0;
+    json!({
+        "hardness": 1.0,
+        "angle": o.ink_angle,
+        "roundness": 0.35,
+        "spacing": 0.06,
+        "shapeDynamics": {"enabled": true, "size": {"control": "speed", "minimum": (1.0 - sensitivity * 0.9).clamp(0.1, 1.0)}},
+        "smoothing": {"enabled": true, "amount": 0.35},
+    })
 }
 
 /// Tools whose strokes the engine renders while they are drawn (`LiveStroke`).
@@ -561,6 +584,8 @@ pub(crate) fn strokes_live(tool: Tool) -> bool {
         tool,
         Tool::Brush
             | Tool::Pencil
+            | Tool::Ink
+            | Tool::MyPaintBrush
             | Tool::Eraser
             | Tool::ColorReplacement
             | Tool::Blur
@@ -579,6 +604,7 @@ fn live_retouch_command(tool: Tool) -> Option<&'static str> {
         Tool::CloneStamp => Some("paint.cloneStamp"),
         Tool::Healing => Some("paint.healingBrush"),
         Tool::HistoryBrush => Some("paint.historyBrush"),
+        Tool::ArtHistoryBrush => Some("paint.artHistoryBrush"),
         _ => None,
     }
 }
@@ -687,7 +713,12 @@ fn begin_live_stroke(app: &PhotocraftApp) -> Option<LiveStroke> {
     static STROKES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let st = app.session.active()?;
     let d = app.drag.as_ref()?;
-    let stroke = if d.tool == Tool::ColorReplacement {
+    let stroke = if d.tool == Tool::MyPaintBrush {
+        let n = STROKES.fetch_add(1, std::sync::atomic::Ordering::Relaxed) & 0x3fff_ffff;
+        let mut p = crate::mypaint_ui::stroke_params(app, d, n.wrapping_add(1));
+        p["points"] = json!([]);
+        EngineStroke::MyPaint(Box::new(photocraft_engine::mypaint_cmds::LiveMyPaint::begin(&app.session, &p).ok()?))
+    } else if d.tool == Tool::ColorReplacement {
         // The params `retouch_ui::finish_stroke` commits.
         let mut p = crate::retouch_ui::color_replacement_params(app);
         p["points"] = json!(d.points);
@@ -699,7 +730,7 @@ fn begin_live_stroke(app: &PhotocraftApp) -> Option<LiveStroke> {
         EngineStroke::Dab(photocraft_engine::retouch_cmds::LiveDab::begin(&app.session, cmd, &p).ok()?)
     } else if let Some(cmd) = live_retouch_command(d.tool) {
         // The params `retouch_ui::finish_stroke` commits.
-        let mut p = if d.tool == Tool::HistoryBrush { json!({}) } else { crate::retouch_ui::clone_params(app)? };
+        let mut p = if matches!(d.tool, Tool::HistoryBrush | Tool::ArtHistoryBrush) { crate::retouch_ui::history_params(app, d.tool) } else { crate::retouch_ui::clone_params(app)? };
         p["points"] = json!(d.points);
         p["target"] = paint_target(app);
         EngineStroke::Retouch(photocraft_engine::retouch_cmds::LiveRetouch::begin(&app.session, cmd, &p).ok()?)
@@ -758,7 +789,7 @@ pub(crate) fn live_retouch_points(app: &PhotocraftApp) -> Option<Vec<photocraft_
 /// Offer the Clone Stamp's or History Brush's live stroke, with the drag points it hasn't rendered
 /// yet, to the command `retouch_ui::finish_stroke` commits, which then takes its pixels.
 fn offer_live_retouch(app: &mut PhotocraftApp, d: &Drag) {
-    if !matches!(d.tool, Tool::CloneStamp | Tool::HistoryBrush) {
+    if !matches!(d.tool, Tool::CloneStamp | Tool::HistoryBrush | Tool::ArtHistoryBrush) {
         return;
     }
     let Some(LiveStroke { stroke: EngineStroke::Retouch(mut live), fed, .. }) = app.live_stroke.take() else { return };
@@ -814,6 +845,9 @@ pub(crate) fn freehand_tool(tool: Tool) -> bool {
             | Tool::Eraser
             | Tool::BackgroundEraser
             | Tool::HistoryBrush
+            | Tool::ArtHistoryBrush
+            | Tool::Ink
+            | Tool::MyPaintBrush
             | Tool::Remove
             | Tool::SpotHealing
             | Tool::Healing
@@ -3959,7 +3993,14 @@ pub fn canvas_view(app: &mut PhotocraftApp, ui: &mut egui::Ui, idx: usize, rect:
                         crate::tool_cursor::crosshair(&painter, p, 6.0, 0.0)
                     } else {
                         let painting = app.drag.is_some();
-                        let brush = &app.session.tools.brush;
+                        // The MyPaint tool has its own size (the options bar's): its brush is not the session's.
+                        let mypaint_brush;
+                        let brush = if tool == Tool::MyPaintBrush {
+                            mypaint_brush = photocraft_engine::paint::BrushSettings { size: crate::mypaint_ui::cursor_size(app), roundness: 1.0, angle: 0.0, tip: Default::default(), ..app.session.tools.brush.clone() };
+                            &mypaint_brush
+                        } else {
+                            &app.session.tools.brush
+                        };
                         let full = (brush.size / 2.0 * xf.zoom).max(1.0);
                         match cur.painting {
                             PaintingCursor::Standard => egui::CursorIcon::Default,
@@ -5751,6 +5792,26 @@ fn commit_brush_stroke(app: &mut PhotocraftApp, d: &Drag) {
     }
 }
 
+/// A MyPaint stroke on release: `paint.mypaint` with the live stroke's seed, so it paints what the
+/// preview showed.
+fn commit_mypaint_stroke(app: &mut PhotocraftApp, d: &Drag) {
+    let live = app.live_stroke.take();
+    let seed = live.as_ref().and_then(|l| l.stroke.seed()).unwrap_or(1);
+    let p = crate::mypaint_ui::stroke_params(app, d, seed);
+    let Some(l) = live else {
+        let _ = app.run("paint.mypaint", p);
+        return;
+    };
+    let LiveStroke { doc, key, damage, .. } = l;
+    let started = crate::gpu_canvas::now_ms();
+    let result = app.run("paint.mypaint", p);
+    app.stroke_trace.stroke(crate::gpu_canvas::now_ms() - started);
+    if result.is_ok() {
+        let shown = CommittedStroke { doc, revision: 0, key, damage };
+        shown_as_document(app, doc, |k| shown.since(k).is_some());
+    }
+}
+
 /// Pencil (and a Pencil-mode Eraser) dabs sit on the pixel grid. Clicks anywhere inside one
 /// pixel must produce the same point, or a ⇧-click line changes with the sub-pixel position.
 fn snap_aliased_tip(app: &PhotocraftApp, tool: Tool, x: f64, y: f64) -> (f64, f64) {
@@ -5798,7 +5859,8 @@ pub(crate) fn finish_gesture(app: &mut PhotocraftApp, d: Drag) {
         t if crate::vector_ui::is_shape_tool(t) => crate::vector_ui::finish_shape(app, t, d.start, [end[0], end[1]], d.live),
         Tool::PathSelection => crate::vector_ui::path_selection_finish(app, d.start, [end[0], end[1]]),
         Tool::Type | Tool::VerticalType | Tool::HorizontalTypeMask | Tool::VerticalTypeMask => crate::type_tool::pointer_up(app, d.start, [end[0], end[1]]),
-        Tool::Brush | Tool::Pencil | Tool::Eraser => commit_brush_stroke(app, &d),
+        Tool::Brush | Tool::Pencil | Tool::Eraser | Tool::Ink => commit_brush_stroke(app, &d),
+        Tool::MyPaintBrush => commit_mypaint_stroke(app, &d),
         Tool::RectMarquee | Tool::EllipseMarquee => {
             // Exactly what the drag showed (`marquee_preview_px`); a click deselects.
             let Some([x0, y0, x1, y1]) = marquee_preview_px(&app.ui.tool_options, &d, app.point_zoom()) else {

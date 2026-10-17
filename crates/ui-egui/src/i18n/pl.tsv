@@ -3950,3 +3950,25 @@ curves	Smooth	Wygładź
 	Open PDF…	Otwórz PDF…
 	Page	Strona
 	Resolution (pixels/inch)	Rozdzielczość (piksele/cal)
+	Style:	Styl:
+	Tight Short	Ciasny krótki
+	Tight Medium	Ciasny średni
+	Tight Long	Ciasny długi
+	Loose Medium	Luźny średni
+	Loose Long	Luźny długi
+	Loose Curl	Luźny lok
+	Dab	Plamka
+	Tight Curl	Ciasny lok
+	Tight Curl Long	Ciasny lok długi
+	Loose Curl Long	Luźny lok długi
+	Fidelity:	Wierność:
+	Area:	Obszar:
+	Nib Angle:	Kąt stalówki:
+	Speed Sensitivity:	Czułość na prędkość:
+	Source: the opening state	Źródło: stan początkowy
+	Source: {name}	Źródło: {name}
+	Click the box beside a History row to set it	Kliknij pole obok wiersza historii, aby go wybrać
+	Set the source for the History Brush	Ustaw źródło dla Pędzla historii
+	Ink Tool	Narzędzie Tusz
+	MyPaint Brush Tool	Narzędzie Pędzel MyPaint
+	Art History Brush Tool	Narzędzie Pędzel historii artystyczny

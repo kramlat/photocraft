@@ -27,9 +27,9 @@ const TOOL_SECTIONS: &[&[&[Tool]]] = &[
     ],
     &[
         &[Tool::Remove, Tool::SpotHealing, Tool::Healing, Tool::Patch, Tool::ContentAwareMove, Tool::RedEye],
-        &[Tool::Brush, Tool::Pencil, Tool::MixerBrush, Tool::ColorReplacement],
+        &[Tool::Brush, Tool::Pencil, Tool::MixerBrush, Tool::ColorReplacement, Tool::Ink, Tool::MyPaintBrush],
         &[Tool::CloneStamp, Tool::PatternStamp],
-        &[Tool::HistoryBrush],
+        &[Tool::HistoryBrush, Tool::ArtHistoryBrush],
         &[Tool::Eraser, Tool::BackgroundEraser, Tool::MagicEraser],
         &[Tool::Gradient, Tool::PaintBucket],
         &[Tool::Blur, Tool::Sharpen, Tool::Smudge],
@@ -957,7 +957,7 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
                 // chip, so a tool change swaps the brush with it (Photoshop keeps one per tool).
                 crate::paint_mouse::sync_tool_brush(app);
                 // Brush edits here go through `tools.setBrush`, one journal entry per gesture (Rule 1).
-                if (tool.is_brushlike() && !matches!(tool, Tool::Brush | Tool::Pencil | Tool::MixerBrush | Tool::Eraser)) || tool == Tool::QuickSelection {
+                if (tool.is_brushlike() && !matches!(tool, Tool::Brush | Tool::Pencil | Tool::MixerBrush | Tool::Eraser | Tool::MyPaintBrush)) || tool == Tool::QuickSelection {
                     brush_preset_chip(ui, &app.session.tools.brush, &mut app.ui);
                     crate::brush_picker::settings_toggle(app, ui);
                     widgets::vline(ui, 22.0);
@@ -3105,6 +3105,28 @@ fn channels(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     crate::channels_panel::show(app, ui);
 }
 
+/// The box at the left of a History row that sets what the History Brush and the Art History
+/// Brush paint from (Photoshop's source column): a brush shows on the chosen row, the opening
+/// state until another is chosen.
+fn history_source_box(app: &mut PhotocraftApp, ui: &mut egui::Ui, row: Rect, doc: u64, src: crate::state::HistorySource) {
+    use crate::state::HistorySource;
+    let t = Tokens::get(ui.ctx());
+    let chosen = app.ui.history_source.filter(|(d, _)| *d == doc).map(|(_, s)| s).unwrap_or(HistorySource::State(0));
+    let on = chosen == src;
+    let boxr = Rect::from_center_size(pos2(row.left() + 16.0, row.center().y), vec2(16.0, 16.0));
+    let r = ui.interact(boxr, ui.id().with(("history-source", doc, format!("{src:?}"))), Sense::click());
+    if on {
+        ui.painter().rect_filled(boxr, 2.0, t.accent_soft);
+        icons::paint(ui, boxr, "brush", 11.0, t.accent_text);
+    } else if r.hovered() {
+        ui.painter().rect_stroke(boxr, 2.0, Stroke::new(1.0, t.separator), StrokeKind::Inside);
+    }
+    let r = r.on_hover_text(tl!("Set the source for the History Brush"));
+    if r.clicked() {
+        app.ui.history_source = Some((doc, src));
+    }
+}
+
 fn history(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else {
@@ -3180,6 +3202,9 @@ fn history(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
                 if is_redo { t.text_faint } else { t.icon },
             );
             ui.painter().text(pos2(rect.left() + 58.0, rect.center().y), Align2::LEFT_CENTER, &e, egui::FontId::proportional(12.0), color);
+            if !is_redo {
+                history_source_box(app, ui, rect, doc.id.0, crate::state::HistorySource::State(i));
+            }
             if resp.clicked() && i != current {
                 target = Some(i);
             } else if resp.clicked() && selected_snap.is_some() {
@@ -3329,6 +3354,7 @@ fn snapshot_rows(app: &mut PhotocraftApp, ui: &mut egui::Ui, selected: Option<u6
         let tex = app.snapshot_thumb(&ctx, doc_id, snap, &live);
         ui.painter().image(tex, thumb, Rect::from_min_max(egui::Pos2::ZERO, pos2(1.0, 1.0)), Color32::WHITE);
         ui.painter().rect_stroke(thumb, 0.0, Stroke::new(1.0, t.separator), StrokeKind::Outside);
+        history_source_box(app, ui, rect, doc_id.0, crate::state::HistorySource::Snapshot(snap.id));
         match renaming.as_mut().filter(|(id, _)| *id == snap.id) {
             Some((_, text)) => {
                 let field = Rect::from_min_max(pos2(thumb.right() + 6.0, rect.center().y - 10.0), pos2(rect.right() - 6.0, rect.center().y + 10.0));
@@ -5397,8 +5423,9 @@ mod type_flyout_tests {
         frame(&mut app, &ctx, 0.1, vec![]);
         let index = TOOL_SECTIONS.iter().flat_map(|section| section.iter()).position(|slot| slot.contains(&Tool::Brush)).unwrap();
         let slot = TOOL_SECTIONS.iter().flat_map(|section| section.iter()).nth(index).copied().unwrap();
-        // Photoshop's Brush group, Color Replacement after the Mixer Brush.
-        assert_eq!(slot, &[Tool::Brush, Tool::Pencil, Tool::MixerBrush, Tool::ColorReplacement]);
+        // Photoshop's Brush group, Color Replacement after the Mixer Brush, then GIMP's Ink and
+        // MyPaint Brush.
+        assert_eq!(slot, &[Tool::Brush, Tool::Pencil, Tool::MixerBrush, Tool::ColorReplacement, Tool::Ink, Tool::MyPaintBrush]);
         let bx = if Tokens::get(&ctx).pro { 30.0 } else { 36.0 };
         let mut buttons: Vec<Rect> = ctx.viewport(|v| {
             v.prev_pass
@@ -5418,8 +5445,8 @@ mod type_flyout_tests {
         frame(&mut app, &ctx, 1.45, vec![]);
         let key = egui::Id::new(("tool-slot", index));
         let menu = ctx.memory(|m| m.area_rect(key.with("flyout"))).unwrap();
-        // The last of the four 26-point rows.
-        let row = egui::pos2(menu.left() + 65.0, menu.bottom() - 20.0);
+        // The fourth of the six 26-point rows (Ink and the MyPaint Brush follow it).
+        let row = egui::pos2(menu.left() + 65.0, menu.bottom() - 20.0 - 2.0 * 26.0);
         frame(&mut app, &ctx, 2.0, vec![egui::Event::PointerMoved(row), pointer(row, true)]);
         frame(&mut app, &ctx, 2.05, vec![pointer(row, false)]);
         assert_eq!(app.ui.tool, Tool::ColorReplacement);
@@ -5474,7 +5501,7 @@ mod toolbar_hidden_tests {
         let slots: usize = TOOL_SECTIONS.iter().map(|section| section.len()).sum();
         hide(&mut app, &Tool::ALL);
         assert_eq!(tool_buttons(&mut app), all - slots, "every tool slot is gone when every tool is hidden");
-        hide(&mut app, &[Tool::Brush, Tool::Pencil, Tool::MixerBrush, Tool::ColorReplacement]);
+        hide(&mut app, &[Tool::Brush, Tool::Pencil, Tool::MixerBrush, Tool::ColorReplacement, Tool::Ink, Tool::MyPaintBrush]);
         assert_eq!(tool_buttons(&mut app), all - 1, "a slot whose tools are all hidden is gone");
         hide(&mut app, &[Tool::Sponge]);
         assert_eq!(tool_buttons(&mut app), all, "a slot with a visible tool stays");

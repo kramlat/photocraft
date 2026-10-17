@@ -174,7 +174,12 @@ pub struct StepInput {
     pub initial_direction: f32,
     /// Sequential step number (0 = first).
     pub step: u64,
+    /// Pointer speed in pixels per millisecond (0 when the input carries no times).
+    pub speed: f32,
 }
+
+/// The speed (px/ms) at which [`Control::Speed`] reaches 0.
+pub const SPEED_FULL: f32 = 3.0;
 
 /// Walks a polyline and emits steps every `step_len(point)` pixels, plus airbrush steps in time.
 #[derive(Clone, Debug)]
@@ -196,6 +201,8 @@ pub struct PathWalker {
     /// Pixel-grid stepping for small aliased tips: the dab-centre offset inside a pixel (see
     /// [`PathWalker::pixel_grid`]).
     grid: Option<f64>,
+    /// Smoothed pointer speed in px/ms.
+    speed_est: f32,
 }
 
 impl PathWalker {
@@ -212,6 +219,7 @@ impl PathWalker {
             speed: None,
             speed_acc: 0.0,
             grid: None,
+            speed_est: 0.0,
         }
     }
 
@@ -254,7 +262,7 @@ impl PathWalker {
     }
 
     fn emit(&mut self, point: StrokePoint, out: &mut impl FnMut(StepInput)) {
-        let s = StepInput { point, direction: self.dir, initial_direction: self.initial_dir.unwrap_or(self.dir), step: self.step };
+        let s = StepInput { point, direction: self.dir, initial_direction: self.initial_dir.unwrap_or(self.dir), step: self.step, speed: self.speed_est };
         self.step += 1;
         out(s);
     }
@@ -272,6 +280,13 @@ impl PathWalker {
             self.dir = (-dy).atan2(dx) as f32;
             if self.initial_dir.is_none() {
                 self.initial_dir = Some(self.dir);
+            }
+        }
+        if len > 1e-9 {
+            let dt = p.time - a.time;
+            if dt > 0.0 && dt.is_finite() {
+                let seg = (len / dt) as f32;
+                self.speed_est = if self.speed_est == 0.0 { seg } else { self.speed_est * 0.6 + seg * 0.4 };
             }
         }
         if let Some(f) = self.pending_first.take() {
@@ -353,6 +368,7 @@ pub fn control_value(c: Control, fade_steps: u32, s: &StepInput) -> f32 {
         Control::PenTilt => 1.0 - (p.tilt_x.hypot(p.tilt_y) / 90.0).clamp(0.0, 1.0),
         Control::StylusWheel => p.wheel.clamp(0.0, 1.0),
         Control::Rotation => (p.rotation.rem_euclid(360.0)) / 360.0,
+        Control::Speed => 1.0 - (s.speed / SPEED_FULL).clamp(0.0, 1.0),
     }
 }
 
@@ -362,7 +378,7 @@ pub fn dynamic_value(d: &Dynamic, s: &StepInput) -> f32 {
     let v = control_value(d.control, d.fade_steps, s);
     match d.control {
         Control::Off | Control::InitialDirection | Control::Direction => v,
-        Control::Fade | Control::PenPressure | Control::PenTilt | Control::StylusWheel | Control::Rotation => d.curve.eval(v),
+        Control::Fade | Control::PenPressure | Control::PenTilt | Control::StylusWheel | Control::Rotation | Control::Speed => d.curve.eval(v),
     }
 }
 
@@ -382,6 +398,7 @@ pub fn control_angle(c: Control, fade_steps: u32, s: &StepInput) -> f32 {
         }
         Control::StylusWheel => 360.0 * p.wheel.clamp(0.0, 1.0),
         Control::Rotation => p.rotation,
+        Control::Speed => 360.0 * (s.speed / SPEED_FULL).clamp(0.0, 1.0),
         Control::InitialDirection => s.initial_direction.to_degrees(),
         Control::Direction => s.direction.to_degrees(),
     }
@@ -477,7 +494,7 @@ impl DabBuilder {
     }
 
     pub fn step_len(&self, p: &StrokePoint) -> f64 {
-        let s = StepInput { point: *p, direction: 0.0, initial_direction: 0.0, step: 0 };
+        let s = StepInput { point: *p, direction: 0.0, initial_direction: 0.0, step: 0, speed: 0.0 };
         let d = base_diameter(&self.brush, &s).max(1.0);
         f64::from(d * self.brush.spacing.max(0.01)).max(0.5)
     }

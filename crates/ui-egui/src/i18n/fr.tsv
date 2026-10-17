@@ -3367,3 +3367,26 @@ curves	Smooth	Lisser
 	Open PDF…	Ouvrir un PDF…
 	Page	Page
 	Resolution (pixels/inch)	Résolution (pixels/pouce)
+	Speed	Vitesse
+	Style:	Style :
+	Tight Short	Serré court
+	Tight Medium	Serré moyen
+	Tight Long	Serré long
+	Loose Medium	Lâche moyen
+	Loose Long	Lâche long
+	Loose Curl	Lâche bouclé
+	Dab	Tampon
+	Tight Curl	Serré bouclé
+	Tight Curl Long	Serré bouclé long
+	Loose Curl Long	Lâche bouclé long
+	Fidelity:	Fidélité :
+	Area:	Zone :
+	Nib Angle:	Angle de la plume :
+	Speed Sensitivity:	Sensibilité à la vitesse :
+	Source: the opening state	Source : l'état initial
+	Source: {name}	Source : {name}
+	Click the box beside a History row to set it	Cliquez sur la case à côté d'une ligne de l'historique pour la choisir
+	Set the source for the History Brush	Définir la source du Pinceau d'historique
+	Ink Tool	Outil Encre
+	MyPaint Brush Tool	Outil Pinceau MyPaint
+	Art History Brush Tool	Outil Pinceau d'historique artistique

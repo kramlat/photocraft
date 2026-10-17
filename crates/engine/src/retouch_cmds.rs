@@ -623,10 +623,15 @@ fn healing_brush(s: &mut Session, p: &Value) -> Result<Value> {
 fn history_source(s: &Session, id: Option<LayerId>, p: &Value, cmd: &str) -> Result<Surface> {
     let st = s.active().ok_or(EngineError::NoDocument)?;
     let explicit = p.get("state").and_then(Value::as_u64).map(|v| v as usize);
-    let source_doc = match explicit {
-        Some(i) if i == st.history.past_len() => st.doc.clone(),
-        Some(i) => st.history.state(i).ok_or_else(|| bad(cmd, format!("no history state {i} (0..={})", st.history.past_len())))?,
-        None => st.history.state(0).unwrap_or_else(|| st.doc.clone()),
+    let source_doc = if let Some(snap) = p.get("snapshot").and_then(Value::as_u64) {
+        // A snapshot of the History panel as the source (Photoshop's source column).
+        st.snapshots.iter().find(|x| x.id == snap).map(|x| x.doc.clone()).ok_or_else(|| bad(cmd, format!("no snapshot {snap}")))?
+    } else {
+        match explicit {
+            Some(i) if i == st.history.past_len() => st.doc.clone(),
+            Some(i) => st.history.state(i).ok_or_else(|| bad(cmd, format!("no history state {i} (0..={})", st.history.past_len())))?,
+            None => st.history.state(0).unwrap_or_else(|| st.doc.clone()),
+        }
     };
     crate::channel_cmds::read_target_surface(source_doc.as_ref(), id, p)
         .cloned()
@@ -1413,7 +1418,7 @@ pub fn specs() -> Vec<CommandSpec> {
             label: "Art History Brush",
             menu: &[],
             shortcut: None,
-            params: brush_params!(r#","state":index (the history state to restyle; default 0 = the oldest held state),"style":"tightShort|tightMedium|tightLong|looseMedium|looseLong|looseCurl|dab|tightCurl|tightCurlLong|looseCurlLong"="tightShort","fidelity":0..100=50 (how closely strokes follow the source's colours and edges),"area":1..500=50 (px; the size of the strokes),"seed":0..1000000=1"#),
+            params: brush_params!(r#","state":index (the history state to restyle; default 0 = the oldest held state),"snapshot":id? (a snapshot, instead of a state),"style":"tightShort|tightMedium|tightLong|looseMedium|looseLong|looseCurl|dab|tightCurl|tightCurlLong|looseCurlLong"="tightShort","fidelity":0..100=50 (how closely strokes follow the source's colours and edges),"area":1..500=50 (px; the size of the strokes),"seed":0..1000000=1"#),
             enabled: has_pixel_layer,
             run: art_history_brush,
             journal: true,
@@ -1423,7 +1428,7 @@ pub fn specs() -> Vec<CommandSpec> {
             label: "History Brush",
             menu: &[],
             shortcut: None,
-            params: brush_params!(r#","state":index (into history.entries; default 0 = the oldest held state, normally the Open snapshot)"#),
+            params: brush_params!(r#","state":index (into history.entries; default 0 = the oldest held state, normally the Open snapshot),"snapshot":id? (a snapshot of the History panel, instead of a state)"#),
             enabled: has_pixel_layer,
             run: history_brush,
             journal: true,

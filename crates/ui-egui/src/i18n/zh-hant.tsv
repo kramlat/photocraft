@@ -2970,3 +2970,26 @@ curves	Smooth	平滑
 	Open PDF…	開啟 PDF…
 	Page	頁面
 	Resolution (pixels/inch)	解析度（像素/英寸）
+	Speed	速度
+	Style:	樣式:
+	Tight Short	緊密短
+	Tight Medium	緊密中
+	Tight Long	緊密長
+	Loose Medium	鬆散中
+	Loose Long	鬆散長
+	Loose Curl	鬆散捲曲
+	Dab	點按
+	Tight Curl	緊密捲曲
+	Tight Curl Long	緊密捲曲長
+	Loose Curl Long	鬆散捲曲長
+	Fidelity:	保真度:
+	Area:	區域:
+	Nib Angle:	筆尖角度:
+	Speed Sensitivity:	速度靈敏度:
+	Source: the opening state	來源: 開啟時的狀態
+	Source: {name}	來源: {name}
+	Click the box beside a History row to set it	按一下歷程記錄列旁的方塊來設定
+	Set the source for the History Brush	設定歷程記錄筆刷的來源
+	Ink Tool	墨水工具
+	MyPaint Brush Tool	MyPaint 筆刷工具
+	Art History Brush Tool	歷程記錄藝術筆刷工具

@@ -4028,3 +4028,25 @@ curves	Smooth	スムーズ
 	Open PDF…	PDF を開く…
 	Page	ページ
 	Resolution (pixels/inch)	解像度 (pixel/inch)
+	Style:	スタイル:
+	Tight Short	タイト短
+	Tight Medium	タイト中
+	Tight Long	タイト長
+	Loose Medium	ルーズ中
+	Loose Long	ルーズ長
+	Loose Curl	ルーズカール
+	Dab	ダブ
+	Tight Curl	タイトカール
+	Tight Curl Long	タイトカール長
+	Loose Curl Long	ルーズカール長
+	Fidelity:	精度:
+	Area:	領域:
+	Nib Angle:	ペン先の角度:
+	Speed Sensitivity:	速度の感度:
+	Source: the opening state	ソース: 開いた時の状態
+	Source: {name}	ソース: {name}
+	Click the box beside a History row to set it	ヒストリーの行の横にある四角をクリックして指定
+	Set the source for the History Brush	ヒストリーブラシのソースを設定
+	Ink Tool	インクツール
+	MyPaint Brush Tool	MyPaint ブラシツール
+	Art History Brush Tool	アートヒストリーブラシツール

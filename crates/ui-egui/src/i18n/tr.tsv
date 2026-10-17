@@ -4082,3 +4082,25 @@ cameraData	Lens	Lens
 	Open PDF…	PDF Aç…
 	Page	Sayfa
 	Resolution (pixels/inch)	Çözünürlük (piksel/inç)
+	Style:	Stil:
+	Tight Short	Sıkı kısa
+	Tight Medium	Sıkı orta
+	Tight Long	Sıkı uzun
+	Loose Medium	Gevşek orta
+	Loose Long	Gevşek uzun
+	Loose Curl	Gevşek kıvrım
+	Dab	Leke
+	Tight Curl	Sıkı kıvrım
+	Tight Curl Long	Sıkı kıvrım uzun
+	Loose Curl Long	Gevşek kıvrım uzun
+	Fidelity:	Aslına uygunluk:
+	Area:	Alan:
+	Nib Angle:	Uç açısı:
+	Speed Sensitivity:	Hız duyarlılığı:
+	Source: the opening state	Kaynak: açılış durumu
+	Source: {name}	Kaynak: {name}
+	Click the box beside a History row to set it	Seçmek için Geçmiş satırının yanındaki kutuya tıklayın
+	Set the source for the History Brush	Geçmiş Fırçası için kaynağı ayarla
+	Ink Tool	Mürekkep Aracı
+	MyPaint Brush Tool	MyPaint Fırça Aracı
+	Art History Brush Tool	Sanat Geçmişi Fırçası Aracı

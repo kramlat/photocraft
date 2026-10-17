@@ -85,6 +85,7 @@ pub static ICONS: &[(&str, &[u8])] = &[
     ("monitor", include_bytes!("../../../assets/icons/monitor.svg")),
     ("mouse-pointer-2", include_bytes!("../../../assets/icons/mouse-pointer-2.svg")),
     ("move", include_bytes!("../../../assets/icons/move.svg")),
+    ("mypaint-brush", include_bytes!("../../../assets/icons/mypaint-brush.svg")),
     ("navigation", include_bytes!("../../../assets/icons/navigation.svg")),
     ("paint-bucket", include_bytes!("../../../assets/icons/paint-bucket.svg")),
     ("painting-symmetry", include_bytes!("../../../assets/icons/painting-symmetry.svg")),

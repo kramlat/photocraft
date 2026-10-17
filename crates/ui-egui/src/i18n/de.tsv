@@ -3355,3 +3355,25 @@ curves	Smooth	Glätten
 	Open PDF…	PDF öffnen…
 	Page	Seite
 	Resolution (pixels/inch)	Auflösung (Pixel/Zoll)
+	Style:	Stil:
+	Tight Short	Straff, kurz
+	Tight Medium	Straff, mittel
+	Tight Long	Straff, lang
+	Loose Medium	Locker, mittel
+	Loose Long	Locker, lang
+	Loose Curl	Locker, Kringel
+	Dab	Tupfer
+	Tight Curl	Straff, Kringel
+	Tight Curl Long	Straff, Kringel lang
+	Loose Curl Long	Locker, Kringel lang
+	Fidelity:	Genauigkeit:
+	Area:	Bereich:
+	Nib Angle:	Federwinkel:
+	Speed Sensitivity:	Geschwindigkeitsempfindlichkeit:
+	Source: the opening state	Quelle: der Anfangszustand
+	Source: {name}	Quelle: {name}
+	Click the box beside a History row to set it	Klicken Sie auf das Feld neben einer Protokollzeile, um sie festzulegen
+	Set the source for the History Brush	Quelle für den Protokollpinsel festlegen
+	Ink Tool	Tuschefeder-Werkzeug
+	MyPaint Brush Tool	MyPaint-Pinsel-Werkzeug
+	Art History Brush Tool	Kunstprotokollpinsel-Werkzeug

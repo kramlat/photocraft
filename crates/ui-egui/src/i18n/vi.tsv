@@ -3836,3 +3836,25 @@ curves	Smooth	Làm mượt
 	Open PDF…	Mở PDF…
 	Page	Trang
 	Resolution (pixels/inch)	Độ phân giải (pixel/inch)
+	Style:	Kiểu:
+	Tight Short	Chặt ngắn
+	Tight Medium	Chặt vừa
+	Tight Long	Chặt dài
+	Loose Medium	Lỏng vừa
+	Loose Long	Lỏng dài
+	Loose Curl	Lỏng xoăn
+	Dab	Chấm
+	Tight Curl	Chặt xoăn
+	Tight Curl Long	Chặt xoăn dài
+	Loose Curl Long	Lỏng xoăn dài
+	Fidelity:	Độ trung thực:
+	Area:	Vùng:
+	Nib Angle:	Góc ngòi:
+	Speed Sensitivity:	Độ nhạy tốc độ:
+	Source: the opening state	Nguồn: trạng thái ban đầu
+	Source: {name}	Nguồn: {name}
+	Click the box beside a History row to set it	Bấm vào ô cạnh một dòng Lịch sử để chọn
+	Set the source for the History Brush	Đặt nguồn cho Cọ Lịch sử
+	Ink Tool	Công cụ Mực
+	MyPaint Brush Tool	Công cụ Cọ MyPaint
+	Art History Brush Tool	Công cụ Cọ Lịch sử Nghệ thuật

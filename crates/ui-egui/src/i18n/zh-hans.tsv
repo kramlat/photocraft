@@ -2985,3 +2985,26 @@ curves	Smooth	平滑
 	Open PDF…	打开 PDF…
 	Page	页面
 	Resolution (pixels/inch)	分辨率（像素/英寸）
+	Speed	速度
+	Style:	样式:
+	Tight Short	绷紧短
+	Tight Medium	绷紧中
+	Tight Long	绷紧长
+	Loose Medium	松散中
+	Loose Long	松散长
+	Loose Curl	松散卷曲
+	Dab	点按
+	Tight Curl	绷紧卷曲
+	Tight Curl Long	绷紧卷曲长
+	Loose Curl Long	松散卷曲长
+	Fidelity:	保真度:
+	Area:	区域:
+	Nib Angle:	笔尖角度:
+	Speed Sensitivity:	速度敏感度:
+	Source: the opening state	源: 打开时的状态
+	Source: {name}	源: {name}
+	Click the box beside a History row to set it	单击历史记录行旁边的方框来设置
+	Set the source for the History Brush	设置历史记录画笔的源
+	Ink Tool	墨水工具
+	MyPaint Brush Tool	MyPaint 画笔工具
+	Art History Brush Tool	历史记录艺术画笔工具

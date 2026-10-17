@@ -125,7 +125,8 @@ pub fn finish_stroke(app: &mut PhotocraftApp, tool: Tool, points: &[[f64; 3]], m
             };
             (if tool == Tool::Healing { "paint.healingBrush" } else { "paint.cloneStamp" }, p)
         }
-        Tool::HistoryBrush => ("paint.historyBrush", json!({})),
+        Tool::HistoryBrush => ("paint.historyBrush", history_params(app, tool)),
+        Tool::ArtHistoryBrush => ("paint.artHistoryBrush", history_params(app, tool)),
         Tool::Blur | Tool::Sharpen | Tool::Smudge | Tool::Dodge | Tool::Burn | Tool::Sponge => match dab_params(app, tool) {
             Some(cp) => cp,
             None => return false,
@@ -438,6 +439,44 @@ fn pct(ui: &mut egui::Ui, label: &str, v: &mut f32) {
     crate::widgets::value_field(ui, v, 1.0..=100.0, "%", 58.0);
 }
 
+/// The params of `paint.historyBrush` / `paint.artHistoryBrush`: the History panel's chosen source
+/// (the opening state unless one was picked in this document) and, for the Art History Brush, its
+/// Style, Fidelity and Area.
+pub(crate) fn history_params(app: &PhotocraftApp, tool: Tool) -> Value {
+    use crate::state::HistorySource;
+    let mut p = json!({});
+    let doc = app.session.active().map(|d| d.doc.id.0);
+    if let Some((d, src)) = app.ui.history_source
+        && Some(d) == doc
+    {
+        match src {
+            HistorySource::State(i) => p["state"] = json!(i),
+            HistorySource::Snapshot(id) => p["snapshot"] = json!(id),
+        }
+    }
+    if tool == Tool::ArtHistoryBrush {
+        let o = &app.ui.tool_options;
+        p["style"] = json!(o.art_style);
+        p["fidelity"] = json!(o.art_fidelity);
+        p["area"] = json!(o.art_area);
+    }
+    p
+}
+
+/// "Source: …" in the options bar of the history brushes.
+fn history_source_label(app: &PhotocraftApp, ui: &mut egui::Ui) {
+    use crate::state::HistorySource;
+    let doc = app.session.active().map(|d| d.doc.id.0);
+    let text = match app.ui.history_source.filter(|(d, _)| Some(*d) == doc).map(|(_, s)| s) {
+        None | Some(HistorySource::State(0)) => tl!("Source: the opening state").to_string(),
+        Some(HistorySource::State(i)) => app.session.active().and_then(|st| st.history.entries().get(i).cloned()).map_or_else(|| tl!("Source: the opening state").to_string(), |name| crate::i18n::fmt(tl!("Source: {name}"), &[("name", &name)])),
+        Some(HistorySource::Snapshot(id)) => app.session.active().and_then(|st| st.snapshots.iter().find(|x| x.id == id).map(|x| x.name.clone())).map_or_else(|| tl!("Source: the opening state").to_string(), |name| crate::i18n::fmt(tl!("Source: {name}"), &[("name", &name)])),
+    };
+    let t = Tokens::get(ui.ctx());
+    ui.label(egui::RichText::new(text).color(t.text_dim).size(12.0));
+    ui.label(egui::RichText::new(tl!("Click the box beside a History row to set it")).color(t.text_faint).size(11.0));
+}
+
 /// Options bar for the retouching and smart-selection tools. Returns false for other tools.
 pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bool {
     if !tool.is_brushlike() && !matches!(tool, Tool::QuickSelection | Tool::ObjectSelection | Tool::Patch | Tool::ContentAwareMove | Tool::RedEye)
@@ -604,7 +643,38 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bo
             crate::widgets::value_field(ui, &mut o.cr_tolerance, 0.0..=100.0, "%", 62.0);
             crate::widgets::checkbox(ui, &mut o.cr_anti_alias, tl!("Anti-alias"));
         }
-        Tool::HistoryBrush => opt(ui, "Paints from the document's opening state"),
+        Tool::HistoryBrush => history_source_label(app, ui),
+        Tool::ArtHistoryBrush => {
+            let o = &mut app.ui.tool_options;
+            opt(ui, tl!("Style:"));
+            let styles: Vec<(String, &str)> = vec![
+                ("tightShort".into(), tl!("Tight Short")),
+                ("tightMedium".into(), tl!("Tight Medium")),
+                ("tightLong".into(), tl!("Tight Long")),
+                ("looseMedium".into(), tl!("Loose Medium")),
+                ("looseLong".into(), tl!("Loose Long")),
+                ("looseCurl".into(), tl!("Loose Curl")),
+                ("dab".into(), tl!("Dab")),
+                ("tightCurl".into(), tl!("Tight Curl")),
+                ("tightCurlLong".into(), tl!("Tight Curl Long")),
+                ("looseCurlLong".into(), tl!("Loose Curl Long")),
+            ];
+            crate::widgets::dropdown(ui, "art-history-style", &mut o.art_style, &styles, 130.0);
+            opt(ui, tl!("Fidelity:"));
+            crate::widgets::value_field(ui, &mut o.art_fidelity, 0.0..=100.0, "%", 58.0);
+            opt(ui, tl!("Area:"));
+            crate::widgets::value_field(ui, &mut o.art_area, 1.0..=500.0, "px", 62.0);
+            crate::widgets::vline(ui, 22.0);
+            history_source_label(app, ui);
+        }
+        Tool::Ink => {
+            let o = &mut app.ui.tool_options;
+            opt(ui, tl!("Nib Angle:"));
+            crate::widgets::value_field(ui, &mut o.ink_angle, 0.0..=180.0, "°", 58.0);
+            opt(ui, tl!("Speed Sensitivity:"));
+            crate::widgets::value_field(ui, &mut o.ink_sensitivity, 0.0..=100.0, "%", 58.0);
+        }
+        Tool::MyPaintBrush => crate::mypaint_ui::options_bar(app, ui),
         Tool::QuickSelection => {
             crate::widgets::checkbox(ui, &mut o.sample_all_layers, tl!("Sample All Layers"));
             crate::widgets::checkbox(ui, &mut o.enhance_edge, tl!("Enhance Edge"));

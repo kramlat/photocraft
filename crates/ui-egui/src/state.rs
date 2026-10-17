@@ -86,6 +86,10 @@ pub enum Tool {
     Pencil,
     MixerBrush,
     ColorReplacement,
+    /// A calligraphic pen whose line thickens where the hand slows down (GIMP's Ink).
+    Ink,
+    /// Paints with MyPaint brushes (`.myb`), through the MyPaint engine.
+    MyPaintBrush,
     Eraser,
     BackgroundEraser,
     MagicEraser,
@@ -108,6 +112,8 @@ pub enum Tool {
     CloneStamp,
     PatternStamp,
     HistoryBrush,
+    /// Paints a painterly restyling of a history state (Photoshop's Art History Brush).
+    ArtHistoryBrush,
     Blur,
     Sharpen,
     Smudge,
@@ -138,7 +144,7 @@ pub enum Tool {
 }
 
 impl Tool {
-    pub const ALL: [Tool; 67] = [
+    pub const ALL: [Tool; 70] = [
         Tool::Move,
         Tool::Artboard,
         Tool::RectMarquee,
@@ -160,6 +166,8 @@ impl Tool {
         Tool::Pencil,
         Tool::MixerBrush,
         Tool::ColorReplacement,
+        Tool::Ink,
+        Tool::MyPaintBrush,
         Tool::Eraser,
         Tool::BackgroundEraser,
         Tool::MagicEraser,
@@ -181,6 +189,7 @@ impl Tool {
         Tool::CloneStamp,
         Tool::PatternStamp,
         Tool::HistoryBrush,
+        Tool::ArtHistoryBrush,
         Tool::Blur,
         Tool::Sharpen,
         Tool::Smudge,
@@ -220,6 +229,8 @@ impl Tool {
             Tool::Pencil => "Pencil Tool",
             Tool::MixerBrush => "Mixer Brush Tool",
             Tool::ColorReplacement => "Color Replacement Tool",
+            Tool::Ink => "Ink Tool",
+            Tool::MyPaintBrush => "MyPaint Brush Tool",
             Tool::Eraser => "Eraser Tool",
             Tool::BackgroundEraser => "Background Eraser Tool",
             Tool::MagicEraser => "Magic Eraser Tool",
@@ -255,6 +266,7 @@ impl Tool {
             Tool::CloneStamp => "Clone Stamp Tool",
             Tool::PatternStamp => "Pattern Stamp Tool",
             Tool::HistoryBrush => "History Brush Tool",
+            Tool::ArtHistoryBrush => "Art History Brush Tool",
             Tool::Blur => "Blur Tool",
             Tool::Sharpen => "Sharpen Tool",
             Tool::Smudge => "Smudge Tool",
@@ -299,6 +311,8 @@ impl Tool {
                 | Tool::Pencil
                 | Tool::MixerBrush
                 | Tool::ColorReplacement
+                | Tool::Ink
+                | Tool::MyPaintBrush
                 | Tool::Eraser
                 | Tool::BackgroundEraser
                 | Tool::Remove
@@ -307,6 +321,7 @@ impl Tool {
                 | Tool::CloneStamp
                 | Tool::PatternStamp
                 | Tool::HistoryBrush
+                | Tool::ArtHistoryBrush
                 | Tool::Blur
                 | Tool::Sharpen
                 | Tool::Smudge
@@ -320,7 +335,7 @@ impl Tool {
         match self {
             Tool::Move | Tool::Artboard => 'V',
             Tool::RectMarquee | Tool::EllipseMarquee => 'M',
-            Tool::Brush | Tool::Pencil | Tool::MixerBrush | Tool::ColorReplacement => 'B',
+            Tool::Brush | Tool::Pencil | Tool::MixerBrush | Tool::ColorReplacement | Tool::Ink | Tool::MyPaintBrush => 'B',
             Tool::Eraser | Tool::BackgroundEraser | Tool::MagicEraser => 'E',
             Tool::Eyedropper | Tool::ColorSampler | Tool::Ruler | Tool::Note | Tool::Count => 'I',
             Tool::Lasso | Tool::PolygonLasso | Tool::MagneticLasso => 'L',
@@ -334,7 +349,7 @@ impl Tool {
             Tool::Zoom => 'Z',
             Tool::Remove | Tool::SpotHealing | Tool::Healing | Tool::Patch | Tool::ContentAwareMove | Tool::RedEye => 'J',
             Tool::CloneStamp | Tool::PatternStamp => 'S',
-            Tool::HistoryBrush => 'Y',
+            Tool::HistoryBrush | Tool::ArtHistoryBrush => 'Y',
             Tool::Blur | Tool::Sharpen | Tool::Smudge => '\0',
             // In the Marquee flyout, but M cycles only the Rectangular and Elliptical Marquee.
             Tool::SingleRowMarquee | Tool::SingleColumnMarquee => '\0',
@@ -374,6 +389,13 @@ impl Tool {
             n == a || n == a.replace("marquee", "") || n == t.label().to_ascii_lowercase().replace(' ', "")
         })
     }
+}
+
+/// What the History Brush paints from: a history state (index) or a snapshot (id).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum HistorySource {
+    State(usize),
+    Snapshot(u64),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -670,6 +692,23 @@ pub struct ToolOptions {
     pub cr_limits: String,
     pub cr_tolerance: f32,
     pub cr_anti_alias: bool,
+    /// Ink › Nib Angle (degrees) and Sensitivity (%: how much speed thins the line).
+    #[serde(default = "ink_angle_default")]
+    pub ink_angle: f32,
+    #[serde(default = "ink_sensitivity_default")]
+    pub ink_sensitivity: f32,
+    /// MyPaint Brush: the brush's size in px (0 = the brush's own), and its Opacity (%).
+    #[serde(default)]
+    pub mypaint_size: f32,
+    #[serde(default = "hundred")]
+    pub mypaint_opacity: f32,
+    /// Art History Brush: Style, Fidelity (%) and Area (px).
+    #[serde(default = "art_style_default")]
+    pub art_style: String,
+    #[serde(default = "fifty")]
+    pub art_fidelity: f32,
+    #[serde(default = "fifty")]
+    pub art_area: f32,
     /// Zoom tool › Scrubby Zoom: dragging left/right zooms continuously (else a zoom rectangle).
     #[serde(default = "yes")]
     pub zoom_scrubby: bool,
@@ -710,6 +749,19 @@ pub struct ToolOptions {
     /// Eyedropper › Show Sampling Ring.
     #[serde(default = "yes")]
     pub eyedropper_ring: bool,
+}
+
+fn ink_angle_default() -> f32 {
+    35.0
+}
+fn ink_sensitivity_default() -> f32 {
+    60.0
+}
+fn hundred() -> f32 {
+    100.0
+}
+fn art_style_default() -> String {
+    "tightShort".into()
 }
 
 fn yes() -> bool {
@@ -847,6 +899,13 @@ impl Default for ToolOptions {
             cr_limits: "contiguous".into(),
             cr_tolerance: 30.0,
             cr_anti_alias: true,
+            ink_angle: 35.0,
+            ink_sensitivity: 60.0,
+            mypaint_size: 0.0,
+            mypaint_opacity: 100.0,
+            art_style: "tightShort".into(),
+            art_fidelity: 50.0,
+            art_area: 50.0,
             zoom_scrubby: true,
             pencil_auto_erase: false,
             brush_clear: false,
@@ -1104,6 +1163,10 @@ pub struct UiState {
     pub clone_source: Option<[f64; 2]>,
     #[serde(default)]
     pub clone_offset: Option<[f64; 2]>,
+    /// The History Brush and Art History Brush source the user picked in the History panel, with
+    /// the document it was picked in (`None`: the document's opening state).
+    #[serde(skip)]
+    pub history_source: Option<(u64, HistorySource)>,
     /// Pattern Stamp aligned origin in document pixels, kept across strokes.
     #[serde(default)]
     pub pattern_stamp_phase: Option<[f32; 2]>,
@@ -1328,6 +1391,7 @@ impl Default for UiState {
             tool_brushes: Vec::new(),
             clone_source: None,
             clone_offset: None,
+            history_source: None,
             pattern_stamp_phase: None,
             extras: Extras::default(),
             view: Default::default(),
@@ -1453,7 +1517,7 @@ mod tests {
         assert!(!Tool::RedEye.is_brushlike());
         assert_eq!(Tool::from_name("patternStamp"), Some(Tool::PatternStamp));
         assert_eq!(Tool::from_name("Pattern Stamp Tool"), Some(Tool::PatternStamp));
-        assert_eq!(Tool::ALL.len(), 67);
+        assert_eq!(Tool::ALL.len(), 70);
         assert_eq!(Tool::from_name("Vertical Type Mask Tool"), Some(Tool::VerticalTypeMask));
         assert_eq!(Tool::from_name("addAnchorPoint"), Some(Tool::AddAnchorPoint));
         assert_eq!(Tool::from_name("Delete Anchor Point Tool"), Some(Tool::DeleteAnchorPoint));

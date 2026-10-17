@@ -88,7 +88,7 @@ pub struct Buttons {
 
 /// Tools whose right-click opens the Brush Preset picker (those with the options-bar brush chip).
 pub fn has_brush_picker(tool: Tool) -> bool {
-    tool.is_brushlike() || tool == Tool::QuickSelection
+    (tool.is_brushlike() && tool != Tool::MyPaintBrush) || tool == Tool::QuickSelection
 }
 
 /// Does a right-button drag with `tool` erase (rather than open the picker)?

@@ -4312,3 +4312,25 @@ navigator	Zoom	Zoom
 	Open PDF…	Abrir PDF…
 	Page	Página
 	Resolution (pixels/inch)	Resolución (píxeles/pulgada)
+	Style:	Estilo:
+	Tight Short	Ajustado corto
+	Tight Medium	Ajustado medio
+	Tight Long	Ajustado largo
+	Loose Medium	Suelto medio
+	Loose Long	Suelto largo
+	Loose Curl	Suelto rizado
+	Dab	Toque
+	Tight Curl	Ajustado rizado
+	Tight Curl Long	Ajustado rizado largo
+	Loose Curl Long	Suelto rizado largo
+	Fidelity:	Fidelidad:
+	Area:	Área:
+	Nib Angle:	Ángulo de la punta:
+	Speed Sensitivity:	Sensibilidad a la velocidad:
+	Source: the opening state	Origen: el estado inicial
+	Source: {name}	Origen: {name}
+	Click the box beside a History row to set it	Haz clic en la casilla junto a una fila del historial para elegirla
+	Set the source for the History Brush	Definir el origen del pincel de historia
+	Ink Tool	Herramienta Tinta
+	MyPaint Brush Tool	Herramienta Pincel MyPaint
+	Art History Brush Tool	Herramienta Pincel de historia artístico

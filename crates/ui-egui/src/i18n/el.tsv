@@ -4052,3 +4052,25 @@ curves	Smooth	Εξομάλυνση
 	Open PDF…	Άνοιγμα PDF…
 	Page	Σελίδα
 	Resolution (pixels/inch)	Ανάλυση (pixel/ίντσα)
+	Style:	Στυλ:
+	Tight Short	Σφιχτό κοντό
+	Tight Medium	Σφιχτό μεσαίο
+	Tight Long	Σφιχτό μακρύ
+	Loose Medium	Χαλαρό μεσαίο
+	Loose Long	Χαλαρό μακρύ
+	Loose Curl	Χαλαρή μπούκλα
+	Dab	Πινελιά
+	Tight Curl	Σφιχτή μπούκλα
+	Tight Curl Long	Σφιχτή μπούκλα μακριά
+	Loose Curl Long	Χαλαρή μπούκλα μακριά
+	Fidelity:	Πιστότητα:
+	Area:	Περιοχή:
+	Nib Angle:	Γωνία ακίδας:
+	Speed Sensitivity:	Ευαισθησία ταχύτητας:
+	Source: the opening state	Πηγή: η αρχική κατάσταση
+	Source: {name}	Πηγή: {name}
+	Click the box beside a History row to set it	Κάντε κλικ στο πλαίσιο δίπλα σε μια γραμμή ιστορικού για να την επιλέξετε
+	Set the source for the History Brush	Ορισμός πηγής για το Πινέλο ιστορικού
+	Ink Tool	Εργαλείο Μελάνι
+	MyPaint Brush Tool	Εργαλείο Πινέλο MyPaint
+	Art History Brush Tool	Εργαλείο Καλλιτεχνικό πινέλο ιστορικού

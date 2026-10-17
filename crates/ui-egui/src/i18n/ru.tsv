@@ -3337,3 +3337,26 @@ curves	Smooth	Сгладить
 	Open PDF…	Открыть PDF…
 	Page	Страница
 	Resolution (pixels/inch)	Разрешение (пикс./дюйм)
+	Speed	Скорость
+	Style:	Стиль:
+	Tight Short	Плотный короткий
+	Tight Medium	Плотный средний
+	Tight Long	Плотный длинный
+	Loose Medium	Свободный средний
+	Loose Long	Свободный длинный
+	Loose Curl	Свободный завиток
+	Dab	Мазок
+	Tight Curl	Плотный завиток
+	Tight Curl Long	Плотный завиток длинный
+	Loose Curl Long	Свободный завиток длинный
+	Fidelity:	Точность:
+	Area:	Область:
+	Nib Angle:	Угол пера:
+	Speed Sensitivity:	Чувствительность к скорости:
+	Source: the opening state	Источник: исходное состояние
+	Source: {name}	Источник: {name}
+	Click the box beside a History row to set it	Щёлкните поле рядом со строкой истории, чтобы выбрать её
+	Set the source for the History Brush	Задать источник для архивной кисти
+	Ink Tool	Инструмент «Тушь»
+	MyPaint Brush Tool	Инструмент «Кисть MyPaint»
+	Art History Brush Tool	Инструмент «Художественная архивная кисть»

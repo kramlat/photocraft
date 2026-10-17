@@ -35,6 +35,9 @@ pub enum Control {
     StylusWheel,
     /// Barrel rotation of the stylus.
     Rotation,
+    /// How fast the pointer moves: a slow stroke reads 1 and a quick one (about 3 px per ms or
+    /// more) 0, so "size by speed" draws thick where the hand slows down, as an ink pen does.
+    Speed,
     /// Angle only: the direction of the first stroke segment.
     InitialDirection,
     /// Angle only: the current stroke direction.

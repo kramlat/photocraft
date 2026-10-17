@@ -172,6 +172,7 @@ pub mod proxy;
 pub mod puppet_ui;
 pub mod quick_pick;
 pub mod rasterize_prompt;
+pub mod mypaint_ui;
 pub mod retouch_ui;
 mod rgb_histogram;
 pub mod rotate_view;
@@ -2681,6 +2682,8 @@ mod pen_variants_tests;
 mod color_replacement_tests;
 #[cfg(test)]
 mod layer_shortcut_tests;
+#[cfg(test)]
+mod new_tools_tests;
 #[cfg(test)]
 mod pencil_tests;
 #[cfg(test)]

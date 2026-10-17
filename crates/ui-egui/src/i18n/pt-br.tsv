@@ -4142,3 +4142,25 @@ layerLabel	No Color	Sem cor
 	Open PDF…	Abrir PDF…
 	Page	Página
 	Resolution (pixels/inch)	Resolução (pixels/polegada)
+	Style:	Estilo:
+	Tight Short	Justo curto
+	Tight Medium	Justo médio
+	Tight Long	Justo longo
+	Loose Medium	Solto médio
+	Loose Long	Solto longo
+	Loose Curl	Solto cacheado
+	Dab	Toque
+	Tight Curl	Justo cacheado
+	Tight Curl Long	Justo cacheado longo
+	Loose Curl Long	Solto cacheado longo
+	Fidelity:	Fidelidade:
+	Area:	Área:
+	Nib Angle:	Ângulo da ponta:
+	Speed Sensitivity:	Sensibilidade à velocidade:
+	Source: the opening state	Origem: o estado inicial
+	Source: {name}	Origem: {name}
+	Click the box beside a History row to set it	Clique na caixa ao lado de uma linha do histórico para escolhê-la
+	Set the source for the History Brush	Definir a origem do Pincel de histórico
+	Ink Tool	Ferramenta Tinta
+	MyPaint Brush Tool	Ferramenta Pincel MyPaint
+	Art History Brush Tool	Ferramenta Pincel de histórico de arte

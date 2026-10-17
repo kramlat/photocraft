@@ -238,16 +238,13 @@ fn b_cycles_brush_pencil_mixer_brush_and_color_replacement() {
     assert_eq!(h.state().ui.tool, Tool::MixerBrush);
     press(&mut h, Modifiers::NONE);
     assert_eq!(h.state().ui.tool, Tool::ColorReplacement);
-    // Use Shift Key for Tool Switch: ⇧B cycles, B keeps the group's tool.
+    // Use Shift Key for Tool Switch: ⇧B cycles, B keeps the group's tool. The group goes on past
+    // Color Replacement to GIMP's Ink and the MyPaint Brush, and wraps to the Brush.
     h.state_mut().session.edit_prefs(|p| p.tools.use_shift_key_for_tool_switch = true);
-    press(&mut h, Modifiers::SHIFT);
-    assert_eq!(h.state().ui.tool, Tool::Brush);
-    press(&mut h, Modifiers::SHIFT);
-    assert_eq!(h.state().ui.tool, Tool::Pencil);
-    press(&mut h, Modifiers::SHIFT);
-    assert_eq!(h.state().ui.tool, Tool::MixerBrush);
-    press(&mut h, Modifiers::SHIFT);
-    assert_eq!(h.state().ui.tool, Tool::ColorReplacement);
+    for want in [Tool::Ink, Tool::MyPaintBrush, Tool::Brush, Tool::Pencil, Tool::MixerBrush, Tool::ColorReplacement] {
+        press(&mut h, Modifiers::SHIFT);
+        assert_eq!(h.state().ui.tool, want);
+    }
     press(&mut h, Modifiers::NONE);
     assert_eq!(h.state().ui.tool, Tool::ColorReplacement);
     assert_eq!(Tool::from_name("pencil"), Some(Tool::Pencil));

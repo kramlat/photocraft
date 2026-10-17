@@ -42,6 +42,8 @@ pub struct Library {
     entries: Vec<Entry>,
     scanned: bool,
     current: Option<String>,
+    /// Where imported brushes are kept; `None` is the default (see [`default_user_dir`]).
+    pub user_dir: Option<PathBuf>,
 }
 
 fn pretty(stem: &str) -> String {
@@ -59,13 +61,13 @@ fn default_size(text: &str) -> f32 {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn user_dir() -> Option<PathBuf> {
+fn default_user_dir() -> Option<PathBuf> {
     let base = std::env::var_os("XDG_DATA_HOME").map(PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))?;
     Some(base.join("photocraft/mypaint-brushes"))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn search_roots() -> Vec<PathBuf> {
+fn search_roots(user: Option<PathBuf>) -> Vec<PathBuf> {
     let mut roots = Vec::new();
     if let Some(p) = std::env::var_os("PHOTOCRAFT_MYPAINT_BRUSHES") {
         roots.push(PathBuf::from(p));
@@ -75,7 +77,7 @@ fn search_roots() -> Vec<PathBuf> {
     if let Some(d) = &home_data {
         roots.push(d.join("mypaint/brushes"));
     }
-    if let Some(d) = user_dir() {
+    if let Some(d) = user {
         roots.push(d);
     }
     let dirs = std::env::var("XDG_DATA_DIRS").unwrap_or_else(|_| "/usr/local/share:/usr/share".into());
@@ -112,7 +114,38 @@ fn scan(root: &Path) -> Vec<(String, String, PathBuf)> {
 }
 
 impl Library {
-    fn ensure(&mut self) {
+    /// Loads the brushes on first use; a no-op after that.
+    pub fn ensure(&mut self) {
+        self.ensure_loaded();
+    }
+
+    /// The brushes by group: `(group, [(id, name, own size px)])`, in panel order.
+    pub fn groups(&mut self) -> Vec<(String, Vec<(String, String, f32)>)> {
+        self.ensure_loaded();
+        let mut out: Vec<(String, Vec<(String, String, f32)>)> = Vec::new();
+        for e in &self.entries {
+            match out.iter_mut().find(|(g, _)| *g == e.group) {
+                Some((_, v)) => v.push((e.id.clone(), e.name.clone(), e.size)),
+                None => out.push((e.group.clone(), vec![(e.id.clone(), e.name.clone(), e.size)])),
+            }
+        }
+        out
+    }
+
+    /// The selected brush's own size, if the library is loaded.
+    pub fn current_size(&self) -> Option<f32> {
+        let id = self.current.as_ref()?;
+        self.entries.iter().find(|e| &e.id == id).map(|e| e.size)
+    }
+
+    /// The selected brush: `(id, name, own size px)`.
+    pub fn current(&mut self) -> Option<(String, String, f32)> {
+        self.ensure_loaded();
+        let id = self.current.clone()?;
+        self.entries.iter().find(|e| e.id == id).map(|e| (e.id.clone(), e.name.clone(), e.size))
+    }
+
+    fn ensure_loaded(&mut self) {
         if self.scanned {
             return;
         }
@@ -122,7 +155,7 @@ impl Library {
             self.entries.push(Entry { id: (*id).to_string(), name: pretty(stem), group: (*group).to_string(), size: default_size(text), source: Source::Embedded(text) });
         }
         #[cfg(not(target_arch = "wasm32"))]
-        for root in search_roots() {
+        for root in search_roots(self.user_dir.clone().or_else(default_user_dir)) {
             for (id, group, path) in scan(&root) {
                 // A file on disk replaces the embedded brush of the same name (MyPaint's own
                 // pack is the same set), and an earlier folder wins over a later one.
@@ -203,7 +236,7 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     #[allow(unused_mut)]
     let mut source = Source::Inline(text.clone());
     #[cfg(not(target_arch = "wasm32"))]
-    if let Some(dir) = user_dir().map(|d| d.join("user")) {
+    if let Some(dir) = s.mypaint.user_dir.clone().or_else(default_user_dir).map(|d| d.join("user")) {
         // Kept for next time; a folder that can't be written still gives a brush for this session.
         let file = dir.join(format!("{clean}.myb"));
         if std::fs::create_dir_all(&dir).is_ok() && std::fs::write(&file, &text).is_ok() {
@@ -221,22 +254,23 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"brush": id, "name": entry.name, "size": entry.size}))
 }
 
-/// One pointer sample of a MyPaint stroke: `[x, y, pressure, time ms, tilt x°, tilt y°]` (all
-/// but the first two optional).
+/// One pointer sample of a MyPaint stroke, as every stroke command takes them: `[x, y, pressure,
+/// tilt x°, tilt y°, rotation°, time ms]` (all but the first two optional).
 fn parse_points(p: &Value, cmd: &str) -> Result<Vec<photocraft_paint::StrokePoint>> {
     let arr = p.get("points").and_then(Value::as_array).ok_or_else(|| bad(cmd, "missing `points`"))?;
     let mut out = Vec::with_capacity(arr.len());
     let mut t = 0.0f64;
     for v in arr {
-        let a = v.as_array().ok_or_else(|| bad(cmd, "`points` are [x, y, pressure?, timeMs?, tiltX?, tiltY?]"))?;
+        let a = v.as_array().ok_or_else(|| bad(cmd, "`points` are [x, y, pressure?, tiltX?, tiltY?, rotation?, timeMs?]"))?;
         let n = |i: usize| a.get(i).and_then(Value::as_f64);
         let (Some(x), Some(y)) = (n(0), n(1)) else { return Err(bad(cmd, "a point needs numeric x and y")) };
         // Without times the pointer is taken to report every 8 ms.
-        t = n(3).unwrap_or(t + 8.0);
+        t = n(6).unwrap_or(t + 8.0);
         let mut sp = photocraft_paint::StrokePoint::new(x, y, n(2).unwrap_or(1.0) as f32);
         sp.time = t;
-        sp.tilt_x = n(4).unwrap_or(0.0) as f32;
-        sp.tilt_y = n(5).unwrap_or(0.0) as f32;
+        sp.tilt_x = n(3).unwrap_or(0.0) as f32;
+        sp.tilt_y = n(4).unwrap_or(0.0) as f32;
+        sp.rotation = n(5).unwrap_or(0.0) as f32;
         out.push(sp);
     }
     if out.is_empty() {
@@ -253,12 +287,14 @@ fn colour(p: &Value, s: &Session) -> [f32; 3] {
 
 /// The brush for a stroke: the named (or current, or inline `myb`) brush with the size, opacity,
 /// colour and eraser the params ask for.
-fn make_brush(s: &mut Session, p: &Value, points: &[photocraft_paint::StrokePoint], cmd: &str) -> Result<Brush> {
+fn make_brush(s: &Session, p: &Value, points: &[photocraft_paint::StrokePoint], cmd: &str) -> Result<Brush> {
     let text = match p.get("myb").and_then(Value::as_str) {
         Some(t) => t.to_string(),
         None => {
-            let lib = &mut s.mypaint;
-            lib.ensure();
+            let lib = &s.mypaint;
+            if !lib.scanned {
+                return Err(bad(cmd, "the MyPaint brush library is not loaded yet (run mypaint.brushes.list)"));
+            }
             let key = p.get("brush").and_then(Value::as_str).map(str::to_string).or_else(|| lib.current.clone()).ok_or_else(|| bad(cmd, "no MyPaint brush"))?;
             let e = lib.find(&key).ok_or_else(|| bad(cmd, format!("no MyPaint brush \"{key}\"")))?.clone();
             lib.text(&e)?
@@ -317,6 +353,7 @@ fn ensure_paintable(surf: &Surface, cmd: &str) -> Result<()> {
 fn paint_mypaint(s: &mut Session, p: &Value) -> Result<Value> {
     const CMD: &str = "paint.mypaint";
     let points = parse_points(p, CMD)?;
+    s.mypaint.ensure();
     let mut brush = make_brush(s, p, &points, CMD)?;
     let zoom = p.get("zoom").and_then(Value::as_f64).unwrap_or(1.0).clamp(0.01, 100.0) as f32;
     let id: Option<LayerId> = if crate::channel_cmds::is_channel_target(p) {
@@ -375,12 +412,14 @@ pub struct LiveMyPaint {
     prev_time: Option<f64>,
     zoom: f32,
     dirty: Rect,
+    /// The seed the stroke's random numbers come from (the commit must reuse it).
+    pub seed: u64,
 }
 
 impl LiveMyPaint {
     /// Starts a stroke from `p` (the params of `paint.mypaint`; its `points` are ignored, feed them
     /// with [`Self::push`]).
-    pub fn begin(s: &mut Session, p: &Value) -> Result<Self> {
+    pub fn begin(s: &Session, p: &Value) -> Result<Self> {
         const CMD: &str = "paint.mypaint";
         has_pixel_layer(s).map_err(EngineError::Other)?;
         let brush = make_brush(s, p, &[photocraft_paint::StrokePoint::new(0.0, 0.0, 1.0)], CMD)?;
@@ -393,7 +432,7 @@ impl LiveMyPaint {
         ensure_paintable(surf, CMD)?;
         let tiles = TileSurface::new(surf.clone(), bounds);
         let zoom = p.get("zoom").and_then(Value::as_f64).unwrap_or(1.0).clamp(0.01, 100.0) as f32;
-        Ok(LiveMyPaint { doc: Arc::new(doc), brush, tiles, id, params: p.clone(), pre_selection, lock, prev_time: None, zoom, dirty: Rect::EMPTY })
+        Ok(LiveMyPaint { doc: Arc::new(doc), brush, tiles, id, params: p.clone(), pre_selection, lock, prev_time: None, zoom, dirty: Rect::EMPTY, seed: p.get("seed").and_then(Value::as_u64).unwrap_or(0) })
     }
 
     /// Paints more points; returns the rectangle that changed.
@@ -440,7 +479,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "paint.mypaint",
             "MyPaint Brush",
             &[],
-            r##"{"points":[[x,y,pressure?,timeMs?,tiltXdeg?,tiltYdeg?]…],"brush":id|name? (default: the selected one),"myb":".myb text"? (instead of a brush),"size":0.5..2000? (px; default the brush's own),"opacity":0..1?,"hardness":0..1?,"color":color? (default foreground),"erase":bool=false,"seed":0..1000000000?,"zoom":0.01..100=1,"layer":id?,"target":"pixels|mask|alpha:N|quickMask"?}"##,
+            r##"{"points":[[x,y,pressure?,tiltXdeg?,tiltYdeg?,rotationDeg?,timeMs?]…],"brush":id|name? (default: the selected one),"myb":".myb text"? (instead of a brush),"size":0.5..2000? (px; default the brush's own),"opacity":0..1?,"hardness":0..1?,"color":color? (default foreground),"erase":bool=false,"seed":0..1000000000?,"zoom":0.01..100=1,"layer":id?,"target":"pixels|mask|alpha:N|quickMask"?}"##,
             has_pixel_layer,
             paint_mypaint
         ),

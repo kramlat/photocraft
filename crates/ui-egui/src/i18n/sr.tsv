@@ -4423,3 +4423,25 @@ shape	Appearance	Izgled
 	Open PDF…	Otvori PDF…
 	Page	Strana
 	Resolution (pixels/inch)	Rezolucija (pikseli/inč)
+	Style:	Stil:
+	Tight Short	Tesan kratak
+	Tight Medium	Tesan srednji
+	Tight Long	Tesan dug
+	Loose Medium	Slobodan srednji
+	Loose Long	Slobodan dug
+	Loose Curl	Slobodan uvojak
+	Dab	Mrlja
+	Tight Curl	Tesan uvojak
+	Tight Curl Long	Tesan uvojak dug
+	Loose Curl Long	Slobodan uvojak dug
+	Fidelity:	Vernost:
+	Area:	Oblast:
+	Nib Angle:	Ugao pera:
+	Speed Sensitivity:	Osetljivost na brzinu:
+	Source: the opening state	Izvor: početno stanje
+	Source: {name}	Izvor: {name}
+	Click the box beside a History row to set it	Kliknite polje pored reda istorije da ga izaberete
+	Set the source for the History Brush	Postavi izvor za Četku istorije
+	Ink Tool	Alatka Mastilo
+	MyPaint Brush Tool	Alatka Četka MyPaint
+	Art History Brush Tool	Alatka Umetnička četka istorije

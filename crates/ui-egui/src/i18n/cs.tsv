@@ -3958,3 +3958,25 @@ navigator	Zoom	Zvětšení
 	Open PDF…	Otevřít PDF…
 	Page	Stránka
 	Resolution (pixels/inch)	Rozlišení (pixelů/palec)
+	Style:	Styl:
+	Tight Short	Těsný krátký
+	Tight Medium	Těsný střední
+	Tight Long	Těsný dlouhý
+	Loose Medium	Volný střední
+	Loose Long	Volný dlouhý
+	Loose Curl	Volný kudrlinka
+	Dab	Skvrna
+	Tight Curl	Těsný kudrlinka
+	Tight Curl Long	Těsný kudrlinka dlouhý
+	Loose Curl Long	Volný kudrlinka dlouhý
+	Fidelity:	Věrnost:
+	Area:	Oblast:
+	Nib Angle:	Úhel hrotu:
+	Speed Sensitivity:	Citlivost na rychlost:
+	Source: the opening state	Zdroj: počáteční stav
+	Source: {name}	Zdroj: {name}
+	Click the box beside a History row to set it	Kliknutím na pole vedle řádku historie jej vyberete
+	Set the source for the History Brush	Nastavit zdroj pro Štětec historie
+	Ink Tool	Nástroj Inkoust
+	MyPaint Brush Tool	Nástroj Štětec MyPaint
+	Art History Brush Tool	Nástroj Umělecký štětec historie

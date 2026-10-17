@@ -13,7 +13,7 @@ fn px(s: &Session, x: i32, y: i32) -> Vec<f32> {
 }
 
 fn stroke(extra: Value) -> Value {
-    let pts: Vec<Value> = (0..30).map(|i| json!([10.0 + i as f64 * 3.0, 20.0, 0.8, i as f64 * 10.0])).collect();
+    let pts: Vec<Value> = (0..30).map(|i| json!([10.0 + i as f64 * 3.0, 20.0, 0.8, 0, 0, 0, i as f64 * 10.0])).collect();
     let mut p = json!({"points": pts, "color": "#ff0000", "seed": 5});
     p.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
     p
@@ -83,12 +83,12 @@ fn size_opacity_erase_and_the_selection_are_honoured() {
 #[test]
 fn smudge_brushes_drag_existing_colour_along() {
     let mut s = session(120, 40, 8, "rgb");
-    let blue: Vec<Value> = (0..30).map(|i| json!([i as f64 * 1.5, 20.0, 0.5, i as f64 * 10.0])).collect();
+    let blue: Vec<Value> = (0..30).map(|i| json!([i as f64 * 1.5, 20.0, 0.5, 0, 0, 0, i as f64 * 10.0])).collect();
     s.execute("paint.mypaint", json!({"points": blue, "brush": "classic/brush", "size": 24, "color": "#0000ff", "seed": 1})).unwrap();
     assert!(px(&s, 20, 20)[2] > 0.9 && px(&s, 20, 20)[0] < 0.5, "the blue stroke: {:?}", px(&s, 20, 20));
     assert!(px(&s, 90, 20).iter().all(|v| *v > 0.99), "nothing painted there yet");
     // Drag from the blue towards the right with a smudge brush.
-    let pts: Vec<Value> = (0..40).map(|i| json!([30.0 + i as f64 * 2.0, 20.0, 0.9, i as f64 * 10.0])).collect();
+    let pts: Vec<Value> = (0..40).map(|i| json!([30.0 + i as f64 * 2.0, 20.0, 0.9, 0, 0, 0, i as f64 * 10.0])).collect();
     s.execute("paint.mypaint", json!({"points": pts, "brush": "classic/smudge", "size": 20, "seed": 2})).unwrap();
     let far = px(&s, 72, 20);
     assert!(far[0] < 0.93 || far[1] < 0.93, "some blue was carried to the right: {far:?}");
@@ -123,12 +123,15 @@ fn bad_input_is_an_error_not_a_crash() {
 #[test]
 fn importing_a_brush_adds_and_selects_it() {
     let mut s = Session::new();
+    let dir = std::env::temp_dir().join(format!("pc-mypaint-{}", std::process::id()));
+    s.mypaint.user_dir = Some(dir.clone());
     let text = r#"{"version": 3, "settings": {"radius_logarithmic": {"base_value": 1.0, "inputs": {}}, "opaque": {"base_value": 1.0, "inputs": {}}, "hardness": {"base_value": 1.0, "inputs": {}}}}"#;
     let r = s.execute("mypaint.brushes.import", json!({"data": text, "name": "Test Brush"})).unwrap();
     assert_eq!(r["brush"], "user/Test Brush");
     assert!((r["size"].as_f64().unwrap() - 2.0 * 1.0f64.exp()).abs() < 1e-4, "{r}");
     assert!(s.execute("mypaint.brushes.import", json!({"data": "{}"})).is_err());
-    let _ = std::fs::remove_file(user_dir().unwrap().join("user/Test Brush.myb"));
+    assert!(dir.join("user/Test Brush.myb").exists(), "kept for the next run");
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]
@@ -136,7 +139,8 @@ fn a_live_stroke_matches_the_committed_one() {
     let mut s = session(120, 40, 8, "rgb");
     let p = stroke(json!({"brush": "classic/pencil", "size": 8}));
     let pts: Vec<photocraft_paint::StrokePoint> = parse_points(&p, "t").unwrap();
-    let mut live = LiveMyPaint::begin(&mut s, &p).unwrap();
+    s.execute("mypaint.brushes.list", json!({})).unwrap();
+    let mut live = LiveMyPaint::begin(&s, &p).unwrap();
     for chunk in pts.chunks(7) {
         live.push(chunk).unwrap();
     }
@@ -153,7 +157,7 @@ fn every_embedded_brush_loads_and_paints_without_trouble() {
     let ids: Vec<String> = v["groups"].as_array().unwrap().iter().flat_map(|g| g["brushes"].as_array().unwrap().iter().map(|b| b["id"].as_str().unwrap().to_string())).collect();
     assert!(ids.len() >= 190);
     for id in ids {
-        let pts: Vec<Value> = (0..24).map(|i| json!([10.0 + i as f64 * 6.0, 40.0 + 15.0 * (i as f64 / 4.0).sin(), 0.2 + 0.03 * i as f64, i as f64 * 12.0, 10.0, -10.0])).collect();
+        let pts: Vec<Value> = (0..24).map(|i| json!([10.0 + i as f64 * 6.0, 40.0 + 15.0 * (i as f64 / 4.0).sin(), 0.2 + 0.03 * i as f64, 10.0, -10.0, 0, i as f64 * 12.0])).collect();
         s.execute("paint.mypaint", json!({"points": pts, "brush": id, "size": 12, "seed": 3, "color": "#336699"})).unwrap_or_else(|e| panic!("{id}: {e}"));
         let d = s.active().unwrap();
         let data = d.doc.layers[0].surface().unwrap().read_region(Rect::new(0, 0, 160, 80));

@@ -4471,3 +4471,25 @@ shape	Appearance	Aspetto
 	Open PDF…	Apri PDF…
 	Page	Pagina
 	Resolution (pixels/inch)	Risoluzione (pixel/pollice)
+	Style:	Stile:
+	Tight Short	Stretto corto
+	Tight Medium	Stretto medio
+	Tight Long	Stretto lungo
+	Loose Medium	Sciolto medio
+	Loose Long	Sciolto lungo
+	Loose Curl	Sciolto ricciolo
+	Dab	Tocco
+	Tight Curl	Stretto ricciolo
+	Tight Curl Long	Stretto ricciolo lungo
+	Loose Curl Long	Sciolto ricciolo lungo
+	Fidelity:	Fedeltà:
+	Area:	Area:
+	Nib Angle:	Angolo del pennino:
+	Speed Sensitivity:	Sensibilità alla velocità:
+	Source: the opening state	Sorgente: lo stato iniziale
+	Source: {name}	Sorgente: {name}
+	Click the box beside a History row to set it	Fai clic sulla casella accanto a una riga della cronologia per sceglierla
+	Set the source for the History Brush	Imposta la sorgente del Pennello cronologia
+	Ink Tool	Strumento Inchiostro
+	MyPaint Brush Tool	Strumento Pennello MyPaint
+	Art History Brush Tool	Strumento Pennello cronologia artistico

@@ -4051,3 +4051,25 @@ curves	Smooth	Згладити
 	Open PDF…	Відкрити PDF…
 	Page	Сторінка
 	Resolution (pixels/inch)	Роздільна здатність (пікс./дюйм)
+	Style:	Стиль:
+	Tight Short	Щільний короткий
+	Tight Medium	Щільний середній
+	Tight Long	Щільний довгий
+	Loose Medium	Вільний середній
+	Loose Long	Вільний довгий
+	Loose Curl	Вільний завиток
+	Dab	Мазок
+	Tight Curl	Щільний завиток
+	Tight Curl Long	Щільний завиток довгий
+	Loose Curl Long	Вільний завиток довгий
+	Fidelity:	Точність:
+	Area:	Область:
+	Nib Angle:	Кут пера:
+	Speed Sensitivity:	Чутливість до швидкості:
+	Source: the opening state	Джерело: початковий стан
+	Source: {name}	Джерело: {name}
+	Click the box beside a History row to set it	Клацніть поле біля рядка історії, щоб вибрати його
+	Set the source for the History Brush	Задати джерело для архівного пензля
+	Ink Tool	Інструмент «Туш»
+	MyPaint Brush Tool	Інструмент «Пензель MyPaint»
+	Art History Brush Tool	Інструмент «Художній архівний пензель»

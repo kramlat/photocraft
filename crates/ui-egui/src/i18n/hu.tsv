@@ -4269,3 +4269,25 @@ cameraRaw	Yellow	Sárga
 	Open PDF…	PDF megnyitása…
 	Page	Oldal
 	Resolution (pixels/inch)	Felbontás (pixel/hüvelyk)
+	Style:	Stílus:
+	Tight Short	Szoros rövid
+	Tight Medium	Szoros közepes
+	Tight Long	Szoros hosszú
+	Loose Medium	Laza közepes
+	Loose Long	Laza hosszú
+	Loose Curl	Laza hurok
+	Dab	Pötty
+	Tight Curl	Szoros hurok
+	Tight Curl Long	Szoros hurok hosszú
+	Loose Curl Long	Laza hurok hosszú
+	Fidelity:	Hűség:
+	Area:	Terület:
+	Nib Angle:	Heggyszög:
+	Speed Sensitivity:	Sebességérzékenység:
+	Source: the opening state	Forrás: a kezdeti állapot
+	Source: {name}	Forrás: {name}
+	Click the box beside a History row to set it	Kattintson az előzmények egyik sora melletti négyzetre a kiválasztáshoz
+	Set the source for the History Brush	Az Előzményecset forrásának beállítása
+	Ink Tool	Tinta eszköz
+	MyPaint Brush Tool	MyPaint ecset eszköz
+	Art History Brush Tool	Művészi előzményecset eszköz

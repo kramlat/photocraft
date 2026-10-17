@@ -3534,3 +3534,25 @@ curves	Smooth	매끄럽게
 	Open PDF…	PDF 열기…
 	Page	페이지
 	Resolution (pixels/inch)	해상도 (픽셀/인치)
+	Style:	스타일:
+	Tight Short	조밀 짧게
+	Tight Medium	조밀 보통
+	Tight Long	조밀 길게
+	Loose Medium	느슨 보통
+	Loose Long	느슨 길게
+	Loose Curl	느슨 곱슬
+	Dab	점찍기
+	Tight Curl	조밀 곱슬
+	Tight Curl Long	조밀 곱슬 길게
+	Loose Curl Long	느슨 곱슬 길게
+	Fidelity:	충실도:
+	Area:	영역:
+	Nib Angle:	펜촉 각도:
+	Speed Sensitivity:	속도 민감도:
+	Source: the opening state	원본: 처음 상태
+	Source: {name}	원본: {name}
+	Click the box beside a History row to set it	기록 항목 옆의 상자를 클릭하여 지정
+	Set the source for the History Brush	기록 브러시의 원본 설정
+	Ink Tool	잉크 도구
+	MyPaint Brush Tool	MyPaint 브러시 도구
+	Art History Brush Tool	예술 기록 브러시 도구
