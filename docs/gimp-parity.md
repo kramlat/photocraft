@@ -56,8 +56,11 @@ direction GIMP offers), ⬜ = to do. Adobe column: whether Photoshop has it too 
 | DICOM, Amiga IFF | ✅ | yes |
 | Photoshop Raw / raw data | ✅ | yes |
 | ICNS, TIM, XMC (X cursors), FLI/FLC (read) | ✅ | no |
-| PSP, PVR, CEL, PIX (Dr. Halo), MacPaint, WMF, FAX G3, Seattle FilmWorks, MNG | ⬜ | no |
-| Export-only: C source, HTML table, ASCII art | ⬜ | no |
+| MPO and JPS (Photoshop stereo): open as their first JPEG | ✅ | yes |
+| PSP (layers), PVR, KISS CEL, Dr. Halo, MacPaint, WMF, FAX G3, Seattle FilmWorks, MNG | ⬜ (see below) | no |
+
+Why these are still open: no test files of any of them exist on the development machine and no other tool can read them to compare against, so a reader would be unchecked (PSP in particular has many versions and layer types). PVR, CEL and Dr. Halo also need a palette or hardware layout GIMP itself documents poorly; FAX G3 here is GIMP's own `Research` flavour; WMF is a vector format that wants a renderer; MNG is an animated PNG variant. Send a sample file of any of them and it moves up the list.
+| Export-only: C source, HTML table, ASCII art | ✅ | no |
 
 ## Next
 

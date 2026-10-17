@@ -49,7 +49,7 @@ XL are missing (gap G10). Remaining: 300–500 h including PSD fidelity.
 | Pixar | R/W | no | no | |
 | Amiga IFF | R/W | yes: ILBM and PBM, 1–8 planes, EHB, HAM6/8, 24/32-bit, mask and transparent colour, ByteRun1 | yes, 24-bit and 8-bit gray, ByteRun1 | Read paths checked with hand-built files (no Amiga tool here) |
 | Wireless Bitmap | R/W | yes | yes | Type 0 (1-bit); thresholded at one half on save |
-| MPO / JPS (stereo) | R/W | no | no | |
+| MPO / JPS (stereo) | R/W | the first picture (`.mpo` is a JPEG with extra frames; a `.jps` is one JPEG with both eyes side by side) | as a plain JPEG | No stereo pair handling, no depth/anaglyph preview |
 | PICT | R | no | no | Legacy |
 | Scitex CT | R/W | no | no | Legacy |
 | Photoshop Raw (.raw) | R/W | yes: File › Open Photoshop Raw… asks width, height, 1–4 channels, 8/16 bits, byte order, interleaving and header bytes | yes: File › Save Photoshop Raw… (byte order, interleaving) | `file.openRaw` / `file.saveRaw`; no CMYK channel presets or file-size guess beyond the dialog's first guess; opened with no save path so Save never overwrites the raw data |
@@ -91,6 +91,7 @@ D5100 colour profile. Counts and the G14 estimate are unchanged.
 | OpenRaster `.ora` | yes | yes | [ora.md](ora.md) |
 | GIMP `.xcf` | yes | yes | [xcf.md](xcf.md) |
 | ICO, QOI | yes | yes | |
+| C source (`.c`, `.h`), HTML table, ASCII art | no | yes | GIMP exports, write-only (the picture as a byte array in a C struct; an HTML table with a coloured cell per run of pixels; at most 120 columns of text) |
 | PlayStation `.tim`, X11 cursors, Autodesk `.fli`/`.flc` | yes | no | GIMP formats, read-only (TIM: the first palette; cursors: the largest picture; FLI: the first frame) |
 | Apple `.icns` | yes | no | The largest picture (PNG, JPEG 2000 or classic RLE with mask); an icon file holds fixed square sizes, so writing is an icon-export job, not Save As |
 | Sun Raster `.ras`, SGI `.sgi`/`.rgb`/`.bw`, Farbfeld `.ff`, X Window Dump `.xwd`, Alias PIX `.pix`, XBM `.xbm` | yes | yes | GIMP formats, written clean-room from the public specifications. Sun: 1/8/24/32-bit, raw and RLE (writes 8/24/32). SGI: raw and RLE, 8/16-bit, 1–4 channels (writes RLE). XWD: 1/8/16/24/32-bit (writes 32-bit TrueColor). XBM: X11 and X10, 1-bit |
@@ -146,6 +147,7 @@ remaining gaps in #1606 stay tracked with per-sample corpus ceilings.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-16 | minor | C source, HTML table and ASCII art export; MPO and JPS open |
 | 2026-10-16 | minor | PDF opens (rasterised page, choice of page and resolution) |
 | 2026-10-16 | minor | Photoshop Raw open and save; TIM, X11 cursor and FLI read |
 | 2026-10-16 | minor | DICOM and Amiga IFF read and write, ICNS read |

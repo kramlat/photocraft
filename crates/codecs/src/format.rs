@@ -53,6 +53,12 @@ pub enum Format {
     Jxl,
     /// JPEG 2000 (JP2 and bare codestreams).
     Jp2,
+    /// C source with the pixels as an array (`.c`, `.h`); write-only.
+    CSource,
+    /// HTML table, one coloured cell per run of pixels; write-only.
+    HtmlTable,
+    /// ASCII art (`.aa`, `.ansi`); write-only.
+    AsciiArt,
     /// Sony PlayStation TIM texture; read-only.
     Tim,
     /// X11 cursor (Xcursor); read-only.
@@ -97,6 +103,9 @@ pub struct FormatCaps {
 /// The test-suite asserts that every other enabled format is read+write.
 pub const ASYMMETRIC_EXCEPTIONS: &[(Format, &str)] = &[
     (Format::Xpm, "XPM is a legacy Unix icon interchange format. Reading existing XPM icons is supported; writing modern image assets should use PNG instead."),
+    (Format::CSource, "C source holds a picture for embedding in code; it is written, never read back."),
+    (Format::HtmlTable, "An HTML table of coloured cells is a web export; it is written, never read back."),
+    (Format::AsciiArt, "ASCII art is a text rendering of a picture (at most 120 columns); it is written, never read back."),
     (Format::Tim, "TIM is a PlayStation texture format, supported for opening game assets; save the picture as PNG instead."),
     (Format::Xcursor, "X11 cursors are supported for opening; writing one is a cursor-theme job (many sizes and hotspots), not Save As."),
     (Format::Fli, "FLI/FLC is an animation; the first frame is read. Save the picture as PNG or GIF instead."),
@@ -137,7 +146,7 @@ const TIFF_LAYOUTS: &[ChannelLayout] = &[L::Gray, L::GrayA, L::Rgb, L::Rgba, L::
 
 impl Format {
     /// Every format known to the crate (enabled or not).
-    pub const ALL: [Format; 35] = [
+    pub const ALL: [Format; 38] = [
         Format::Png,
         Format::Jpeg,
         Format::Tiff,
@@ -173,6 +182,9 @@ impl Format {
         Format::Tim,
         Format::Xcursor,
         Format::Fli,
+        Format::CSource,
+        Format::HtmlTable,
+        Format::AsciiArt,
     ];
 
     pub fn caps(self) -> FormatCaps {
@@ -219,6 +231,9 @@ impl Format {
             Format::Dicom => "DICOM",
             Format::Iff => "Amiga IFF",
             Format::Icns => "ICNS",
+            Format::CSource => "C source",
+            Format::HtmlTable => "HTML table",
+            Format::AsciiArt => "ASCII art",
             Format::Tim => "PlayStation TIM",
             Format::Xcursor => "X11 cursor",
             Format::Fli => "FLI/FLC",
@@ -230,7 +245,7 @@ impl Format {
     pub fn extensions(self) -> &'static [&'static str] {
         match self {
             Format::Png => &["png", "apng"],
-            Format::Jpeg => &["jpg", "jpeg", "jpe", "jfif"],
+            Format::Jpeg => &["jpg", "jpeg", "jpe", "jfif", "mpo", "jps"],
             Format::Tiff => &["tif", "tiff"],
             Format::WebP => &["webp"],
             Format::Gif => &["gif"],
@@ -261,6 +276,9 @@ impl Format {
             Format::Dicom => &["dcm", "dicom", "dic"],
             Format::Iff => &["iff", "ilbm", "lbm", "ham"],
             Format::Icns => &["icns"],
+            Format::CSource => &["c", "h"],
+            Format::HtmlTable => &["html", "htm"],
+            Format::AsciiArt => &["aa", "ansi"],
             Format::Tim => &["tim"],
             Format::Xcursor => &["xmc", "xcursor"],
             Format::Fli => &["fli", "flc"],
@@ -301,6 +319,9 @@ impl Format {
             Format::Dicom => "image/x-dicom",
             Format::Iff => "image/x-ilbm",
             Format::Icns => "image/x-icns",
+            Format::CSource => "image/x-csource",
+            Format::HtmlTable => "image/x-html-table",
+            Format::AsciiArt => "image/x-ascii-art",
             Format::Tim => "image/x-psx-tim",
             Format::Xcursor => "image/x-xcursor",
             Format::Fli => "image/x-fli",
@@ -367,6 +388,9 @@ pub fn caps(format: Format) -> FormatCaps {
         Format::Xwd => FormatCaps { layouts: &[L::Rgb], alpha: false, ..base },
         Format::AliasPix => FormatCaps { layouts: &[L::Gray, L::Rgb], alpha: false, ..base },
         Format::Jxl => FormatCaps { read: cfg!(not(target_arch = "wasm32")), depths: &[S::U8, S::U16], layouts: RGB_GRAY, icc: true, ..base },
+        Format::CSource => FormatCaps { read: false, layouts: &[L::Gray, L::Rgb, L::Rgba], ..base },
+        Format::HtmlTable => FormatCaps { read: false, layouts: RGB_GRAY, lossy: false, ..base },
+        Format::AsciiArt => FormatCaps { read: false, layouts: RGB_GRAY, lossy: true, ..base },
         Format::Tim => FormatCaps { write: false, layouts: &[L::Rgb], alpha: false, ..base },
         Format::Xcursor => FormatCaps { write: false, layouts: &[L::Rgba], ..base },
         Format::Fli => FormatCaps { write: false, layouts: &[L::Gray, L::Rgb], alpha: false, ..base },

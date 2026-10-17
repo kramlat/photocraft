@@ -134,3 +134,33 @@ fn fli_palette_values_beyond_six_bits_do_not_overflow() {
     let f = fli(1, 1, &[fli_chunk(11, &pal), fli_chunk(16, &[0])]);
     assert_eq!(decode(&f).unwrap().data(), [255]);
 }
+
+#[test]
+fn text_exports_describe_the_pixels() {
+    let img = Image::from_u8(3, 2, ChannelLayout::Rgb, vec![255, 0, 0, 255, 0, 0, 0, 0, 255, 10, 20, 30, 40, 50, 60, 70, 80, 90]).unwrap();
+    for f in [Format::CSource, Format::HtmlTable, Format::AsciiArt] {
+        assert!(caps(f).write && !caps(f).read, "{f:?}");
+        assert_eq!(detect(b"static const struct"), None);
+        assert!(decode_as(f, b"x").is_err());
+    }
+    let c = String::from_utf8(encode(&img, Format::CSource, &Default::default()).unwrap()).unwrap();
+    assert!(c.contains("3, 2, 3,") && c.contains("255, 0, 0, 255, 0, 0, 0, 0, 255,") && c.contains("pixel_data[18 + 1]"), "{c}");
+    let html = String::from_utf8(encode(&img, Format::HtmlTable, &Default::default()).unwrap()).unwrap();
+    assert!(html.contains("colspan=\"2\" bgcolor=\"#ff0000\"") && html.contains("bgcolor=\"#0000ff\"") && html.matches("<tr>").count() == 2, "{html}");
+    // Alpha: transparent pixels get no background.
+    let a = Image::from_u8(2, 1, ChannelLayout::Rgba, vec![1, 2, 3, 255, 9, 9, 9, 0]).unwrap();
+    let html = String::from_utf8(encode(&a, Format::HtmlTable, &Default::default()).unwrap()).unwrap();
+    assert!(html.contains("bgcolor=\"#010203\"") && html.contains("<td width=\"1\" height=\"1\"></td>"), "{html}");
+    // ASCII art: black is a space, white is '@', and wide pictures are cut to 120 columns.
+    let bw = Image::from_u8(4, 2, ChannelLayout::Gray, vec![0, 0, 255, 255, 0, 0, 255, 255]).unwrap();
+    assert_eq!(encode(&bw, Format::AsciiArt, &Default::default()).unwrap(), b"  @@\n");
+    let wide = Image::new(400, 100, ChannelLayout::Gray, SampleType::U8).unwrap();
+    let art = encode(&wide, Format::AsciiArt, &Default::default()).unwrap();
+    assert_eq!(art.split(|c| *c == b'\n').next().unwrap().len(), 120);
+}
+
+#[test]
+fn mpo_and_jps_open_as_jpeg() {
+    assert_eq!(from_extension("photo.MPO"), Some(Format::Jpeg));
+    assert_eq!(from_extension("stereo.jps"), Some(Format::Jpeg));
+}
