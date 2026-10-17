@@ -191,6 +191,9 @@ pub fn reset_options(o: &mut ToolOptions, tool: Tool) {
         | Tool::DeleteAnchorPoint
         | Tool::ConvertPoint
         | Tool::Artboard
+        | Tool::SeamlessClone
+        | Tool::CageTransform
+        | Tool::Transform3D
         | Tool::Frame => {}
     }
 }

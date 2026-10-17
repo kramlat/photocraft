@@ -4073,3 +4073,18 @@ curves	Smooth	Згладити
 	Ink Tool	Інструмент «Туш»
 	MyPaint Brush Tool	Інструмент «Пензель MyPaint»
 	Art History Brush Tool	Інструмент «Художній архівний пензель»
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Інструмент «Безшовне клонування»
+	Cage Transform Tool	Інструмент «Трансформація за кліткою»
+	Transform 3D Tool	Інструмент «3D-трансформація»
+	Cage Transform: drag the corner points; click an edge to add one	Трансформація за кліткою: перетягуйте кутові точки; клацніть на ребрі, щоб додати точку
+	Cage Transform is not active	Трансформація за кліткою не активна
+	Commit Cage Transform ({key})	Застосувати трансформацію за кліткою ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D-трансформація: перетягніть, щоб повернути шар (утримуйте ⌥ для повороту в площині)
+	Roll	Поворот у площині
+	Commit Transform 3D ({key})	Застосувати 3D-трансформацію ({key})
+	Seamless Clone needs a pixel layer with content	Для безшовного клонування потрібен піксельний шар із вмістом
+@plural	{n} point|{n} points	{n} точка|{n} точки|{n} точок
+	Cage Transform	Трансформація за кліткою
+	Transform 3D	3D-трансформація

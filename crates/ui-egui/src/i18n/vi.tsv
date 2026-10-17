@@ -3858,3 +3858,18 @@ curves	Smooth	Làm mượt
 	Ink Tool	Công cụ Mực
 	MyPaint Brush Tool	Công cụ Cọ MyPaint
 	Art History Brush Tool	Công cụ Cọ Lịch sử Nghệ thuật
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Công cụ Nhân bản liền mạch
+	Cage Transform Tool	Công cụ Biến đổi theo lồng
+	Transform 3D Tool	Công cụ Biến đổi 3D
+	Cage Transform: drag the corner points; click an edge to add one	Biến đổi theo lồng: kéo các điểm góc; nhấp vào một cạnh để thêm điểm
+	Cage Transform is not active	Biến đổi theo lồng chưa được bật
+	Commit Cage Transform ({key})	Áp dụng biến đổi theo lồng ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Biến đổi 3D: kéo để xoay lớp (giữ ⌥ để xoay trong mặt phẳng)
+	Roll	Xoay trong mặt phẳng
+	Commit Transform 3D ({key})	Áp dụng biến đổi 3D ({key})
+	Seamless Clone needs a pixel layer with content	Nhân bản liền mạch cần một lớp điểm ảnh có nội dung
+@plural	{n} point|{n} points	{n} điểm
+	Cage Transform	Biến đổi theo lồng
+	Transform 3D	Biến đổi 3D

@@ -4164,3 +4164,18 @@ layerLabel	No Color	Sem cor
 	Ink Tool	Ferramenta Tinta
 	MyPaint Brush Tool	Ferramenta Pincel MyPaint
 	Art History Brush Tool	Ferramenta Pincel de histórico de arte
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Ferramenta Clonagem contínua
+	Cage Transform Tool	Ferramenta Transformação por gaiola
+	Transform 3D Tool	Ferramenta Transformação 3D
+	Cage Transform: drag the corner points; click an edge to add one	Transformação por gaiola: arraste os pontos dos cantos; clique em uma borda para adicionar um
+	Cage Transform is not active	A transformação por gaiola não está ativa
+	Commit Cage Transform ({key})	Aplicar transformação por gaiola ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Transformação 3D: arraste para girar a camada (segure ⌥ para girar no plano)
+	Roll	Rotação no plano
+	Commit Transform 3D ({key})	Aplicar transformação 3D ({key})
+	Seamless Clone needs a pixel layer with content	A clonagem contínua precisa de uma camada de pixels com conteúdo
+@plural	{n} point|{n} points	{n} ponto|{n} pontos
+	Cage Transform	Transformação por gaiola
+	Transform 3D	Transformação 3D

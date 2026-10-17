@@ -4493,3 +4493,18 @@ shape	Appearance	Aspetto
 	Ink Tool	Strumento Inchiostro
 	MyPaint Brush Tool	Strumento Pennello MyPaint
 	Art History Brush Tool	Strumento Pennello cronologia artistico
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Strumento Clonazione senza giunture
+	Cage Transform Tool	Strumento Trasformazione a gabbia
+	Transform 3D Tool	Strumento Trasformazione 3D
+	Cage Transform: drag the corner points; click an edge to add one	Trasformazione a gabbia: trascina i punti degli angoli; fai clic su un bordo per aggiungerne uno
+	Cage Transform is not active	La trasformazione a gabbia non è attiva
+	Commit Cage Transform ({key})	Applica trasformazione a gabbia ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Trasformazione 3D: trascina per ruotare il livello (tieni premuto ⌥ per ruotarlo sul piano)
+	Roll	Rotazione sul piano
+	Commit Transform 3D ({key})	Applica trasformazione 3D ({key})
+	Seamless Clone needs a pixel layer with content	La clonazione senza giunture richiede un livello di pixel con contenuto
+@plural	{n} point|{n} points	{n} punto|{n} punti
+	Cage Transform	Trasformazione a gabbia
+	Transform 3D	Trasformazione 3D

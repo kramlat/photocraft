@@ -3008,3 +3008,18 @@ curves	Smooth	平滑
 	Ink Tool	墨水工具
 	MyPaint Brush Tool	MyPaint 画笔工具
 	Art History Brush Tool	历史记录艺术画笔工具
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	无缝克隆工具
+	Cage Transform Tool	笼式变换工具
+	Transform 3D Tool	3D 变换工具
+	Cage Transform: drag the corner points; click an edge to add one	笼式变换：拖动角点；单击边可添加点
+	Cage Transform is not active	笼式变换未启用
+	Commit Cage Transform ({key})	应用笼式变换 ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D 变换：拖动以旋转图层（按住 ⌥ 可在平面内旋转）
+	Roll	平面内旋转
+	Commit Transform 3D ({key})	应用 3D 变换 ({key})
+	Seamless Clone needs a pixel layer with content	无缝克隆需要包含内容的像素图层
+@plural	{n} point|{n} points	{n} 个点
+	Cage Transform	笼式变换
+	Transform 3D	3D 变换

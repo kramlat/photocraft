@@ -1259,7 +1259,7 @@ mod tests {
         assert_eq!(Tool::CloneStamp.key(), 'S');
         assert_eq!(Tool::PatternStamp.key(), 'S');
         let group: Vec<Tool> = Tool::ALL.iter().copied().filter(|t| t.key() == 'S').collect();
-        assert_eq!(group, vec![Tool::CloneStamp, Tool::PatternStamp]);
+        assert_eq!(group, vec![Tool::CloneStamp, Tool::PatternStamp, Tool::SeamlessClone]);
         assert_eq!(Tool::from_name("patternStamp"), Some(Tool::PatternStamp));
     }
 

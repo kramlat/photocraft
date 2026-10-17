@@ -141,10 +141,16 @@ pub enum Tool {
     Slice,
     SliceSelect,
     Frame,
+    /// Moves the layer and blends it into what is below with a Poisson solve.
+    SeamlessClone,
+    /// Deforms the layer with a polygon cage (mean value coordinates).
+    CageTransform,
+    /// Turns the layer in 3-D space (rotate X/Y/Z with perspective).
+    Transform3D,
 }
 
 impl Tool {
-    pub const ALL: [Tool; 70] = [
+    pub const ALL: [Tool; 73] = [
         Tool::Move,
         Tool::Artboard,
         Tool::RectMarquee,
@@ -215,12 +221,18 @@ impl Tool {
         Tool::Slice,
         Tool::SliceSelect,
         Tool::Frame,
+        Tool::SeamlessClone,
+        Tool::CageTransform,
+        Tool::Transform3D,
     ];
 
     pub fn label(self) -> &'static str {
         match self {
             Tool::Move => "Move Tool",
             Tool::Artboard => "Artboard Tool",
+            Tool::SeamlessClone => "Seamless Clone Tool",
+            Tool::CageTransform => "Cage Transform Tool",
+            Tool::Transform3D => "Transform 3D Tool",
             Tool::RectMarquee => "Rectangular Marquee Tool",
             Tool::EllipseMarquee => "Elliptical Marquee Tool",
             Tool::SingleRowMarquee => "Single Row Marquee Tool",
@@ -333,7 +345,7 @@ impl Tool {
     /// Photoshop default single-key shortcut (`'\0'` = none, e.g. the Blur group).
     pub fn key(self) -> char {
         match self {
-            Tool::Move | Tool::Artboard => 'V',
+            Tool::Move | Tool::Artboard | Tool::CageTransform | Tool::Transform3D => 'V',
             Tool::RectMarquee | Tool::EllipseMarquee => 'M',
             Tool::Brush | Tool::Pencil | Tool::MixerBrush | Tool::ColorReplacement | Tool::Ink | Tool::MyPaintBrush => 'B',
             Tool::Eraser | Tool::BackgroundEraser | Tool::MagicEraser => 'E',
@@ -348,7 +360,7 @@ impl Tool {
             Tool::RotateView => 'R',
             Tool::Zoom => 'Z',
             Tool::Remove | Tool::SpotHealing | Tool::Healing | Tool::Patch | Tool::ContentAwareMove | Tool::RedEye => 'J',
-            Tool::CloneStamp | Tool::PatternStamp => 'S',
+            Tool::CloneStamp | Tool::PatternStamp | Tool::SeamlessClone => 'S',
             Tool::HistoryBrush | Tool::ArtHistoryBrush => 'Y',
             Tool::Blur | Tool::Sharpen | Tool::Smudge => '\0',
             // In the Marquee flyout, but M cycles only the Rectangular and Elliptical Marquee.
@@ -1517,7 +1529,7 @@ mod tests {
         assert!(!Tool::RedEye.is_brushlike());
         assert_eq!(Tool::from_name("patternStamp"), Some(Tool::PatternStamp));
         assert_eq!(Tool::from_name("Pattern Stamp Tool"), Some(Tool::PatternStamp));
-        assert_eq!(Tool::ALL.len(), 70);
+        assert_eq!(Tool::ALL.len(), 73);
         assert_eq!(Tool::from_name("Vertical Type Mask Tool"), Some(Tool::VerticalTypeMask));
         assert_eq!(Tool::from_name("addAnchorPoint"), Some(Tool::AddAnchorPoint));
         assert_eq!(Tool::from_name("Delete Anchor Point Tool"), Some(Tool::DeleteAnchorPoint));

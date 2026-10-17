@@ -158,6 +158,8 @@ pub mod patch_preview;
 pub(crate) mod pattern_fill_ui;
 pub mod pattern_preview;
 pub mod perspective_crop_ui;
+pub mod cage_ui;
+pub mod seamless_ui;
 pub mod perspective_ui;
 pub mod pixel_grid;
 pub mod plugin_ui;

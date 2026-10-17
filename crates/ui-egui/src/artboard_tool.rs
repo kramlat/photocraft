@@ -449,6 +449,10 @@ mod tests {
         press(&mut app, egui::Modifiers::SHIFT);
         assert_eq!(app.ui.tool, Tool::Artboard);
         press(&mut app, egui::Modifiers::SHIFT);
+        assert_eq!(app.ui.tool, Tool::CageTransform);
+        press(&mut app, egui::Modifiers::SHIFT);
+        assert_eq!(app.ui.tool, Tool::Transform3D);
+        press(&mut app, egui::Modifiers::SHIFT);
         assert_eq!(app.ui.tool, Tool::Move);
     }
 }

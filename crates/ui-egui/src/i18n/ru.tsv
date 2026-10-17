@@ -3360,3 +3360,18 @@ curves	Smooth	Сгладить
 	Ink Tool	Инструмент «Тушь»
 	MyPaint Brush Tool	Инструмент «Кисть MyPaint»
 	Art History Brush Tool	Инструмент «Художественная архивная кисть»
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Инструмент «Бесшовное клонирование»
+	Cage Transform Tool	Инструмент «Трансформация по клетке»
+	Transform 3D Tool	Инструмент «3D-трансформация»
+	Cage Transform: drag the corner points; click an edge to add one	Трансформация по клетке: перетаскивайте угловые точки; щёлкните по ребру, чтобы добавить точку
+	Cage Transform is not active	Трансформация по клетке не активна
+	Commit Cage Transform ({key})	Применить трансформацию по клетке ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D-трансформация: перетащите, чтобы повернуть слой (удерживайте ⌥ для поворота в плоскости)
+	Roll	Поворот в плоскости
+	Commit Transform 3D ({key})	Применить 3D-трансформацию ({key})
+	Seamless Clone needs a pixel layer with content	Для бесшовного клонирования нужен пиксельный слой с содержимым
+@plural	{n} point|{n} points	{n} точка|{n} точки|{n} точек
+	Cage Transform	Трансформация по клетке
+	Transform 3D	3D-трансформация

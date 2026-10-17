@@ -113,6 +113,9 @@ fn scan(root: &Path) -> Vec<(String, String, PathBuf)> {
     out
 }
 
+/// A brush group: its name and its `(id, name, own size px)` brushes.
+pub type BrushGroup = (String, Vec<(String, String, f32)>);
+
 impl Library {
     /// Loads the brushes on first use; a no-op after that.
     pub fn ensure(&mut self) {
@@ -120,9 +123,9 @@ impl Library {
     }
 
     /// The brushes by group: `(group, [(id, name, own size px)])`, in panel order.
-    pub fn groups(&mut self) -> Vec<(String, Vec<(String, String, f32)>)> {
+    pub fn groups(&mut self) -> Vec<BrushGroup> {
         self.ensure_loaded();
-        let mut out: Vec<(String, Vec<(String, String, f32)>)> = Vec::new();
+        let mut out: Vec<BrushGroup> = Vec::new();
         for e in &self.entries {
             match out.iter_mut().find(|(g, _)| *g == e.group) {
                 Some((_, v)) => v.push((e.id.clone(), e.name.clone(), e.size)),

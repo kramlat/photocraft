@@ -473,3 +473,88 @@ fn unlocked_or_position_locked_smart_objects_take_distortions() {
         }
     }
 }
+
+#[test]
+fn cage_identity_changes_nothing_and_a_dragged_corner_moves_pixels() {
+    let mut s = session(8);
+    let before = active_surface(&s);
+    let sq = json!([[5, 5], [65, 5], [65, 45], [5, 45]]);
+    let r = s.execute(CAGE, json!({"cage": {"src": sq, "dst": sq}})).unwrap();
+    assert_eq!(r["changed"], false);
+    assert_eq!(worst(&before, &active_surface(&s), Rect::new(0, 0, 80, 60)), 0.0);
+    s.execute(CAGE, json!({"cage": {"src": sq, "dst": [[5, 5], [65, 5], [75, 45], [5, 45]]}, "interpolation": "bilinear"})).unwrap();
+    let after = active_surface(&s);
+    assert!(after.content_bounds().x1 > before.content_bounds().x1, "the dragged corner pulls the content right");
+    assert!(s.undo());
+    assert_eq!(worst(&before, &active_surface(&s), Rect::new(0, 0, 80, 60)), 0.0, "one history step");
+}
+
+#[test]
+fn cage_rejects_bad_input() {
+    let mut s = session(8);
+    assert!(s.execute(CAGE, json!({})).is_err());
+    assert!(s.execute(CAGE, json!({"cage": {"src": [[0, 0], [1, 1]], "dst": [[0, 0], [1, 1]]}})).is_err());
+    assert!(s.execute(CAGE, json!({"cage": {"src": [[0, 0], [9, 0], [9, 9]], "dst": [[0, 0], [9, 0]]}})).is_err());
+}
+
+#[test]
+fn transform_3d_zero_is_identity_and_a_tilt_foreshortens() {
+    let mut s = session(8);
+    let before = active_surface(&s);
+    let r = s.execute(TRANSFORM_3D, json!({})).unwrap();
+    assert_eq!(r["changed"], false);
+    s.execute(TRANSFORM_3D, json!({"rotateY": 50, "interpolation": "bilinear"})).unwrap();
+    let after = active_surface(&s);
+    let (b, a) = (before.content_bounds(), after.content_bounds());
+    assert!(a.width() < b.width(), "{a:?} vs {b:?}: turning about the vertical axis narrows the layer");
+    assert!(a.height() >= b.height(), "the near side grows taller");
+    assert!(s.execute(TRANSFORM_3D, json!({"rotateX": 120})).is_err());
+    let mut fresh = session(8);
+    assert!(fresh.execute(TRANSFORM_3D, json!({"rotateY": 80, "distance": 20})).is_err(), "eye inside the layer");
+}
+
+#[test]
+fn transform_3d_quad_is_symmetric_without_rotation() {
+    let q = transform_3d_quad(Rect::new(0, 0, 100, 50), 0.0, 0.0, 0.0, 150.0).unwrap();
+    assert_eq!(q, [[0.0, 0.0], [100.0, 0.0], [100.0, 50.0], [0.0, 50.0]]);
+}
+
+#[test]
+fn seamless_clone_takes_backdrop_colour_and_keeps_alpha() {
+    let mut s = Session::new();
+    s.execute("file.new", json!({"width": 60, "height": 40, "depth": 8})).unwrap();
+    // A blue backdrop, then a layer holding a red-ish textured patch.
+    s.execute("layer.new.layer", json!({})).unwrap();
+    s.edit("paint", |doc, active| {
+        let surf = doc.layer_mut(active.unwrap()).unwrap().surface_mut().unwrap();
+        for y in 0..40 {
+            for x in 0..60 {
+                surf.write_pixel(x, y, &[0.1, 0.2, 0.8, 1.0]);
+            }
+        }
+        Ok(())
+    })
+    .unwrap();
+    s.execute("layer.new.layer", json!({})).unwrap();
+    s.edit("paint", |doc, active| {
+        let surf = doc.layer_mut(active.unwrap()).unwrap().surface_mut().unwrap();
+        for y in 10..20 {
+            for x in 10..20 {
+                let v = 0.6 + 0.01 * (x - 10) as f32;
+                surf.write_pixel(x, y, &[v, 0.2, 0.2, 1.0]);
+            }
+        }
+        Ok(())
+    })
+    .unwrap();
+    let r = s.execute("edit.seamlessClone", json!({"offset": [20, 5]})).unwrap();
+    assert_eq!(r["changed"], true);
+    let out = active_surface(&s);
+    assert_eq!(out.content_bounds(), Rect::new(30, 15, 40, 25), "moved by the offset, outline unchanged");
+    let px = out.read_region(Rect::new(35, 20, 36, 21));
+    assert!(px[2] > px[0], "the patch took the blue backdrop's colour: {px:?}");
+    assert!((px[3] - 1.0).abs() < 1e-6);
+    assert!(s.execute("edit.seamlessClone", json!({})).is_err());
+    assert!(s.undo());
+    assert_eq!(active_surface(&s).content_bounds(), Rect::new(10, 10, 20, 20));
+}

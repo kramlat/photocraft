@@ -4445,3 +4445,18 @@ shape	Appearance	Izgled
 	Ink Tool	Alatka Mastilo
 	MyPaint Brush Tool	Alatka Četka MyPaint
 	Art History Brush Tool	Alatka Umetnička četka istorije
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Alatka bešavno kloniranje
+	Cage Transform Tool	Alatka transformacija kavezom
+	Transform 3D Tool	Alatka 3D transformacija
+	Cage Transform: drag the corner points; click an edge to add one	Transformacija kavezom: prevlačite ugaone tačke; kliknite na ivicu da dodate tačku
+	Cage Transform is not active	Transformacija kavezom nije aktivna
+	Commit Cage Transform ({key})	Primeni transformaciju kavezom ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D transformacija: prevucite da zarotirate sloj (držite ⌥ za rotaciju u ravni)
+	Roll	Rotacija u ravni
+	Commit Transform 3D ({key})	Primeni 3D transformaciju ({key})
+	Seamless Clone needs a pixel layer with content	Bešavno kloniranje zahteva piksel sloj sa sadržajem
+@plural	{n} point|{n} points	{n} tačka|{n} tačke|{n} tačaka
+	Cage Transform	Transformacija kavezom
+	Transform 3D	3D transformacija

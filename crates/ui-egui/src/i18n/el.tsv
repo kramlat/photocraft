@@ -4074,3 +4074,18 @@ curves	Smooth	Εξομάλυνση
 	Ink Tool	Εργαλείο Μελάνι
 	MyPaint Brush Tool	Εργαλείο Πινέλο MyPaint
 	Art History Brush Tool	Εργαλείο Καλλιτεχνικό πινέλο ιστορικού
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Εργαλείο Απρόσκοπτης κλωνοποίησης
+	Cage Transform Tool	Εργαλείο Μετασχηματισμού πλαισίου
+	Transform 3D Tool	Εργαλείο Μετασχηματισμού 3D
+	Cage Transform: drag the corner points; click an edge to add one	Μετασχηματισμός πλαισίου: σύρετε τα σημεία των γωνιών· κάντε κλικ σε μια ακμή για να προσθέσετε σημείο
+	Cage Transform is not active	Ο μετασχηματισμός πλαισίου δεν είναι ενεργός
+	Commit Cage Transform ({key})	Εφαρμογή μετασχηματισμού πλαισίου ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Μετασχηματισμός 3D: σύρετε για να περιστρέψετε το επίπεδο (κρατήστε ⌥ για περιστροφή εντός επιπέδου)
+	Roll	Περιστροφή εντός επιπέδου
+	Commit Transform 3D ({key})	Εφαρμογή μετασχηματισμού 3D ({key})
+	Seamless Clone needs a pixel layer with content	Η απρόσκοπτη κλωνοποίηση απαιτεί επίπεδο εικονοστοιχείων με περιεχόμενο
+@plural	{n} point|{n} points	{n} σημείο|{n} σημεία
+	Cage Transform	Μετασχηματισμός πλαισίου
+	Transform 3D	Μετασχηματισμός 3D

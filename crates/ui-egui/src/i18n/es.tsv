@@ -4334,3 +4334,18 @@ navigator	Zoom	Zoom
 	Ink Tool	Herramienta Tinta
 	MyPaint Brush Tool	Herramienta Pincel MyPaint
 	Art History Brush Tool	Herramienta Pincel de historia artístico
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Herramienta Clonación sin costuras
+	Cage Transform Tool	Herramienta Transformación con jaula
+	Transform 3D Tool	Herramienta Transformación 3D
+	Cage Transform: drag the corner points; click an edge to add one	Transformación con jaula: arrastra los puntos de las esquinas; haz clic en un borde para añadir uno
+	Cage Transform is not active	La transformación con jaula no está activa
+	Commit Cage Transform ({key})	Aplicar transformación con jaula ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Transformación 3D: arrastra para girar la capa (mantén ⌥ para rotar en el plano)
+	Roll	Rotación en el plano
+	Commit Transform 3D ({key})	Aplicar transformación 3D ({key})
+	Seamless Clone needs a pixel layer with content	La clonación sin costuras necesita una capa de píxeles con contenido
+@plural	{n} point|{n} points	{n} punto|{n} puntos
+	Cage Transform	Transformación con jaula
+	Transform 3D	Transformación 3D

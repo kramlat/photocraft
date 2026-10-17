@@ -3980,3 +3980,18 @@ navigator	Zoom	Zvětšení
 	Ink Tool	Nástroj Inkoust
 	MyPaint Brush Tool	Nástroj Štětec MyPaint
 	Art History Brush Tool	Nástroj Umělecký štětec historie
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Nástroj Bezešvé klonování
+	Cage Transform Tool	Nástroj Transformace klecí
+	Transform 3D Tool	Nástroj Transformace 3D
+	Cage Transform: drag the corner points; click an edge to add one	Transformace klecí: tažením posouvejte body rohů; kliknutím na hranu přidáte bod
+	Cage Transform is not active	Transformace klecí není aktivní
+	Commit Cage Transform ({key})	Potvrdit transformaci klecí ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Transformace 3D: tažením otáčejte vrstvu (podržením ⌥ ji otočíte v rovině)
+	Roll	Otočení v rovině
+	Commit Transform 3D ({key})	Potvrdit transformaci 3D ({key})
+	Seamless Clone needs a pixel layer with content	Bezešvé klonování vyžaduje pixelovou vrstvu s obsahem
+@plural	{n} point|{n} points	{n} bod|{n} body|{n} bodů
+	Cage Transform	Transformace klecí
+	Transform 3D	Transformace 3D

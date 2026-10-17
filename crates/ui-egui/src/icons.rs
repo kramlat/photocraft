@@ -86,6 +86,9 @@ pub fn tool_icon(t: Tool) -> &'static str {
     match t {
         Tool::Move => "move",
         Tool::Artboard => "artboard",
+        Tool::SeamlessClone => "seamless-clone",
+        Tool::CageTransform => "cage-transform",
+        Tool::Transform3D => "transform-3d",
         Tool::RectMarquee => "square-dashed",
         Tool::EllipseMarquee => "circle-dashed",
         Tool::SingleRowMarquee => "marquee-row",

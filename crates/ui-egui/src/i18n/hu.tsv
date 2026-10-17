@@ -4291,3 +4291,18 @@ cameraRaw	Yellow	Sárga
 	Ink Tool	Tinta eszköz
 	MyPaint Brush Tool	MyPaint ecset eszköz
 	Art History Brush Tool	Művészi előzményecset eszköz
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Zökkenőmentes klónozás eszköz
+	Cage Transform Tool	Ketrecátalakítás eszköz
+	Transform 3D Tool	3D-átalakítás eszköz
+	Cage Transform: drag the corner points; click an edge to add one	Ketrecátalakítás: húzd a sarokpontokat; kattints egy élre pont hozzáadásához
+	Cage Transform is not active	A ketrecátalakítás nem aktív
+	Commit Cage Transform ({key})	Ketrecátalakítás alkalmazása ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D-átalakítás: húzással forgasd a réteget (⌥ nyomva tartásával síkban forgathatod)
+	Roll	Síkbeli forgatás
+	Commit Transform 3D ({key})	3D-átalakítás alkalmazása ({key})
+	Seamless Clone needs a pixel layer with content	A zökkenőmentes klónozáshoz tartalmat tartalmazó képpontréteg kell
+@plural	{n} point|{n} points	{n} pont
+	Cage Transform	Ketrecátalakítás
+	Transform 3D	3D-átalakítás

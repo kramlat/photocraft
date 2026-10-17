@@ -12,6 +12,7 @@
 
 use std::cell::RefCell;
 
+use photocraft_algo::cage::Cage;
 use photocraft_algo::liquify::{LiquifyField, LiquifyStroke, apply_liquify, auto_cell};
 use photocraft_algo::perspective::{PerspectiveMap, Plane, Straighten, straighten};
 use photocraft_algo::puppet::{PuppetDensity, PuppetMode, PuppetPin, PuppetWarp, puppet_warp, puppet_warp_with_mask};
@@ -32,6 +33,8 @@ pub const PUPPET: &str = "edit.puppetWarp";
 pub const PUPPET_SMART: &str = "layer.smartObjects.puppetWarp";
 pub const PERSPECTIVE: &str = "edit.perspectiveWarp";
 pub const PERSPECTIVE_SMART: &str = "layer.smartObjects.perspectiveWarp";
+pub const CAGE: &str = "edit.cageTransform";
+pub const TRANSFORM_3D: &str = "edit.transform3d";
 
 fn bad(cmd: &str, msg: impl Into<String>) -> EngineError {
     EngineError::BadParams { cmd: cmd.into(), msg: msg.into() }
@@ -108,6 +111,41 @@ pub fn perspective_params(cmd: &str, p: &Value) -> Result<Vec<Plane>> {
     Ok(planes)
 }
 
+/// Cage Transform params.
+pub fn cage_params(cmd: &str, p: &Value) -> Result<Cage> {
+    let cage: Cage = match p.get("cage") {
+        Some(v) => serde_json::from_value(v.clone()).map_err(|e| bad(cmd, format!("bad `cage` ({{\"src\":[[x,y]…],\"dst\":[[x,y]…]}}): {e}")))?,
+        None => return Err(bad(cmd, "pass `cage`: {\"src\":[[x,y]…],\"dst\":[[x,y]…]}")),
+    };
+    cage.validate().map_err(|e| bad(cmd, e))?;
+    Ok(cage)
+}
+
+/// The four corners of `b` (clockwise from top-left) after turning them in 3-D about the box's
+/// centre — `rx`/`ry`/`rz` in degrees, `distance` px from the eye to the layer — and projecting
+/// them back onto the canvas. Positive `rx` tilts the top away, positive `ry` the right side.
+pub fn transform_3d_quad(b: Rect, rx: f64, ry: f64, rz: f64, distance: f64) -> Option<[[f64; 2]; 4]> {
+    let (cx, cy) = ((f64::from(b.x0) + f64::from(b.x1)) / 2.0, (f64::from(b.y0) + f64::from(b.y1)) / 2.0);
+    let (hw, hh) = (f64::from(b.width()) / 2.0, f64::from(b.height()) / 2.0);
+    let (srx, crx) = rx.to_radians().sin_cos();
+    let (sry, cry) = ry.to_radians().sin_cos();
+    let (srz, crz) = rz.to_radians().sin_cos();
+    let mut out = [[0.0; 2]; 4];
+    for (o, (px, py)) in out.iter_mut().zip([(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]) {
+        // In-plane turn, then tilt about the horizontal axis, then about the vertical axis.
+        let (x, y) = (px * crz - py * srz, px * srz + py * crz);
+        let (y, z) = (y * crx, -y * srx);
+        let (x, z) = (x * cry - z * sry, x * sry + z * cry);
+        let depth = distance + z;
+        if depth <= distance * 0.05 {
+            return None;
+        }
+        let k = distance / depth;
+        *o = [cx + x * k, cy + y * k];
+    }
+    Some(out)
+}
+
 fn interp(p: &Value) -> Interp {
     Interp::parse(p.get("interpolation").and_then(Value::as_str).unwrap_or("bicubic"))
 }
@@ -173,6 +211,15 @@ pub fn perspective_surface(surf: &Surface, planes: &[Plane], interp: Interp) -> 
     warp_mesh_surface(surf, b, &|x, y| m.map(x, y), interp)
 }
 
+/// Cage-transforms a surface's content.
+pub fn cage_surface(surf: &Surface, cage: &Cage, interp: Interp) -> Surface {
+    let b = surf.content_bounds();
+    if cage.is_identity() || b.is_empty() {
+        return surf.clone();
+    }
+    warp_mesh_surface(surf, b, &|x, y| cage.map(x, y), interp)
+}
+
 /// Smart-filter hook: re-applies a stored Liquify / Puppet / Perspective Warp to a rendered
 /// smart object (`None` for other ids).
 pub fn apply_to_surface(id: &str, params: &Value, surf: &Surface, canvas: Rect) -> Option<Surface> {
@@ -184,6 +231,7 @@ pub fn apply_to_surface(id: &str, params: &Value, surf: &Surface, canvas: Rect) 
         // A stored warp too far to render leaves the smart object as it is (#1019).
         PUPPET | PUPPET_SMART => Some(puppet_surface(surf, &puppet_params(id, params).ok()?, interp(params)).unwrap_or_else(|| surf.clone())),
         PERSPECTIVE | PERSPECTIVE_SMART => Some(perspective_surface(surf, &perspective_params(id, params).ok()?, interp(params))),
+        CAGE => Some(cage_surface(surf, &cage_params(id, params).ok()?, interp(params))),
         _ => None,
     }
 }
@@ -380,10 +428,60 @@ fn perspective(s: &mut Session, p: &Value, cmd: &str) -> Result<Value> {
     Ok(r)
 }
 
+fn cage(s: &mut Session, p: &Value) -> Result<Value> {
+    let cage = cage_params(CAGE, p)?;
+    let id = target(s, p)?;
+    let smart = matches!(s.active().and_then(|d| d.doc.layer(id)).map(|l| &l.content), Some(LayerContent::Smart(_)));
+    if cage.is_identity() && !smart {
+        return Ok(json!({"layer": id.0, "changed": false}));
+    }
+    let it = interp(p);
+    let mask_fn = |m: &Surface, sel: Option<&Surface>| {
+        let f = |x, y| cage.map(x, y);
+        let whole = |m: &Surface| Ok(warp_mesh_gray(m, &f, Interp::Bilinear));
+        match sel {
+            Some(sel) => crate::transform_cmds::move_gray_selected(m, sel, &|lifted, src| Ok(warp_mesh_surface(lifted, src, &f, Interp::Bilinear)), &whole),
+            None => whole(m),
+        }
+    };
+    run_on_layer(s, CAGE, "Cage Transform", p, true, &|surf, sel, _| deform_selected(surf, sel, &|x| Ok(cage_surface(x, &cage, it))), Some(&mask_fn))
+}
+
+/// Edit › Transform 3D: turn the layer about its centre in space and project it back, as one
+/// perspective plane.
+fn transform_3d(s: &mut Session, p: &Value) -> Result<Value> {
+    let num = |k: &str, lo: f64, hi: f64, d: f64| -> Result<f64> {
+        let v = p.get(k).map_or(Some(d), Value::as_f64).filter(|v| v.is_finite() && (lo..=hi).contains(v));
+        v.ok_or_else(|| bad(TRANSFORM_3D, format!("`{k}` must be {lo}..{hi}")))
+    };
+    let (rx, ry, rz) = (num("rotateX", -89.0, 89.0, 0.0)?, num("rotateY", -89.0, 89.0, 0.0)?, num("rotateZ", -360.0, 360.0, 0.0)?);
+    let id = target(s, p)?;
+    let b = s.active().and_then(|d| d.doc.layer(id)).and_then(|l| l.surface()).map(Surface::content_bounds).unwrap_or(Rect::EMPTY);
+    if b.is_empty() {
+        return Ok(json!({"layer": id.0, "changed": false}));
+    }
+    let auto = f64::from(b.width().max(b.height())) * 1.5;
+    let distance = num("distance", 1.0, 1e6, auto)?;
+    let quad = transform_3d_quad(b, rx, ry, rz, distance).ok_or_else(|| bad(TRANSFORM_3D, "the layer would pass through the eye: raise `distance` or lower the angles"))?;
+    let (w, h) = (f64::from(b.x1), f64::from(b.y1));
+    let (x0, y0) = (f64::from(b.x0), f64::from(b.y0));
+    let src = [[x0, y0], [w, y0], [w, h], [x0, h]];
+    let mut q = p.clone();
+    if let Value::Object(m) = &mut q {
+        for k in ["rotateX", "rotateY", "rotateZ", "distance"] {
+            m.remove(k);
+        }
+        m.insert("planes".into(), json!([{"src": src, "dst": quad}]));
+    }
+    perspective(s, &q, PERSPECTIVE)
+}
+
 pub fn specs() -> Vec<CommandSpec> {
     const L: &str = r##"{"strokes":[{"tool":"forwardWarp|reconstruct|smooth|twirlCw|twirlCcw|pucker|bloat|pushLeft|freeze|thaw|lassoMask|reconstructAll","size":px=100,"density":0-100=50,"pressure":0-100=100,"rate":0-100=80,"points":[[x,y,pressure?]…],"amount":%? (reconstructAll; lassoMask: 1 freezes the polygon in points, 0 thaws it)}…],"meshSize":px? (field resolution, px per node; default 2, or 4 above 4 MP),"layer":id?} — strokes replay in order on a fresh field; a selection limits the effect; on a smart object it becomes a smart filter"##;
     const P: &str = r##"{"pins":[{"src":[x,y],"dst":[x,y],"rotate":deg?,"depth":n?}…],"mode":"rigid|normal|distort"="normal","density":"fewer|normal|more"="normal","expansion":px=2,"interpolation":"bicubic|bilinear|nearest","layer":id?} — mesh over the opaque region, as-rigid-as-possible; on a smart object it becomes a smart filter"##;
     const Q: &str = r##"{"planes":[{"src":[[x,y]×4],"dst":[[x,y]×4]}…] (corners clockwise from top-left; corners that coincide in src are linked),"straighten":"horizontal|vertical|auto"?,"interpolation":"bicubic|bilinear|nearest","layer":id?}"##;
+    const C: &str = r##"{"cage":{"src":[[x,y]…],"dst":[[x,y]…]} (a closed polygon around the content and where each corner went; 3+ corners, any simple polygon),"interpolation":"bicubic|bilinear|nearest","layer":id?} — mean value coordinates"##;
+    const T: &str = r##"{"rotateX":deg=0 (positive tilts the top away),"rotateY":deg=0 (positive tilts the right side away),"rotateZ":deg=0,"distance":px? (eye to layer; default 1.5× the layer's longer side),"interpolation":"bicubic|bilinear|nearest","layer":id?}"##;
     vec![
         CommandSpec {
             id: LIQUIFY,
@@ -434,6 +532,26 @@ pub fn specs() -> Vec<CommandSpec> {
             enabled: smart_layer,
             journal: true,
             run: |s, p| perspective(s, p, PERSPECTIVE_SMART),
+        },
+        CommandSpec {
+            id: CAGE,
+            label: "Cage Transform",
+            menu: &["Edit"],
+            shortcut: None,
+            params: C,
+            enabled: pixel_layer,
+            journal: true,
+            run: cage,
+        },
+        CommandSpec {
+            id: TRANSFORM_3D,
+            label: "Transform 3D",
+            menu: &["Edit"],
+            shortcut: None,
+            params: T,
+            enabled: pixel_layer,
+            journal: true,
+            run: transform_3d,
         },
     ]
 }

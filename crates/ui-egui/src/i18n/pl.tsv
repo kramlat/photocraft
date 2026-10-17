@@ -3972,3 +3972,18 @@ curves	Smooth	Wygładź
 	Ink Tool	Narzędzie Tusz
 	MyPaint Brush Tool	Narzędzie Pędzel MyPaint
 	Art History Brush Tool	Narzędzie Pędzel historii artystyczny
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Narzędzie Klonowanie bezszwowe
+	Cage Transform Tool	Narzędzie Transformacja klatką
+	Transform 3D Tool	Narzędzie Transformacja 3D
+	Cage Transform: drag the corner points; click an edge to add one	Transformacja klatką: przeciągaj punkty narożne; kliknij krawędź, aby dodać punkt
+	Cage Transform is not active	Transformacja klatką nie jest aktywna
+	Commit Cage Transform ({key})	Zatwierdź transformację klatką ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Transformacja 3D: przeciągnij, aby obrócić warstwę (przytrzymaj ⌥, aby obrócić w płaszczyźnie)
+	Roll	Obrót w płaszczyźnie
+	Commit Transform 3D ({key})	Zatwierdź transformację 3D ({key})
+	Seamless Clone needs a pixel layer with content	Klonowanie bezszwowe wymaga warstwy pikseli z zawartością
+@plural	{n} point|{n} points	{n} punkt|{n} punkty|{n} punktów
+	Cage Transform	Transformacja klatką
+	Transform 3D	Transformacja 3D

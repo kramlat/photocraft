@@ -17,6 +17,7 @@ use serde_json::{Value, json};
 
 use crate::PhotocraftApp;
 use crate::canvas::{ToolEvent, ViewXform};
+use crate::state::Tool;
 
 /// Runtime state of the distortion modes (not serialisable: textures, solvers).
 #[derive(Default)]
@@ -24,6 +25,13 @@ pub struct Distort {
     pub liquify: Option<crate::liquify_ui::LiquifyDialog>,
     pub puppet: Option<crate::puppet_ui::PuppetSession>,
     pub perspective: Option<crate::perspective_ui::PerspSession>,
+    pub cage: Option<crate::cage_ui::CageSession>,
+    /// The Seamless Clone tool's drag in progress.
+    pub seamless: Option<crate::seamless_ui::SeamlessDrag>,
+    /// The tool last seen by [`tool_sync`], to start a mode when its tool is picked.
+    last_tool: Option<crate::state::Tool>,
+    /// A press with a mode tool and no session: start one on the next frame.
+    pub want_begin: bool,
     pub vanishing: Option<crate::vp_ui::VpSession>,
     /// Filter Gallery dialog (gallery_ui).
     pub gallery: Option<crate::gallery_ui::GalleryDialog>,
@@ -33,7 +41,7 @@ pub struct Distort {
 
 impl Distort {
     pub fn active(&self) -> bool {
-        self.liquify.is_some() || self.puppet.is_some() || self.perspective.is_some() || self.vanishing.is_some()
+        self.liquify.is_some() || self.puppet.is_some() || self.perspective.is_some() || self.cage.is_some() || self.vanishing.is_some()
     }
 
     /// Short description for `ui.inspect`.
@@ -42,6 +50,7 @@ impl Distort {
             "liquify": self.liquify.as_ref().map(|d| d.describe()),
             "puppet": self.puppet.as_ref().map(|p| p.describe()),
             "perspective": self.perspective.as_ref().map(|p| p.describe()),
+            "cage": self.cage.as_ref().map(|p| p.describe()),
             "vanishingPoint": self.vanishing.as_ref().map(|v| v.describe()),
             "gallery": self.gallery.as_ref().map(|g| g.describe()),
         })
@@ -99,6 +108,9 @@ pub fn display_doc(app: &PhotocraftApp, idx: usize) -> Option<(Arc<Document>, u6
     if let Some(p) = &app.distort.perspective {
         return Some((p.preview_doc.clone(), (1 << 42) + p.key));
     }
+    if let Some(p) = &app.distort.cage {
+        return Some((p.preview_doc.clone(), (1 << 42) + p.key));
+    }
     None
 }
 
@@ -123,6 +135,10 @@ pub fn menu(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &Val
         "edit.perspectiveWarp" | "layer.smartObjects.perspectiveWarp" if ui.is_some() && app.distort.perspective.is_some() => {
             Some(crate::perspective_ui::control(app, ui.unwrap_or(&Value::Null)))
         }
+        "edit.cageTransform" if empty => Some(crate::cage_ui::begin(app, ctx, false).map(|_| json!({"cage": app.distort.describe()["cage"]}))),
+        "edit.cageTransform" if ui.is_some() && app.distort.cage.is_some() => Some(crate::cage_ui::control(app, ui.unwrap_or(&Value::Null))),
+        "edit.transform3d" if empty => Some(crate::perspective_ui::begin_3d(app, ctx, false).map(|_| json!({"perspective": app.distort.describe()["perspective"]}))),
+        "edit.transform3d" if ui.is_some() && app.distort.perspective.is_some() => Some(crate::perspective_ui::control(app, ui.unwrap_or(&Value::Null))),
         "filter.vanishingPoint" if empty => Some(crate::vp_ui::begin(app, ctx).map(|_| json!({"vanishingPoint": app.distort.describe()["vanishingPoint"]}))),
         "filter.vanishingPoint" if ui.is_some() && app.distort.vanishing.is_some() => Some(crate::vp_ui::control(app, ui.unwrap_or(&Value::Null))),
         _ => None,
@@ -143,11 +159,20 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) ->
         crate::perspective_ui::pointer(app, ev, mods);
         return true;
     }
+    if app.distort.cage.is_some() {
+        crate::cage_ui::pointer(app, ev, mods);
+        return true;
+    }
     if app.distort.vanishing.is_some() {
         crate::vp_ui::pointer(app, ev, mods);
         return true;
     }
-    false
+    if matches!(ev, ToolEvent::Down { .. }) && matches!(app.ui.tool, Tool::CageTransform | Tool::Transform3D) {
+        // The tool is selected but its mode ended (committed or cancelled): a press starts it again.
+        app.distort.want_begin = true;
+        return true;
+    }
+    crate::seamless_ui::pointer(app, ev)
 }
 
 /// Keyboard: ↩ commits, Esc cancels (and Liquify's own shortcuts). True when the key handling
@@ -195,6 +220,14 @@ pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
         }
         return true;
     }
+    if app.distort.cage.is_some() {
+        if enter(ctx) {
+            crate::cage_ui::commit(app);
+        } else if esc(ctx) {
+            app.distort.cage = None;
+        }
+        return true;
+    }
     if app.distort.vanishing.is_some() {
         if enter(ctx) {
             let _ = crate::vp_ui::commit(app);
@@ -216,6 +249,12 @@ pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform
     if let Some(p) = &app.distort.perspective {
         crate::perspective_ui::draw(p, painter, xf);
     }
+    if let Some(p) = &app.distort.cage {
+        crate::cage_ui::draw(p, painter, xf);
+    }
+    if let Some(d) = &app.distort.seamless {
+        crate::seamless_ui::draw(d, painter, xf);
+    }
     if let Some(v) = &app.distort.vanishing {
         crate::vp_ui::draw(v, painter, xf);
     }
@@ -229,6 +268,10 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
     }
     if app.distort.perspective.is_some() {
         crate::perspective_ui::options_bar(app, ui);
+        return true;
+    }
+    if app.distort.cage.is_some() {
+        crate::cage_ui::options_bar(app, ui);
         return true;
     }
     if app.distort.vanishing.is_some() {
@@ -250,6 +293,7 @@ pub fn drop_foreign(app: &mut PhotocraftApp) {
         app.distort.liquify = None;
         app.distort.puppet = None;
         app.distort.perspective = None;
+        app.distort.cage = None;
         app.distort.vanishing = None;
         app.distort.gallery = None;
         app.distort.owner = None;
@@ -259,6 +303,7 @@ pub fn drop_foreign(app: &mut PhotocraftApp) {
 /// Full-window dialogs (Liquify, Filter Gallery).
 pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
     drop_foreign(app);
+    tool_sync(app, ctx);
     if app.distort.gallery.is_some() {
         crate::gallery_ui::show(app, ctx);
     }
@@ -271,4 +316,31 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
 pub(crate) fn tolerance(app: &PhotocraftApp) -> f64 {
     let z = app.point_zoom().max(0.01);
     8.0 / f64::from(z)
+}
+
+/// Cage Transform and Transform 3D are modes with a tool each: picking the tool (or pressing on the
+/// canvas with it after a commit) starts the mode, picking another tool ends a mode its tool began.
+fn tool_sync(app: &mut PhotocraftApp, ctx: &egui::Context) {
+    let tool = app.ui.tool;
+    let picked = app.distort.last_tool != Some(tool);
+    app.distort.last_tool = Some(tool);
+    if picked {
+        if tool != Tool::CageTransform && app.distort.cage.as_ref().is_some_and(|c| c.from_tool) {
+            app.distort.cage = None;
+        }
+        if tool != Tool::Transform3D && app.distort.perspective.as_ref().is_some_and(|p| p.from_tool) {
+            app.distort.perspective = None;
+        }
+    }
+    if !(picked || std::mem::take(&mut app.distort.want_begin)) || app.distort.active() || app.session.active().is_none() {
+        return;
+    }
+    let r = match tool {
+        Tool::CageTransform => crate::cage_ui::begin(app, ctx, true),
+        Tool::Transform3D => crate::perspective_ui::begin_3d(app, ctx, true),
+        _ => return,
+    };
+    if let Err(e) = r {
+        app.ui.status = e;
+    }
 }

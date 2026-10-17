@@ -3377,3 +3377,18 @@ curves	Smooth	Haluskan
 	Ink Tool	Alat Tinta
 	MyPaint Brush Tool	Alat Kuas MyPaint
 	Art History Brush Tool	Alat Kuas Riwayat Seni
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Alat Clone Mulus
+	Cage Transform Tool	Alat Transformasi Kerangka
+	Transform 3D Tool	Alat Transformasi 3D
+	Cage Transform: drag the corner points; click an edge to add one	Transformasi Kerangka: seret titik sudut; klik tepi untuk menambah titik
+	Cage Transform is not active	Transformasi Kerangka tidak aktif
+	Commit Cage Transform ({key})	Terapkan Transformasi Kerangka ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Transformasi 3D: seret untuk memutar layer (tahan ⌥ untuk memutar pada bidang)
+	Roll	Putar pada bidang
+	Commit Transform 3D ({key})	Terapkan Transformasi 3D ({key})
+	Seamless Clone needs a pixel layer with content	Clone Mulus memerlukan layer piksel yang berisi
+@plural	{n} point|{n} points	{n} titik
+	Cage Transform	Transformasi Kerangka
+	Transform 3D	Transformasi 3D

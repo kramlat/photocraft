@@ -62,9 +62,30 @@ direction GIMP offers), ⬜ = to do. Adobe column: whether Photoshop has it too 
 Why these are still open: no test files of any of them exist on the development machine and no other tool can read them to compare against, so a reader would be unchecked (PSP in particular has many versions and layer types). PVR, CEL and Dr. Halo also need a palette or hardware layout GIMP itself documents poorly; FAX G3 here is GIMP's own `Research` flavour; WMF is a vector format that wants a renderer; MNG is an animated PNG variant. Send a sample file of any of them and it moves up the list.
 | Export-only: C source, HTML table, ASCII art | ✅ | no |
 
+## Tools
+
+GIMP's toolbox against PhotoCraft's, under Photoshop names and in the flyout a Photoshop user would look in. ✅ = done.
+
+| GIMP tool | PhotoCraft | Flyout |
+|---|---|---|
+| Paintbrush, Pencil, Airbrush | Brush (build-up is the airbrush), Pencil | Brush |
+| Ink | Ink (speed-sensitive nib) | Brush |
+| MyPaint Brush | MyPaint Brush: libmypaint master port, `.myb` v3 incl. spectral pigment mixing, bundled CC0 brushes, Import… | Brush |
+| Clone, Heal, Perspective Clone | Clone Stamp, Healing Brush (perspective via Vanishing Point) | Clone Stamp |
+| Seamless Clone | Seamless Clone: drag the layer, Poisson-fitted to what is below | Clone Stamp |
+| (history) | History Brush, Art History Brush; the History panel's source column picks a state or snapshot | History Brush |
+| Paint Select, Foreground Select | Quick Selection, Object Selection | Selection |
+| Warp Transform | Liquify | Filter |
+| N-Point Deformation | Puppet Warp | Edit |
+| Cage Transform | Cage Transform: mean value coordinates, click an edge to add a corner | Move |
+| Unified Transform, Perspective, Rotate, Scale, Shear, Flip | Free Transform and its modes | Edit |
+| Transform 3D (GIMP 3.2) | Transform 3D: drag to tilt and pan, ⌥ rolls, with a numeric bar | Move |
+
+Notes: MyPaint brushes are looked up in the bundled set, then the system folders (`/usr/share/mypaint-brushes`, `~/.local/share/mypaint/brushes`); the Arch package could list `mypaint-brushes` as optional. Against a libmypaint build, 156 of the 196 bundled brushes land within 1% on a blank canvas; the random and smudge ones differ statistically (their sampling draws from `rand()`).
+
 ## Next
 
-The filter list is complete. Next: the testing in [parity-testing.md](parity-testing.md), and the
+The filter list and the toolbox are complete. Next: the testing in [parity-testing.md](parity-testing.md), and the
 remaining file formats in the table above.
 
 ## Licence note

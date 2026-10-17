@@ -4104,3 +4104,18 @@ cameraData	Lens	Lens
 	Ink Tool	Mürekkep Aracı
 	MyPaint Brush Tool	MyPaint Fırça Aracı
 	Art History Brush Tool	Sanat Geçmişi Fırçası Aracı
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Kusursuz Klonlama Aracı
+	Cage Transform Tool	Kafes Dönüşümü Aracı
+	Transform 3D Tool	3D Dönüşüm Aracı
+	Cage Transform: drag the corner points; click an edge to add one	Kafes Dönüşümü: köşe noktalarını sürükleyin; nokta eklemek için bir kenara tıklayın
+	Cage Transform is not active	Kafes Dönüşümü etkin değil
+	Commit Cage Transform ({key})	Kafes Dönüşümünü uygula ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D Dönüşüm: katmanı döndürmek için sürükleyin (düzlem içinde döndürmek için ⌥ tuşunu basılı tutun)
+	Roll	Düzlem içi dönüş
+	Commit Transform 3D ({key})	3D Dönüşümü uygula ({key})
+	Seamless Clone needs a pixel layer with content	Kusursuz Klonlama, içeriği olan bir piksel katmanı gerektirir
+@plural	{n} point|{n} points	{n} nokta
+	Cage Transform	Kafes Dönüşümü
+	Transform 3D	3D Dönüşüm

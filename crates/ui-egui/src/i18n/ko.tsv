@@ -3556,3 +3556,18 @@ curves	Smooth	매끄럽게
 	Ink Tool	잉크 도구
 	MyPaint Brush Tool	MyPaint 브러시 도구
 	Art History Brush Tool	예술 기록 브러시 도구
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	이음매 없는 복제 도구
+	Cage Transform Tool	케이지 변형 도구
+	Transform 3D Tool	3D 변형 도구
+	Cage Transform: drag the corner points; click an edge to add one	케이지 변형: 모서리 점을 드래그하세요. 가장자리를 클릭하면 점이 추가됩니다
+	Cage Transform is not active	케이지 변형이 활성화되어 있지 않습니다
+	Commit Cage Transform ({key})	케이지 변형 적용 ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D 변형: 드래그하여 레이어를 회전합니다 (⌥를 누르면 평면 회전)
+	Roll	평면 회전
+	Commit Transform 3D ({key})	3D 변형 적용 ({key})
+	Seamless Clone needs a pixel layer with content	이음매 없는 복제에는 내용이 있는 픽셀 레이어가 필요합니다
+@plural	{n} point|{n} points	{n}개의 점
+	Cage Transform	케이지 변형
+	Transform 3D	3D 변형

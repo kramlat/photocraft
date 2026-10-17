@@ -75,6 +75,7 @@ mod other2;
 pub mod paint;
 pub mod panorama;
 mod par;
+pub mod cage;
 pub mod perspective;
 mod photo_util;
 mod pixelate;

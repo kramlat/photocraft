@@ -4134,3 +4134,18 @@ curves	Smooth	Vloeiend maken
 	Ink Tool	Inktgereedschap
 	MyPaint Brush Tool	MyPaint-penseelgereedschap
 	Art History Brush Tool	Kunstgeschiedenispenseel-gereedschap
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Gereedschap Naadloos klonen
+	Cage Transform Tool	Gereedschap Kooitransformatie
+	Transform 3D Tool	Gereedschap 3D-transformatie
+	Cage Transform: drag the corner points; click an edge to add one	Kooitransformatie: sleep de hoekpunten; klik op een rand om een punt toe te voegen
+	Cage Transform is not active	Kooitransformatie is niet actief
+	Commit Cage Transform ({key})	Kooitransformatie toepassen ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D-transformatie: sleep om de laag te draaien (houd ⌥ ingedrukt om in het vlak te roteren)
+	Roll	Rotatie in het vlak
+	Commit Transform 3D ({key})	3D-transformatie toepassen ({key})
+	Seamless Clone needs a pixel layer with content	Naadloos klonen vereist een pixellaag met inhoud
+@plural	{n} point|{n} points	{n} punt|{n} punten
+	Cage Transform	Kooitransformatie
+	Transform 3D	3D-transformatie

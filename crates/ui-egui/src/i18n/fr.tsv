@@ -3390,3 +3390,18 @@ curves	Smooth	Lisser
 	Ink Tool	Outil Encre
 	MyPaint Brush Tool	Outil Pinceau MyPaint
 	Art History Brush Tool	Outil Pinceau d'historique artistique
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Outil Clonage sans raccord
+	Cage Transform Tool	Outil Transformation par cage
+	Transform 3D Tool	Outil Transformation 3D
+	Cage Transform: drag the corner points; click an edge to add one	Transformation par cage : faites glisser les points d'angle ; cliquez sur un bord pour en ajouter un
+	Cage Transform is not active	La transformation par cage n'est pas active
+	Commit Cage Transform ({key})	Valider la transformation par cage ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	Transformation 3D : faites glisser pour faire pivoter le calque (maintenez ⌥ pour le faire tourner dans son plan)
+	Roll	Rotation dans le plan
+	Commit Transform 3D ({key})	Valider la transformation 3D ({key})
+	Seamless Clone needs a pixel layer with content	Le clonage sans raccord nécessite un calque de pixels avec du contenu
+@plural	{n} point|{n} points	{n} point|{n} points
+	Cage Transform	Transformation par cage
+	Transform 3D	Transformation 3D

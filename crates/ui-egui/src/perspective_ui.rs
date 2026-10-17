@@ -35,6 +35,19 @@ enum Drag {
         group: Vec<(usize, usize)>,
         offset: [f64; 2],
     },
+    /// Transform 3D: the pointer and the angles when the press began.
+    Turn {
+        from: [f64; 2],
+        angles: [f64; 3],
+        roll: bool,
+    },
+}
+
+/// Transform 3D state: the layer turned about its centre (degrees), seen from `distance` px.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Turn3d {
+    pub angles: [f64; 3],
+    pub distance: f64,
 }
 
 pub struct PerspSession {
@@ -50,13 +63,29 @@ pub struct PerspSession {
     pub preview_doc: Arc<Document>,
     /// Preview mesh: (screen-independent destination points) for a 40×40 grid over `bounds`.
     grid: Vec<[f64; 2]>,
+    /// Set by Transform 3D, which drives the plane from angles instead of corners.
+    pub turn: Option<Turn3d>,
+    /// Started by selecting the Transform 3D tool (so changing tool ends it).
+    pub from_tool: bool,
 }
 
 const GRID: usize = 40;
 
 impl PerspSession {
     pub fn describe(&self) -> Value {
-        json!({"layer": self.layer.0, "mode": self.mode, "planes": self.planes})
+        json!({"layer": self.layer.0, "mode": self.mode, "planes": self.planes, "rotateX": self.turn.map(|t| t.angles[0]), "rotateY": self.turn.map(|t| t.angles[1]), "rotateZ": self.turn.map(|t| t.angles[2])})
+    }
+
+    /// Transform 3D: the plane for the current angles (the previous one stays when they put the layer behind the eye).
+    fn apply_turn(&mut self) {
+        let Some(t) = self.turn else { return };
+        let b = self.bounds;
+        let (x0, y0, x1, y1) = (f64::from(b.x0), f64::from(b.y0), f64::from(b.x1), f64::from(b.y1));
+        let src = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+        if let Some(dst) = photocraft_engine::distort_cmds::transform_3d_quad(b, t.angles[0], t.angles[1], t.angles[2], t.distance) {
+            self.planes = vec![Plane { src, dst }];
+        }
+        self.update_grid();
     }
 
     fn update_grid(&mut self) {
@@ -118,6 +147,15 @@ impl PerspSession {
 }
 
 pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context, command: &str) -> Result<(), String> {
+    start(app, ctx, command, false, false)
+}
+
+/// Edit › Transform 3D (or its tool): drag to turn the layer in space.
+pub fn begin_3d(app: &mut PhotocraftApp, ctx: &egui::Context, from_tool: bool) -> Result<(), String> {
+    start(app, ctx, photocraft_engine::distort_cmds::TRANSFORM_3D, true, from_tool)
+}
+
+fn start(app: &mut PhotocraftApp, ctx: &egui::Context, command: &str, turn: bool, from_tool: bool) -> Result<(), String> {
     if app.ui.transform.is_some() {
         return Err("finish Free Transform first".into());
     }
@@ -144,16 +182,29 @@ pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context, command: &str) -> Res
         opacity,
         preview_doc,
         grid: Vec::new(),
+        turn: None,
+        from_tool,
     };
-    s.update_grid();
+    if turn {
+        s.mode = PerspMode::Warp;
+        s.turn = Some(Turn3d { angles: [0.0; 3], distance: f64::from(bounds.width().max(bounds.height())) * 1.5 });
+        s.apply_turn();
+        app.ui.status = tl!("Transform 3D: drag to turn the layer (hold ⌥ to roll)").into();
+    } else {
+        s.update_grid();
+        app.ui.status = tl!("Perspective Warp: draw planes along the image's perspective, then switch to Warp").into();
+    }
     app.distort.perspective = Some(s);
-    app.ui.status = tl!("Perspective Warp: draw planes along the image's perspective, then switch to Warp").into();
     Ok(())
 }
 
 pub fn commit(app: &mut PhotocraftApp) {
     let Some(s) = app.distort.perspective.take() else { return };
     if s.planes.is_empty() || PerspectiveMap::is_identity(&s.planes) {
+        return;
+    }
+    if let Some(t) = s.turn {
+        let _ = app.run(&s.command, json!({"rotateX": t.angles[0], "rotateY": t.angles[1], "rotateZ": t.angles[2], "distance": t.distance, "layer": s.layer.0}));
         return;
     }
     let _ = app.run(&s.command, json!({"planes": s.planes, "layer": s.layer.0}));
@@ -179,6 +230,23 @@ pub fn control(app: &mut PhotocraftApp, ui: &Value) -> Result<Value, String> {
         return Ok(json!({"cancelled": true}));
     }
     let s = app.distort.perspective.as_mut().ok_or(tl!("Perspective Warp is not active"))?;
+    if s.turn.is_some() {
+        for (i, k) in ["rotateX", "rotateY", "rotateZ"].iter().enumerate() {
+            if let Some(v) = ui.get(*k).and_then(Value::as_f64).filter(|v| v.is_finite()) {
+                let max = if i == 2 { 360.0 } else { 85.0 };
+                if let Some(t) = s.turn.as_mut() {
+                    t.angles[i] = v.clamp(-max, max);
+                }
+            }
+        }
+        if let Some(d) = ui.get("distance").and_then(Value::as_f64).filter(|d| d.is_finite() && *d >= 1.0)
+            && let Some(t) = s.turn.as_mut()
+        {
+            t.distance = d;
+        }
+        s.apply_turn();
+        return Ok(s.describe());
+    }
     if let Some(m) = ui.get("mode").and_then(Value::as_str) {
         set_mode(s, if m == "warp" { PerspMode::Warp } else { PerspMode::Layout });
     }
@@ -198,7 +266,12 @@ pub fn control(app: &mut PhotocraftApp, ui: &Value) -> Result<Value, String> {
 
 pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, _mods: egui::Modifiers) {
     let tol = crate::distort_ui::tolerance(app);
+    let zoom = f64::from(app.point_zoom().max(0.01));
     let Some(s) = app.distort.perspective.as_mut() else { return };
+    if let Some(t) = s.turn {
+        turn_pointer(s, t, ev, _mods, zoom);
+        return;
+    }
     match ev {
         ToolEvent::Down { x, y, .. } => {
             let p = [x, y];
@@ -225,7 +298,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, _mods: egui::Modifiers) {
                     s.update_grid();
                 }
             }
-            None => {}
+            Some(Drag::Turn { .. }) | None => {}
         },
         ToolEvent::Up { x, y } => {
             match s.drag.take() {
@@ -248,9 +321,35 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, _mods: egui::Modifiers) {
                     }
                     s.set_corner(&group, q);
                 }
-                None => {}
+                Some(Drag::Turn { .. }) | None => {}
             }
             s.update_grid();
+        }
+    }
+}
+
+/// Transform 3D: a drag across the canvas turns the layer; ⌥ rolls it instead.
+fn turn_pointer(s: &mut PerspSession, t: Turn3d, ev: ToolEvent, mods: egui::Modifiers, zoom: f64) {
+    const DEG_PER_SCREEN_PX: f64 = 0.35;
+    match ev {
+        ToolEvent::Down { x, y, .. } => s.drag = Some(Drag::Turn { from: [x, y], angles: t.angles, roll: mods.alt }),
+        ToolEvent::Move { x, y, .. } | ToolEvent::Up { x, y } => {
+            let Some(Drag::Turn { from, angles, roll }) = s.drag else { return };
+            let (dx, dy) = ((x - from[0]) * zoom * DEG_PER_SCREEN_PX, (y - from[1]) * zoom * DEG_PER_SCREEN_PX);
+            let mut a = angles;
+            if roll {
+                a[2] = (angles[2] + dx).clamp(-360.0, 360.0);
+            } else {
+                a[1] = (angles[1] + dx).clamp(-85.0, 85.0);
+                a[0] = (angles[0] - dy).clamp(-85.0, 85.0);
+            }
+            if let Some(t) = s.turn.as_mut() {
+                t.angles = a;
+            }
+            s.apply_turn();
+            if matches!(ev, ToolEvent::Up { .. }) {
+                s.drag = None;
+            }
         }
     }
 }
@@ -286,6 +385,9 @@ pub fn draw(s: &PerspSession, painter: &egui::Painter, xf: &ViewXform) {
         let q = if warp { &p.dst } else { &p.src };
         let pts: Vec<Pos2> = q.iter().map(|c| scr(*c)).collect();
         painter.add(egui::Shape::closed_line(pts.clone(), Stroke::new(1.5, accent)));
+        if s.turn.is_some() {
+            continue;
+        }
         for c in pts {
             painter.circle_filled(c, 4.5, Color32::WHITE);
             painter.circle_stroke(c, 4.5, Stroke::new(1.25, accent));
@@ -299,6 +401,10 @@ pub fn draw(s: &PerspSession, painter: &egui::Painter, xf: &ViewXform) {
 
 pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     let Some(s) = app.distort.perspective.as_mut() else { return };
+    if s.turn.is_some() {
+        turn_options(app, ui);
+        return;
+    }
     if crate::widgets::pill_tab(ui, "Layout", s.mode == PerspMode::Layout).clicked() {
         set_mode(s, PerspMode::Layout);
     }
@@ -327,6 +433,38 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
         if crate::widgets::primary_button(ui, "✓", 32.0)
             .on_hover_text(crate::i18n::fmt(tl!("Commit Perspective Warp ({key})"), &[("key", &crate::shortcuts::pretty("Enter"))]))
+            .clicked()
+        {
+            commit(app);
+        } else if crate::widgets::secondary_button(ui, "⊘", 32.0).on_hover_text(tl!("Cancel (Esc)")).clicked() {
+            app.distort.perspective = None;
+        }
+    });
+}
+
+fn turn_options(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+    let Some(s) = app.distort.perspective.as_mut() else { return };
+    let Some(mut t) = s.turn else { return };
+    let before = t;
+    for (i, label) in [tl!("Tilt"), tl!("Pan"), tl!("Roll")].into_iter().enumerate() {
+        ui.label(label);
+        let max = if i == 2 { 360.0 } else { 85.0 };
+        ui.add(egui::DragValue::new(&mut t.angles[i]).range(-max..=max).speed(0.5).suffix("°"));
+    }
+    ui.label(tl!("Distance"));
+    ui.add(egui::DragValue::new(&mut t.distance).range(1.0..=1e6).speed(5.0).suffix(" px"));
+    if t != before {
+        s.turn = Some(t);
+        s.apply_turn();
+    }
+    if ui.button(tl!("Reset")).clicked() {
+        t.angles = [0.0; 3];
+        s.turn = Some(t);
+        s.apply_turn();
+    }
+    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+        if crate::widgets::primary_button(ui, "✓", 32.0)
+            .on_hover_text(crate::i18n::fmt(tl!("Commit Transform 3D ({key})"), &[("key", &crate::shortcuts::pretty("Enter"))]))
             .clicked()
         {
             commit(app);

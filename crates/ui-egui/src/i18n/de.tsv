@@ -3377,3 +3377,18 @@ curves	Smooth	Glätten
 	Ink Tool	Tuschefeder-Werkzeug
 	MyPaint Brush Tool	MyPaint-Pinsel-Werkzeug
 	Art History Brush Tool	Kunstprotokollpinsel-Werkzeug
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	Nahtlos-klonen-Werkzeug
+	Cage Transform Tool	Käfigtransformation-Werkzeug
+	Transform 3D Tool	3D-Transformation-Werkzeug
+	Cage Transform: drag the corner points; click an edge to add one	Käfigtransformation: Eckpunkte ziehen; auf eine Kante klicken, um einen Punkt hinzuzufügen
+	Cage Transform is not active	Käfigtransformation ist nicht aktiv
+	Commit Cage Transform ({key})	Käfigtransformation bestätigen ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D-Transformation: Ziehen, um die Ebene zu drehen (⌥ gedrückt halten zum Rollen)
+	Roll	Rollen
+	Commit Transform 3D ({key})	3D-Transformation bestätigen ({key})
+	Seamless Clone needs a pixel layer with content	Nahtloses Klonen benötigt eine Pixelebene mit Inhalt
+@plural	{n} point|{n} points	{n} Punkt|{n} Punkte
+	Cage Transform	Käfigtransformation
+	Transform 3D	3D-Transformation

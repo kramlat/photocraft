@@ -4050,3 +4050,18 @@ curves	Smooth	スムーズ
 	Ink Tool	インクツール
 	MyPaint Brush Tool	MyPaint ブラシツール
 	Art History Brush Tool	アートヒストリーブラシツール
+
+# Seamless Clone, Cage Transform and Transform 3D tools
+	Seamless Clone Tool	シームレスクローンツール
+	Cage Transform Tool	ケージ変形ツール
+	Transform 3D Tool	3D変形ツール
+	Cage Transform: drag the corner points; click an edge to add one	ケージ変形: 角の点をドラッグします。辺をクリックすると点を追加します
+	Cage Transform is not active	ケージ変形は有効ではありません
+	Commit Cage Transform ({key})	ケージ変形を確定 ({key})
+	Transform 3D: drag to turn the layer (hold ⌥ to roll)	3D変形: ドラッグしてレイヤーを回転します (⌥ を押しながらで面内回転)
+	Roll	面内回転
+	Commit Transform 3D ({key})	3D変形を確定 ({key})
+	Seamless Clone needs a pixel layer with content	シームレスクローンには内容のあるピクセルレイヤーが必要です
+@plural	{n} point|{n} points	{n} 個の点
+	Cage Transform	ケージ変形
+	Transform 3D	3D変形

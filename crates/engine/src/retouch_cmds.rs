@@ -595,6 +595,71 @@ fn heal_region(fmt: &PixelFormat, src: &Region, dst: &Region, mask: &[bool]) -> 
     out
 }
 
+/// Edit › Seamless Clone: move the layer by `offset` and fit its colours to the backdrop (every
+/// visible layer below it) with a Poisson solve, so the pasted object keeps its texture but takes
+/// on the surrounding light. The layer's own alpha is kept, so its outline does not change.
+fn seamless_clone_layer(s: &mut Session, p: &Value) -> Result<Value> {
+    const CMD: &str = "edit.seamlessClone";
+    let off = match p.get("offset").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_f64).collect::<Vec<_>>()) {
+        Some(v) if v.len() == 2 && v.iter().all(|x| x.is_finite() && x.abs() < 1e6) => [v[0].round() as i32, v[1].round() as i32],
+        _ => return Err(EngineError::BadParams { cmd: CMD.into(), msg: "pass `offset`: [dx, dy] in pixels".into() }),
+    };
+    let id = match p.get("layer").and_then(Value::as_u64) {
+        Some(v) => LayerId(v),
+        None => s.active().and_then(|d| d.active_layer).ok_or(EngineError::Other("no active layer".into()))?,
+    };
+    let mut changed = false;
+    s.edit("Seamless Clone", |doc, _| {
+        let pre = doc.clone();
+        let l = doc.layer_mut(id).ok_or(EngineError::NoLayer(id))?;
+        let LayerContent::Raster(surf) = &mut l.content else {
+            return Err(EngineError::Other("Seamless Clone needs a pixel layer".into()));
+        };
+        let fmt = surf.format();
+        let Some(a) = alpha_index(&fmt) else {
+            return Err(EngineError::Other("Seamless Clone needs a layer with transparency (a Background has none)".into()));
+        };
+        let b = surf.content_bounds();
+        if b.is_empty() {
+            return Ok(());
+        }
+        let g = b.translate(off[0], off[1]).inflate(2);
+        // The layer's pixels, shifted into place.
+        let mut src = Region::read(surf, g.translate(-off[0], -off[1]));
+        src.rect = g;
+        // What is behind it: the document without this layer or anything above it.
+        let mut below = pre.clone();
+        let walk: Vec<(Vec<usize>, LayerId)> = pre.walk().into_iter().map(|(path, _, l)| (path, l.id)).collect();
+        if let Some(pos) = walk.iter().position(|(_, l)| *l == id) {
+            for (path, _) in &walk[pos..] {
+                if let Some(l) = below.layer_at_mut(path) {
+                    l.visible = false;
+                }
+            }
+        }
+        let dst = composite_region(&below, None, SampleLayers::All, g, fmt);
+        let n = src.ch;
+        let mask: Vec<bool> = src.data.chunks_exact(n).map(|px| px[a] > 0.0).collect();
+        let healed = heal_region(&fmt, &src, &dst, &mask);
+        let mut out = Region::new(g, n);
+        for (i, m) in mask.iter().enumerate() {
+            if *m {
+                let (sp, hp) = (&src.data[i * n..(i + 1) * n], &healed.data[i * n..(i + 1) * n]);
+                let o = &mut out.data[i * n..(i + 1) * n];
+                o.copy_from_slice(hp);
+                o[a] = sp[a];
+            }
+        }
+        let mut next = Surface::new(fmt);
+        out.write(&mut next);
+        next.prune();
+        *surf = next;
+        changed = true;
+        Ok(())
+    })?;
+    Ok(json!({"layer": id.0, "changed": changed, "offset": off}))
+}
+
 fn healing_brush(s: &mut Session, p: &Value) -> Result<Value> {
     const CMD: &str = "paint.healingBrush";
     let (stroke, id) = parse_brush(s, p, CMD)?;
@@ -1297,6 +1362,16 @@ pub fn specs() -> Vec<CommandSpec> {
             ),
             enabled: pattern_stamp::enabled,
             run: pattern_stamp::run,
+            journal: true,
+        },
+        CommandSpec {
+            id: "edit.seamlessClone",
+            label: "Seamless Clone",
+            menu: &[],
+            shortcut: None,
+            params: r#"{"offset":[dx,dy] px,"layer":id?} → moves the layer by `offset` and fits its colours to the layers below with a Poisson solve; keeps the layer's own alpha"#,
+            enabled: has_pixel_layer,
+            run: seamless_clone_layer,
             journal: true,
         },
         CommandSpec {
