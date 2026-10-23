@@ -3571,3 +3571,9 @@ curves	Smooth	매끄럽게
 @plural	{n} point|{n} points	{n}개의 점
 	Cage Transform	케이지 변형
 	Transform 3D	3D 변형
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint 브러시
+	No brushes match	일치하는 브러시가 없습니다
+	Thumbnail size	축소판 크기
+	Import…	가져오기…

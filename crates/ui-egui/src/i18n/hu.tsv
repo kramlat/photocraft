@@ -4306,3 +4306,8 @@ cameraRaw	Yellow	Sárga
 @plural	{n} point|{n} points	{n} pont
 	Cage Transform	Ketrecátalakítás
 	Transform 3D	3D-átalakítás
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Ecsetek
+	No brushes match	Nincs egyező ecset
+	Thumbnail size	Miniatűrméret

@@ -4088,3 +4088,8 @@ curves	Smooth	Згладити
 @plural	{n} point|{n} points	{n} точка|{n} точки|{n} точок
 	Cage Transform	Трансформація за кліткою
 	Transform 3D	3D-трансформація
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Пензлі
+	No brushes match	Відповідних пензлів немає
+	Thumbnail size	Розмір мініатюр

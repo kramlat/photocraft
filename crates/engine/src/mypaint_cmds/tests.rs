@@ -165,3 +165,68 @@ fn every_embedded_brush_loads_and_paints_without_trouble() {
         s.execute("history.undo", json!({})).unwrap();
     }
 }
+
+#[test]
+fn every_embedded_brush_has_the_packs_own_128_px_preview() {
+    let mut lib = Library::default();
+    lib.ensure();
+    let ids: Vec<String> = lib.entries.iter().map(|e| e.id.clone()).collect();
+    assert!(ids.len() >= 190);
+    // The embedded table covers every embedded brush (a system pack found on disk may take over an entry, with its own files).
+    for (id, _, _) in embedded::BRUSHES {
+        let (_, bytes) = embedded_previews::PREVIEWS.iter().find(|(k, _)| k == id).unwrap_or_else(|| panic!("{id} has no embedded preview"));
+        assert!(preview::decode(bytes).is_some(), "{id}");
+    }
+    for id in &ids {
+        let p = lib.preview(id).unwrap();
+        assert_eq!((p.width, p.height), (128, 128), "{id}");
+        assert_eq!(p.rgba.len(), 128 * 128 * 4);
+    }
+}
+
+#[test]
+fn a_preview_is_made_once_and_unknown_brushes_have_none() {
+    let mut lib = Library::default();
+    let a = lib.preview("classic/pencil").unwrap();
+    let b = lib.preview("classic/pencil").unwrap();
+    assert!(Arc::ptr_eq(&a, &b));
+    assert!(lib.preview("no/such").is_none());
+}
+
+#[test]
+fn the_engine_draws_a_preview_for_a_brush_without_one() {
+    let mut inked = 0;
+    let mut lib = Library::default();
+    lib.ensure();
+    let texts: Vec<String> = lib.entries.iter().map(|e| lib.text(e).unwrap()).collect();
+    for text in &texts {
+        let p = preview::render(text).expect("every shipped brush draws");
+        assert_eq!((p.width, p.height), (128, 128));
+        if p.rgba.chunks_exact(4).any(|px| px[..3].iter().any(|c| c.abs_diff(245) > 12)) {
+            inked += 1;
+        }
+    }
+    // Erasers and smudges have nothing to move on a blank page; every other brush marks it.
+    assert!(inked * 10 >= texts.len() * 8, "{inked} of {} brushes marked the page", texts.len());
+}
+
+#[test]
+fn a_preview_png_beside_a_brush_file_is_the_brushs_thumbnail() {
+    let dir = std::env::temp_dir().join(format!("pc-mypaint-prev-{}", std::process::id()));
+    let group = dir.join("mine");
+    std::fs::create_dir_all(&group).unwrap();
+    std::fs::write(group.join("dot.myb"), include_str!("../../../../assets/mypaint-brushes/classic/pencil.myb")).unwrap();
+    std::fs::write(group.join("dot_prev.png"), include_bytes!("../../../../assets/mypaint-brushes/classic/brush_prev.png")).unwrap();
+    std::fs::write(group.join("plain.myb"), include_str!("../../../../assets/mypaint-brushes/classic/pencil.myb")).unwrap();
+    let mut lib = Library { user_dir: Some(dir.clone()), ..Library::default() };
+    lib.ensure();
+    let with = lib.entries.iter().find(|e| e.id == "mine/dot").unwrap();
+    assert!(matches!(with.preview, PreviewSrc::File(_)));
+    let without = lib.entries.iter().find(|e| e.id == "mine/plain").unwrap();
+    assert!(matches!(without.preview, PreviewSrc::None));
+    let a = lib.preview("mine/dot").unwrap();
+    let want = preview::decode(include_bytes!("../../../../assets/mypaint-brushes/classic/brush_prev.png")).unwrap();
+    assert_eq!(*a, want);
+    assert_eq!((lib.preview("mine/plain").unwrap().width, 128), (128, 128));
+    std::fs::remove_dir_all(&dir).ok();
+}

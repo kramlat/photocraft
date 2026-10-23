@@ -18,12 +18,26 @@ use crate::commands::CommandSpec;
 use crate::{EngineError, Result, Session};
 
 mod embedded;
+#[cfg(not(target_arch = "wasm32"))]
+mod embedded_previews;
+pub mod preview;
+
+pub use preview::Preview;
 
 #[derive(Clone, Debug)]
 enum Source {
     Embedded(&'static str),
     File(PathBuf),
     Inline(String),
+}
+
+/// Where a brush's thumbnail comes from; none means the engine draws one.
+#[derive(Clone, Debug)]
+enum PreviewSrc {
+    None,
+    #[cfg(not(target_arch = "wasm32"))]
+    Embedded(&'static [u8]),
+    File(PathBuf),
 }
 
 #[derive(Clone, Debug)]
@@ -34,6 +48,7 @@ struct Entry {
     /// The brush's own size (diameter, px).
     size: f32,
     source: Source,
+    preview: PreviewSrc,
 }
 
 /// The brushes available and the one picked. Filled on first use.
@@ -44,6 +59,7 @@ pub struct Library {
     current: Option<String>,
     /// Where imported brushes are kept; `None` is the default (see [`default_user_dir`]).
     pub user_dir: Option<PathBuf>,
+    previews: std::collections::HashMap<String, Option<Arc<Preview>>>,
 }
 
 fn pretty(stem: &str) -> String {
@@ -155,7 +171,11 @@ impl Library {
         self.scanned = true;
         for (id, group, text) in embedded::BRUSHES {
             let stem = id.rsplit('/').next().unwrap_or(id);
-            self.entries.push(Entry { id: (*id).to_string(), name: pretty(stem), group: (*group).to_string(), size: default_size(text), source: Source::Embedded(text) });
+            #[cfg(not(target_arch = "wasm32"))]
+            let preview = embedded_previews::PREVIEWS.iter().find(|(k, _)| k == id).map_or(PreviewSrc::None, |(_, b)| PreviewSrc::Embedded(b));
+            #[cfg(target_arch = "wasm32")]
+            let preview = PreviewSrc::None;
+            self.entries.push(Entry { id: (*id).to_string(), name: pretty(stem), group: (*group).to_string(), size: default_size(text), source: Source::Embedded(text), preview });
         }
         #[cfg(not(target_arch = "wasm32"))]
         for root in search_roots(self.user_dir.clone().or_else(default_user_dir)) {
@@ -167,7 +187,9 @@ impl Library {
                     continue;
                 }
                 let stem = id.rsplit('/').next().unwrap_or(&id).to_string();
-                let entry = Entry { id: id.clone(), name: pretty(&stem), group, size: default_size(&text), source: Source::File(path) };
+                let png = path.with_file_name(format!("{stem}_prev.png"));
+                let preview = if png.is_file() { PreviewSrc::File(png) } else { PreviewSrc::None };
+                let entry = Entry { id: id.clone(), name: pretty(&stem), group, size: default_size(&text), source: Source::File(path), preview };
                 match self.entries.iter_mut().find(|e| e.id == id) {
                     Some(e) if matches!(e.source, Source::Embedded(_)) => *e = entry,
                     Some(_) => {}
@@ -178,6 +200,26 @@ impl Library {
         if self.current.is_none() {
             self.current = self.entries.iter().find(|e| e.id == "classic/brush").or(self.entries.first()).map(|e| e.id.clone());
         }
+    }
+
+    /// The brush's thumbnail: the pack's own `_prev.png` when it has one, else a stroke drawn by the
+    /// engine. Made once per brush; `None` for an unknown id or a brush that will not load.
+    pub fn preview(&mut self, id: &str) -> Option<Arc<Preview>> {
+        self.ensure_loaded();
+        if let Some(p) = self.previews.get(id) {
+            return p.clone();
+        }
+        let e = self.entries.iter().find(|e| e.id == id)?.clone();
+        let made = match &e.preview {
+            #[cfg(not(target_arch = "wasm32"))]
+            PreviewSrc::Embedded(b) => preview::decode(b),
+            PreviewSrc::File(p) => std::fs::read(p).ok().and_then(|b| preview::decode(&b)),
+            PreviewSrc::None => None,
+        }
+        .or_else(|| self.text(&e).ok().and_then(|t| preview::render(&t)))
+        .map(Arc::new);
+        self.previews.insert(id.to_string(), made.clone());
+        made
     }
 
     fn find(&self, key: &str) -> Option<&Entry> {
@@ -248,7 +290,7 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let lib = &mut s.mypaint;
     lib.ensure();
-    let entry = Entry { id: id.clone(), name: pretty(&clean), group: "User".into(), size: default_size(&text), source };
+    let entry = Entry { id: id.clone(), name: pretty(&clean), group: "User".into(), size: default_size(&text), source, preview: PreviewSrc::None };
     match lib.entries.iter_mut().find(|e| e.id == id) {
         Some(e) => *e = entry.clone(),
         None => lib.entries.push(entry.clone()),

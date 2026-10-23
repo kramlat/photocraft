@@ -27,6 +27,11 @@ pub struct PresetUi {
     pub shapes: bool,
     pub tool_presets: bool,
     pub clone_source: bool,
+    /// Window › MyPaint Brushes.
+    pub mypaint: bool,
+    /// The MyPaint Brushes panel's filter text.
+    #[serde(skip)]
+    pub mypaint_filter: String,
     /// Thumbnail size per panel (px; the minimum shows a list).
     pub sizes: BTreeMap<String, f32>,
     /// Folders whose open state differs from the default (only the first folder starts open).
@@ -104,8 +109,15 @@ impl PresetUi {
     }
 }
 
-const PANELS: [&str; 6] =
-    ["window.panel.gradients", "window.panel.patterns", "window.panel.styles", "window.panel.shapes", "window.panel.toolPresets", "window.panel.cloneSource"];
+const PANELS: [&str; 7] = [
+    "window.panel.gradients",
+    "window.panel.patterns",
+    "window.panel.styles",
+    "window.panel.shapes",
+    "window.panel.toolPresets",
+    "window.panel.cloneSource",
+    "window.panel.mypaintBrushes",
+];
 const MIN_THUMB: f32 = 20.0;
 
 /// Window-menu ids handled here.
@@ -128,6 +140,7 @@ fn float_flag<'a>(p: &'a mut PresetUi, id: &str) -> Option<&'a mut bool> {
         "window.panel.shapes" => &mut p.shapes,
         "window.panel.toolPresets" => &mut p.tool_presets,
         "window.panel.cloneSource" => &mut p.clone_source,
+        "window.panel.mypaintBrushes" => &mut p.mypaint,
         _ => return None,
     })
 }
@@ -812,7 +825,7 @@ fn float_window(
     close
 }
 
-/// Draws the open floating panels (Styles, Shapes, Tool Presets, Clone Source).
+/// Draws the open floating panels (Styles, Shapes, Tool Presets, Clone Source, MyPaint Brushes).
 pub fn windows(app: &mut PhotocraftApp, ctx: &egui::Context) {
     let p = app.ui.presets_ui.clone();
     if p.styles && float_window(app, ctx, "styles", tl!("Styles"), 250.0, 0.0, styles_panel) {
@@ -826,6 +839,9 @@ pub fn windows(app: &mut PhotocraftApp, ctx: &egui::Context) {
     }
     if p.clone_source && float_window(app, ctx, "cloneSource", tl!("Clone Source"), 270.0, 840.0, clone_source_panel) {
         app.ui.presets_ui.clone_source = false;
+    }
+    if p.mypaint && float_window(app, ctx, "mypaintBrushes", tl!("MyPaint Brushes"), 300.0, 1120.0, crate::mypaint_panel::panel) {
+        app.ui.presets_ui.mypaint = false;
     }
 }
 

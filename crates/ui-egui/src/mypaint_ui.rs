@@ -9,6 +9,15 @@ use crate::PhotocraftApp;
 use crate::canvas::Drag;
 use crate::theme::Tokens;
 
+/// Asks for a `.myb` file and adds it to the library (the options bar and the MyPaint Brushes panel).
+pub fn import(app: &mut PhotocraftApp) {
+    let _ = app.pick_file_bytes_filtered(&["myb"], |app, name, bytes| {
+        let data = String::from_utf8_lossy(&bytes).into_owned();
+        let stem = name.rsplit(['/', '\\']).next().unwrap_or("brush").trim_end_matches(".myb").to_string();
+        app.run("mypaint.brushes.import", json!({"data": data, "name": stem})).map(|v| json!({"imported": v})).map_err(|e| e.to_string())
+    });
+}
+
 /// Options bar: Brush, Size, Opacity, Import….
 pub fn options_bar(app: &mut PhotocraftApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
@@ -37,11 +46,7 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut Ui) {
     label(ui, "Opacity:");
     crate::widgets::value_field(ui, &mut app.ui.tool_options.mypaint_opacity, 1.0..=100.0, "%", 58.0);
     if crate::widgets::secondary_button(ui, crate::i18n::t("Import…"), 0.0).clicked() {
-        let _ = app.pick_file_bytes_filtered(&["myb"], |app, name, bytes| {
-            let data = String::from_utf8_lossy(&bytes).into_owned();
-            let stem = name.rsplit(['/', '\\']).next().unwrap_or("brush").trim_end_matches(".myb").to_string();
-            app.run("mypaint.brushes.import", json!({"data": data, "name": stem})).map(|v| json!({"imported": v})).map_err(|e| e.to_string())
-        });
+        import(app);
     }
 }
 

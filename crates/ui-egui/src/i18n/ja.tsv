@@ -4065,3 +4065,8 @@ curves	Smooth	スムーズ
 @plural	{n} point|{n} points	{n} 個の点
 	Cage Transform	ケージ変形
 	Transform 3D	3D変形
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint ブラシ
+	No brushes match	一致するブラシはありません
+	Thumbnail size	サムネールのサイズ

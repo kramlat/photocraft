@@ -3023,3 +3023,9 @@ curves	Smooth	平滑
 @plural	{n} point|{n} points	{n} 个点
 	Cage Transform	笼式变换
 	Transform 3D	3D 变换
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint 画笔
+	No brushes match	没有匹配的画笔
+	Thumbnail size	缩览图大小
+	Import…	导入…

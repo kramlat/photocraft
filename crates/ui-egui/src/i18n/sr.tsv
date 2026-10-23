@@ -4460,3 +4460,8 @@ shape	Appearance	Izgled
 @plural	{n} point|{n} points	{n} tačka|{n} tačke|{n} tačaka
 	Cage Transform	Transformacija kavezom
 	Transform 3D	3D transformacija
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Četkice
+	No brushes match	Nijedna četkica ne odgovara
+	Thumbnail size	Veličina sličica

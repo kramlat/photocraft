@@ -174,6 +174,7 @@ pub mod proxy;
 pub mod puppet_ui;
 pub mod quick_pick;
 pub mod rasterize_prompt;
+pub mod mypaint_panel;
 pub mod mypaint_ui;
 pub mod retouch_ui;
 mod rgb_histogram;

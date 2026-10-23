@@ -3995,3 +3995,9 @@ navigator	Zoom	Zvětšení
 @plural	{n} point|{n} points	{n} bod|{n} body|{n} bodů
 	Cage Transform	Transformace klecí
 	Transform 3D	Transformace 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Štětce
+	No brushes match	Žádné štětce neodpovídají
+	Thumbnail size	Velikost miniatur
+	Import…	Importovat…

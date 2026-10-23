@@ -3392,3 +3392,9 @@ curves	Smooth	Glätten
 @plural	{n} point|{n} points	{n} Punkt|{n} Punkte
 	Cage Transform	Käfigtransformation
 	Transform 3D	3D-Transformation
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Pinsel
+	No brushes match	Keine passenden Pinsel
+	Thumbnail size	Vorschaugröße
+	Import…	Importieren…

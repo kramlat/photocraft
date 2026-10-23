@@ -4179,3 +4179,8 @@ layerLabel	No Color	Sem cor
 @plural	{n} point|{n} points	{n} ponto|{n} pontos
 	Cage Transform	Transformação por gaiola
 	Transform 3D	Transformação 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Pincéis
+	No brushes match	Nenhum pincel corresponde
+	Thumbnail size	Tamanho das miniaturas

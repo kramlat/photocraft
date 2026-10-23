@@ -4349,3 +4349,8 @@ navigator	Zoom	Zoom
 @plural	{n} point|{n} points	{n} punto|{n} puntos
 	Cage Transform	Transformación con jaula
 	Transform 3D	Transformación 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Pinceles
+	No brushes match	Ningún pincel coincide
+	Thumbnail size	Tamaño de las miniaturas

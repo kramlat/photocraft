@@ -3405,3 +3405,8 @@ curves	Smooth	Lisser
 @plural	{n} point|{n} points	{n} point|{n} points
 	Cage Transform	Transformation par cage
 	Transform 3D	Transformation 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Pinceaux
+	No brushes match	Aucun pinceau ne correspond
+	Thumbnail size	Taille des vignettes

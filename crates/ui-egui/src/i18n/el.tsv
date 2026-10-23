@@ -4089,3 +4089,8 @@ curves	Smooth	Εξομάλυνση
 @plural	{n} point|{n} points	{n} σημείο|{n} σημεία
 	Cage Transform	Μετασχηματισμός πλαισίου
 	Transform 3D	Μετασχηματισμός 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Πινέλα
+	No brushes match	Κανένα πινέλο δεν ταιριάζει
+	Thumbnail size	Μέγεθος μικρογραφιών

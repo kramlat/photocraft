@@ -3392,3 +3392,8 @@ curves	Smooth	Haluskan
 @plural	{n} point|{n} points	{n} titik
 	Cage Transform	Transformasi Kerangka
 	Transform 3D	Transformasi 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Kuas
+	No brushes match	Tidak ada kuas yang cocok
+	Thumbnail size	Ukuran thumbnail

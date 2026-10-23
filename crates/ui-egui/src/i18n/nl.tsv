@@ -4149,3 +4149,8 @@ curves	Smooth	Vloeiend maken
 @plural	{n} point|{n} points	{n} punt|{n} punten
 	Cage Transform	Kooitransformatie
 	Transform 3D	3D-transformatie
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Penselen
+	No brushes match	Geen penselen gevonden
+	Thumbnail size	Grootte van miniaturen

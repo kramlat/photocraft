@@ -4119,3 +4119,8 @@ cameraData	Lens	Lens
 @plural	{n} point|{n} points	{n} nokta
 	Cage Transform	Kafes Dönüşümü
 	Transform 3D	3D Dönüşüm
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Fırçalar
+	No brushes match	Eşleşen fırça yok
+	Thumbnail size	Küçük resim boyutu

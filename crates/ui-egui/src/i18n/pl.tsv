@@ -3987,3 +3987,8 @@ curves	Smooth	Wygładź
 @plural	{n} point|{n} points	{n} punkt|{n} punkty|{n} punktów
 	Cage Transform	Transformacja klatką
 	Transform 3D	Transformacja 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Pędzle
+	No brushes match	Brak pasujących pędzli
+	Thumbnail size	Rozmiar miniatur

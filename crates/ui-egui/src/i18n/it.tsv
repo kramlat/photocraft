@@ -4508,3 +4508,8 @@ shape	Appearance	Aspetto
 @plural	{n} point|{n} points	{n} punto|{n} punti
 	Cage Transform	Trasformazione a gabbia
 	Transform 3D	Trasformazione 3D
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Pennelli
+	No brushes match	Nessun pennello corrispondente
+	Thumbnail size	Dimensione delle miniature

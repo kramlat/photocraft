@@ -3375,3 +3375,8 @@ curves	Smooth	Сгладить
 @plural	{n} point|{n} points	{n} точка|{n} точки|{n} точек
 	Cage Transform	Трансформация по клетке
 	Transform 3D	3D-трансформация
+
+# MyPaint Brushes panel
+	MyPaint Brushes	MyPaint Кисти
+	No brushes match	Подходящих кистей нет
+	Thumbnail size	Размер миниатюр
